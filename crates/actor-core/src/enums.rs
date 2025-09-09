@@ -18,10 +18,13 @@ pub enum Bucket {
     /// Override contribution (replaces previous values)
     Override,
     /// Exponential contribution
+    #[cfg(feature = "extra_buckets")]
     Exponential,
     /// Logarithmic contribution
+    #[cfg(feature = "extra_buckets")]
     Logarithmic,
     /// Conditional contribution (applied based on conditions)
+    #[cfg(feature = "extra_buckets")]
     Conditional,
 }
 
@@ -34,8 +37,11 @@ impl Bucket {
             Bucket::Mult => 2,
             Bucket::PostAdd => 3,
             Bucket::Override => 4,
+            #[cfg(feature = "extra_buckets")]
             Bucket::Exponential => 5,
+            #[cfg(feature = "extra_buckets")]
             Bucket::Logarithmic => 6,
+            #[cfg(feature = "extra_buckets")]
             Bucket::Conditional => 7,
         }
     }
@@ -52,8 +58,11 @@ impl Bucket {
             Bucket::Mult => "Multiplicative",
             Bucket::PostAdd => "Post-Additive",
             Bucket::Override => "Override",
+            #[cfg(feature = "extra_buckets")]
             Bucket::Exponential => "Exponential",
+            #[cfg(feature = "extra_buckets")]
             Bucket::Logarithmic => "Logarithmic",
+            #[cfg(feature = "extra_buckets")]
             Bucket::Conditional => "Conditional",
         }
     }

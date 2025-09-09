@@ -263,7 +263,13 @@ fn is_valid_cap_mode(mode: &str) -> bool {
 
 /// Check if a bucket type string is valid.
 fn is_valid_bucket_type(bucket: &str) -> bool {
-    matches!(bucket, "FLAT" | "MULT" | "POST_ADD" | "OVERRIDE" | "EXPONENTIAL" | "LOGARITHMIC" | "CONDITIONAL")
+    let core_buckets = matches!(bucket, "FLAT" | "MULT" | "POST_ADD" | "OVERRIDE");
+    #[cfg(feature = "extra_buckets")]
+    let extra_buckets = matches!(bucket, "EXPONENTIAL" | "LOGARITHMIC" | "CONDITIONAL");
+    #[cfg(not(feature = "extra_buckets"))]
+    let extra_buckets = false;
+    
+    core_buckets || extra_buckets
 }
 
 /// Convert cap layers configuration to registry implementation.
@@ -311,8 +317,11 @@ fn convert_combiner_config(config: CombinerConfig) -> Result<CombinerRegistryImp
                 "MULT" => Ok(crate::enums::Bucket::Mult),
                 "POST_ADD" => Ok(crate::enums::Bucket::PostAdd),
                 "OVERRIDE" => Ok(crate::enums::Bucket::Override),
+                #[cfg(feature = "extra_buckets")]
                 "EXPONENTIAL" => Ok(crate::enums::Bucket::Exponential),
+                #[cfg(feature = "extra_buckets")]
                 "LOGARITHMIC" => Ok(crate::enums::Bucket::Logarithmic),
+                #[cfg(feature = "extra_buckets")]
                 "CONDITIONAL" => Ok(crate::enums::Bucket::Conditional),
                 _ => Err(LoaderError::ValidationError {
                     message: format!("Invalid bucket type: {}", bucket),

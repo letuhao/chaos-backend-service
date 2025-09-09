@@ -7,6 +7,10 @@ license.workspace = true
 repository.workspace = true
 description = "Character stat aggregation and management system for Chaos World MMORPG"
 
+[features]
+default = []
+extra_buckets = []
+
 [dependencies]
 # Workspace dependencies
 shared = { path = "../shared" }

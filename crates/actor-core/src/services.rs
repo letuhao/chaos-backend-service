@@ -88,12 +88,15 @@ impl AggregatorImpl {
                     crate::enums::Bucket::Override => {
                         value = contribution.value;
                     }
+                    #[cfg(feature = "extra_buckets")]
                     crate::enums::Bucket::Exponential => {
                         value = value.powf(contribution.value);
                     }
+                    #[cfg(feature = "extra_buckets")]
                     crate::enums::Bucket::Logarithmic => {
                         value = value.log(contribution.value);
                     }
+                    #[cfg(feature = "extra_buckets")]
                     crate::enums::Bucket::Conditional => {
                         // For now, treat conditional as flat
                         // In a real implementation, this would check conditions
@@ -159,12 +162,15 @@ impl AggregatorImpl {
                     crate::enums::Bucket::Override => {
                         value = contribution.value;
                     }
+                    #[cfg(feature = "extra_buckets")]
                     crate::enums::Bucket::Exponential => {
                         value = value.powf(contribution.value);
                     }
+                    #[cfg(feature = "extra_buckets")]
                     crate::enums::Bucket::Logarithmic => {
                         value = value.log(contribution.value);
                     }
+                    #[cfg(feature = "extra_buckets")]
                     crate::enums::Bucket::Conditional => {
                         value += contribution.value;
                     }
