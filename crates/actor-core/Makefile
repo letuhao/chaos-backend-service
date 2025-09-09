@@ -1,7 +1,7 @@
 # Actor Core Makefile
 # Provides convenient commands for development and CI
 
-.PHONY: help test test-configs validate-configs clean build check format clippy
+.PHONY: help test test-configs validate-configs clean build check format clippy ci audit outdated docs
 
 # Default target
 help:
@@ -14,6 +14,10 @@ help:
 	@echo "  format            - Format code with rustfmt"
 	@echo "  clippy            - Run clippy lints"
 	@echo "  clean             - Clean build artifacts"
+	@echo "  ci                - Run all CI checks"
+	@echo "  audit             - Run security audit"
+	@echo "  outdated          - Check for outdated dependencies"
+	@echo "  docs              - Generate documentation"
 
 # Run all tests
 test:
@@ -48,6 +52,18 @@ clippy:
 clean:
 	cargo clean
 
+# Run security audit
+audit:
+	cargo audit
+
+# Check for outdated dependencies
+outdated:
+	cargo outdated
+
+# Generate documentation
+docs:
+	cargo doc --no-deps --all-features --open
+
 # CI validation (runs all checks)
-ci: validate-configs test-configs test clippy
+ci: validate-configs test-configs test clippy format check audit outdated docs
 	@echo "✅ All CI checks passed!"

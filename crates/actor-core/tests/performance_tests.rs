@@ -151,7 +151,7 @@ async fn benchmark_caps_operations() {
     
     // Benchmark range operations
     let start = Instant::now();
-    for _i in 0..ITERATIONS {
+    for i in 0..ITERATIONS {
         let _range = caps.get_range();
         let _center = caps.get_center();
     }

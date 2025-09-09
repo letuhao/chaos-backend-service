@@ -148,7 +148,6 @@ fn test_configs_have_reasonable_values() {
 #[test]
 fn test_configs_integration_with_aggregation() {
     use actor_core::types::*;
-    use actor_core::enums::*;
     use actor_core::bucket_processor::*;
     
     // Load configurations

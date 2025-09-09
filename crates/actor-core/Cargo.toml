@@ -6,6 +6,7 @@ authors.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "Character stat aggregation and management system for Chaos World MMORPG"
+rust-version = "1.89"
 
 [features]
 default = []
@@ -51,3 +52,5 @@ tokio = { workspace = true }
 proptest = { workspace = true }
 criterion = { workspace = true }
 tempfile = "3"
+
+# CI and quality tools

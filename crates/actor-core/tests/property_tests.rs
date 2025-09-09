@@ -4,7 +4,6 @@
 //! that certain properties hold for all valid inputs.
 
 use actor_core::types::*;
-use actor_core::enums::*;
 use actor_core::bucket_processor::*;
 use std::collections::HashMap;
 
@@ -251,7 +250,7 @@ fn test_contribution_validation_works() {
 /// Test that contribution validation rejects invalid values
 #[test]
 fn test_contribution_validation_rejects_invalid() {
-    let mut invalid_contributions = vec![
+    let invalid_contributions = vec![
         Contribution::new("test".to_string(), Bucket::Flat, 10.0, "test".to_string()),
         Contribution::new("test".to_string(), Bucket::Flat, f64::NAN, "test".to_string()),
     ];

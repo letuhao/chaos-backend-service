@@ -1,0 +1,93 @@
+# Pre-commit hooks for Actor Core
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-added-large-files
+      - id: check-case-conflict
+      - id: check-docstring-first
+      - id: check-executables-have-shebangs
+      - id: check-merge-conflict
+      - id: debug-statements
+      - id: detect-private-key
+      - id: mixed-line-ending
+      - id: name-tests-test
+      - id: requirements-txt-fixer
+      - id: check-ast
+      - id: check-merge-conflict
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-added-large-files
+      - id: check-case-conflict
+      - id: check-docstring-first
+      - id: check-executables-have-shebangs
+      - id: check-merge-conflict
+      - id: debug-statements
+      - id: detect-private-key
+      - id: mixed-line-ending
+      - id: name-tests-test
+      - id: requirements-txt-fixer
+      - id: check-ast
+
+  - repo: https://github.com/psf/black
+    rev: 23.12.1
+    hooks:
+      - id: black
+        language_version: python3
+        args: [--line-length=100]
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: [--profile=black, --line-length=100]
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+        args: [--max-line-length=100, --extend-ignore=E203,W503]
+
+  - repo: https://github.com/pre-commit/mirrors-rustfmt
+    rev: v1.6.0
+    hooks:
+      - id: rustfmt
+        args: [--edition=2021]
+
+  - repo: https://github.com/pre-commit/mirrors-clippy
+    rev: v0.1.7
+    hooks:
+      - id: clippy
+        args: [--all-targets, --all-features, -- -D warnings]
+
+  - repo: local
+    hooks:
+      - id: cargo-check
+        name: cargo check
+        entry: cargo check --all-targets --all-features
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: cargo-test
+        name: cargo test
+        entry: cargo test --all-features
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: cargo-doc
+        name: cargo doc
+        entry: cargo doc --no-deps --all-features
+        language: system
+        pass_filenames: false
+        always_run: true

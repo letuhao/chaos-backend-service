@@ -1,0 +1,51 @@
+# Deny configuration for Actor Core
+
+[licenses]
+# Allow only specific licenses
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Unicode-DFS-2016",
+    "Zlib",
+]
+
+# Deny GPL and other copyleft licenses
+deny = [
+    "GPL-2.0",
+    "GPL-3.0",
+    "AGPL-3.0",
+    "LGPL-2.0",
+    "LGPL-2.1",
+    "LGPL-3.0",
+    "MPL-1.0",
+    "MPL-1.1",
+    "MPL-2.0",
+]
+
+# Allow unlicensed crates for development
+unlicensed = "allow"
+
+[advisories]
+# Security advisories
+db-path = "~/.cargo/advisory-db"
+db-urls = ["https://github.com/RustSec/advisory-db"]
+query = "severity >= moderate"
+
+# Ignore specific advisories if needed
+ignore = []
+
+[ban]
+# Ban specific crates
+multiple-versions = "deny"
+wildcards = "deny"
+workspace-dependencies = "deny"
+
+[bans]
+# Additional ban rules
+multiple-versions = "deny"
+wildcards = "deny"
+workspace-dependencies = "deny"

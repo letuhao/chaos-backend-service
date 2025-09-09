@@ -4,11 +4,9 @@
 //! and edge cases that might not be covered by normal usage.
 
 use actor_core::types::*;
-use actor_core::enums::*;
 use actor_core::bucket_processor::*;
 use actor_core::registry::loader::*;
 use std::collections::HashMap;
-use std::path::Path;
 
 /// Test Caps edge cases
 #[test]
@@ -39,7 +37,7 @@ fn test_caps_edge_cases() {
 #[test]
 fn test_caps_extreme_values() {
     // Test with infinity
-    let caps = Caps::new(f64::NEG_INFINITY, f64::INFINITY);
+    let _caps = Caps::new(f64::NEG_INFINITY, f64::INFINITY);
     // Note: Infinity caps might not be considered valid by the current implementation
     // Let's test with a more reasonable range
     let caps = Caps::new(-1e10, 1e10);
