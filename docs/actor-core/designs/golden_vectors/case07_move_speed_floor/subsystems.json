@@ -1,0 +1,26 @@
+[
+  {
+    "primary": [],
+    "derived": [
+      {
+        "dimension": "move_speed",
+        "bucket": "FLAT",
+        "value": 2,
+        "system": "debuff"
+      }
+    ],
+    "caps": [
+      {
+        "system": "world",
+        "dimension": "move_speed",
+        "mode": "HARD_MIN",
+        "kind": "min",
+        "value": 3,
+        "scope": "WORLD"
+      }
+    ],
+    "meta": {
+      "system": "debuff"
+    }
+  }
+]

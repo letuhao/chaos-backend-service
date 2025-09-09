@@ -1,0 +1,13 @@
+{
+  "Primary": {
+    "crit_rate": 0.2
+  },
+  "Derived": {},
+  "CapsUsed": {
+    "crit_rate": {
+      "Min": 0,
+      "Max": 0.25
+    }
+  },
+  "Version": 1
+}

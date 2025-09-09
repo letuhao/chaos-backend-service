@@ -1,0 +1,31 @@
+[package]
+name = "data-gen"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Data generation tool for Chaos World MMORPG backend"
+
+[[bin]]
+name = "data-gen"
+path = "src/main.rs"
+
+[dependencies]
+# Workspace dependencies
+shared = { path = "../../crates/shared" }
+generator-core = { path = "../../crates/generator-core" }
+
+# Core dependencies
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+anyhow = { workspace = true }
+clap = { workspace = true }
+
+# Random number generation
+rand = "0.8"
+rand_chacha = "0.3"
+
+# Database
+sqlx = { workspace = true }

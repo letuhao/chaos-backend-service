@@ -1,0 +1,34 @@
+[
+  {
+    "primary": [
+      {
+        "dimension": "strength",
+        "bucket": "FLAT",
+        "value": 500,
+        "system": "luyen_the"
+      }
+    ],
+    "derived": [],
+    "caps": [
+      {
+        "system": "luyen_the",
+        "dimension": "strength",
+        "mode": "ADDITIVE",
+        "kind": "max",
+        "value": 500,
+        "scope": "TOTAL"
+      },
+      {
+        "system": "kim_dan",
+        "dimension": "strength",
+        "mode": "BASELINE",
+        "kind": "max",
+        "value": 200,
+        "scope": "TOTAL"
+      }
+    ],
+    "meta": {
+      "system": "luyen_the"
+    }
+  }
+]

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "dimension",
+    "bucket",
+    "value",
+    "system"
+  ],
+  "properties": {
+    "dimension": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "bucket": {
+      "type": "string",
+      "enum": [
+        "FLAT",
+        "MULT",
+        "POST_ADD",
+        "OVERRIDE"
+      ]
+    },
+    "value": {
+      "type": "number"
+    },
+    "system": {
+      "type": "string"
+    },
+    "priority": {
+      "type": "integer"
+    }
+  }
+}

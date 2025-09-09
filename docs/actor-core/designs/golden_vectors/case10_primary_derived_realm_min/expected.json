@@ -1,0 +1,19 @@
+{
+  "Primary": {
+    "spirit": 100
+  },
+  "Derived": {
+    "mp_max": 500
+  },
+  "CapsUsed": {
+    "spirit": {
+      "Min": 100,
+      "Max": 999999
+    },
+    "mp_max": {
+      "Min": 0,
+      "Max": 2000000
+    }
+  },
+  "Version": 1
+}

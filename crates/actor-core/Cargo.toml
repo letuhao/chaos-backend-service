@@ -1,0 +1,40 @@
+[package]
+name = "actor-core"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Character stat aggregation and management system for Chaos World MMORPG"
+
+[dependencies]
+# Workspace dependencies
+shared = { path = "../shared" }
+
+# Core dependencies
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+async-trait = { workspace = true }
+tokio = { workspace = true }
+
+# Concurrency
+dashmap = { workspace = true }
+crossbeam = { workspace = true }
+parking_lot = { workspace = true }
+
+# Caching
+moka = { workspace = true }
+memmap2 = { workspace = true }
+
+# Database
+sqlx = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }
+proptest = { workspace = true }
+criterion = { workspace = true }

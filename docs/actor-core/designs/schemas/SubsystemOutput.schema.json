@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "primary",
+    "derived",
+    "caps",
+    "meta"
+  ],
+  "properties": {
+    "primary": {
+      "type": "array",
+      "items": {
+        "$ref": "Contribution.schema.json"
+      }
+    },
+    "derived": {
+      "type": "array",
+      "items": {
+        "$ref": "Contribution.schema.json"
+      }
+    },
+    "caps": {
+      "type": "array",
+      "items": {
+        "$ref": "CapContribution.schema.json"
+      }
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "additive_percent": {
+            "type": "number"
+          },
+          "multipliers": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "post_add": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "system"
+      ],
+      "properties": {
+        "system": {
+          "type": "string"
+        },
+        "stage": {
+          "type": "string"
+        },
+        "version": {
+          "type": "integer"
+        }
+      }
+    }
+  }
+}

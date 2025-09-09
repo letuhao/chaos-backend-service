@@ -1,0 +1,55 @@
+[package]
+name = "api"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "REST, gRPC, and WebSocket API endpoints for Chaos World MMORPG backend"
+
+[dependencies]
+# Workspace dependencies
+shared = { path = "../shared" }
+actor-core = { path = "../actor-core" }
+combat-core = { path = "../combat-core" }
+leveling-core = { path = "../leveling-core" }
+race-core = { path = "../race-core" }
+world-core = { path = "../world-core" }
+event-core = { path = "../event-core" }
+item-core = { path = "../item-core" }
+job-core = { path = "../job-core" }
+generator-core = { path = "../generator-core" }
+
+# Core dependencies
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+async-trait = { workspace = true }
+tokio = { workspace = true }
+
+# Web framework
+axum = { workspace = true }
+tower = { workspace = true }
+tower-http = { workspace = true }
+
+# gRPC
+tonic = { workspace = true }
+prost = "0.12"
+
+# WebSocket
+tokio-tungstenite = "0.21"
+
+# Authentication
+jsonwebtoken = { workspace = true }
+argon2 = "0.5"
+
+# Database
+sqlx = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }
+proptest = { workspace = true }

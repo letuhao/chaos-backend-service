@@ -1,0 +1,13 @@
+{
+  "Primary": {
+    "defense": 5
+  },
+  "Derived": {},
+  "CapsUsed": {
+    "defense": {
+      "Min": 5,
+      "Max": 5
+    }
+  },
+  "Version": 1
+}

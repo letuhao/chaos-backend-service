@@ -1,0 +1,11 @@
+{
+  "Primary": {},
+  "Derived": {},
+  "CapsUsed": {
+    "lifespan_years": {
+      "Min": 100,
+      "Max": 500
+    }
+  },
+  "Version": 1
+}

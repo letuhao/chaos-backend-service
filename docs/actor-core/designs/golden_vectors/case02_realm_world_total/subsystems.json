@@ -1,0 +1,51 @@
+[
+  {
+    "primary": [
+      {
+        "dimension": "strength",
+        "bucket": "FLAT",
+        "value": 650,
+        "system": "luyen_the"
+      }
+    ],
+    "derived": [],
+    "caps": [
+      {
+        "system": "kim_dan",
+        "dimension": "strength",
+        "mode": "BASELINE",
+        "kind": "max",
+        "value": 200,
+        "scope": "TOTAL"
+      },
+      {
+        "system": "luyen_the",
+        "dimension": "strength",
+        "mode": "ADDITIVE",
+        "kind": "max",
+        "value": 500,
+        "scope": "TOTAL"
+      },
+      {
+        "system": "fate",
+        "dimension": "strength",
+        "mode": "HARD_MAX",
+        "kind": "max",
+        "value": 600,
+        "scope": "REALM",
+        "realm": "luyen_the:T2"
+      },
+      {
+        "system": "world",
+        "dimension": "strength",
+        "mode": "HARD_MAX",
+        "kind": "max",
+        "value": 550,
+        "scope": "WORLD"
+      }
+    ],
+    "meta": {
+      "system": "luyen_the"
+    }
+  }
+]

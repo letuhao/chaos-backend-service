@@ -1,0 +1,29 @@
+[package]
+name = "load-test"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Load testing tool for Chaos World MMORPG backend"
+
+[[bin]]
+name = "load-test"
+path = "src/main.rs"
+
+[dependencies]
+# Workspace dependencies
+shared = { path = "../../crates/shared" }
+
+# Core dependencies
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+anyhow = { workspace = true }
+clap = { workspace = true }
+
+# HTTP client
+reqwest = { version = "0.11", features = ["json"] }
+
+# Statistics
+statistical = "0.1"

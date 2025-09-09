@@ -1,0 +1,7 @@
+{
+  "order": [
+    "WORLD",
+    "TOTAL"
+  ],
+  "across_policy": "PRIORITIZED_OVERRIDE"
+}

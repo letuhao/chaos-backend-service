@@ -1,0 +1,126 @@
+[workspace]
+resolver = "2"
+members = [
+    # Libraries
+    "crates/shared",
+    "crates/actor-core",
+    "crates/combat-core", 
+    "crates/leveling-core",
+    "crates/race-core",
+    "crates/world-core",
+    "crates/event-core",
+    "crates/item-core",
+    "crates/job-core",
+    "crates/generator-core",
+    "crates/api",
+    
+    # Services (binaries)
+    "services/chaos-backend",
+    "services/actor-service",
+    "services/combat-service",
+    "services/world-service",
+    "services/event-service",
+    
+    # Tools
+    "tools/migrate",
+    "tools/load-test",
+    "tools/data-gen",
+    "tools/admin-cli",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Chaos World Team"]
+license = "MIT"
+repository = "https://github.com/chaos-world/chaos-backend-service"
+description = "Chaos World MMORPG Backend Service - A high-performance game backend built in Rust"
+
+[workspace.dependencies]
+# Async Runtime
+tokio = { version = "1.0", features = ["full"] }
+async-trait = "0.1"
+futures = "0.3"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+bincode = "1.3"
+rmp-serde = "1.1"
+
+# Concurrency
+dashmap = "5.0"
+crossbeam = "0.8"
+parking_lot = "0.12"
+
+# Caching
+moka = "0.12"
+memmap2 = "0.9"
+flate2 = "1.0"
+
+# Error Handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Logging & Monitoring
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+prometheus = "0.13"
+tracing-opentelemetry = "0.21"
+
+# Database
+sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid"] }
+redis = { version = "0.24", features = ["tokio-comp"] }
+
+# Networking
+tonic = "0.10"
+warp = "0.3"
+axum = "0.7"
+tower = "0.4"
+tower-http = { version = "0.5", features = ["cors", "trace"] }
+
+# Utilities
+uuid = { version = "1.0", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+regex = "1.0"
+url = "2.0"
+base64 = "0.21"
+sha2 = "0.10"
+hmac = "0.12"
+jsonwebtoken = "9.0"
+
+# Configuration
+config = "0.14"
+clap = { version = "4.0", features = ["derive"] }
+toml = "0.8"
+
+# Testing
+criterion = "0.5"
+proptest = "1.0"
+tokio-test = "0.4"
+mockall = "0.12"
+
+# Development
+cargo-fuzz = "0.11"
+cargo-make = "0.37"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+clippy::all = "warn"
+clippy::pedantic = "warn"
+clippy::nursery = "warn"
+clippy::cargo = "warn"
+
+[workspace.lints.clippy]
+# Performance
+all = true
+pedantic = true
+nursery = true
+cargo = true
+
+# Disable some overly pedantic lints
+too_many_arguments = "allow"
+module_name_repetitions = "allow"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"

@@ -1,0 +1,34 @@
+[
+  {
+    "primary": [
+      {
+        "dimension": "spirit",
+        "bucket": "FLAT",
+        "value": 80,
+        "system": "niem_luc"
+      }
+    ],
+    "derived": [
+      {
+        "dimension": "mp_max",
+        "bucket": "FLAT",
+        "value": 500,
+        "system": "niem_luc"
+      }
+    ],
+    "caps": [
+      {
+        "system": "realm",
+        "dimension": "spirit",
+        "mode": "HARD_MIN",
+        "kind": "min",
+        "value": 100,
+        "scope": "REALM",
+        "realm": "niem_luc:base"
+      }
+    ],
+    "meta": {
+      "system": "niem_luc"
+    }
+  }
+]

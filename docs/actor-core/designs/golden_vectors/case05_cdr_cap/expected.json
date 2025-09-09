@@ -1,0 +1,13 @@
+{
+  "Primary": {},
+  "Derived": {
+    "cooldown_reduction": 0.5
+  },
+  "CapsUsed": {
+    "cooldown_reduction": {
+      "Min": 0,
+      "Max": 0.5
+    }
+  },
+  "Version": 1
+}

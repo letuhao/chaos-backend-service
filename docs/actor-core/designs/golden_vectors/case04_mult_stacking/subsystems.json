@@ -1,0 +1,29 @@
+[
+  {
+    "primary": [
+      {
+        "dimension": "attack_power",
+        "bucket": "FLAT",
+        "value": 100,
+        "system": "race"
+      },
+      {
+        "dimension": "attack_power",
+        "bucket": "MULT",
+        "value": 0.2,
+        "system": "items"
+      },
+      {
+        "dimension": "attack_power",
+        "bucket": "MULT",
+        "value": 0.1,
+        "system": "effects"
+      }
+    ],
+    "derived": [],
+    "caps": [],
+    "meta": {
+      "system": "items"
+    }
+  }
+]

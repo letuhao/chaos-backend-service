@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "order",
+    "across_policy"
+  ],
+  "properties": {
+    "order": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "across_policy": {
+      "type": "string",
+      "enum": [
+        "INTERSECT",
+        "PRIORITIZED_OVERRIDE"
+      ]
+    }
+  }
+}

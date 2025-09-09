@@ -1,0 +1,32 @@
+[
+  {
+    "primary": [],
+    "derived": [
+      {
+        "dimension": "cooldown_reduction",
+        "bucket": "FLAT",
+        "value": 0.3,
+        "system": "items"
+      },
+      {
+        "dimension": "cooldown_reduction",
+        "bucket": "FLAT",
+        "value": 0.3,
+        "system": "effects"
+      }
+    ],
+    "caps": [
+      {
+        "system": "world",
+        "dimension": "cooldown_reduction",
+        "mode": "HARD_MAX",
+        "kind": "max",
+        "value": 0.5,
+        "scope": "WORLD"
+      }
+    ],
+    "meta": {
+      "system": "items"
+    }
+  }
+]

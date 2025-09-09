@@ -1,0 +1,39 @@
+[package]
+name = "admin-cli"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Administrative CLI tool for Chaos World MMORPG backend"
+
+[[bin]]
+name = "admin-cli"
+path = "src/main.rs"
+
+[dependencies]
+# Workspace dependencies
+shared = { path = "../../crates/shared" }
+actor-core = { path = "../../crates/actor-core" }
+combat-core = { path = "../../crates/combat-core" }
+leveling-core = { path = "../../crates/leveling-core" }
+race-core = { path = "../../crates/race-core" }
+world-core = { path = "../../crates/world-core" }
+event-core = { path = "../../crates/event-core" }
+item-core = { path = "../../crates/item-core" }
+job-core = { path = "../../crates/job-core" }
+generator-core = { path = "../../crates/generator-core" }
+
+# Core dependencies
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+anyhow = { workspace = true }
+clap = { workspace = true }
+
+# Database
+sqlx = { workspace = true }
+redis = { workspace = true }
+
+# Interactive CLI
+dialoguer = "0.11"

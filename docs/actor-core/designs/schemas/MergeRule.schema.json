@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "use_pipeline",
+    "clamp_default"
+  ],
+  "properties": {
+    "use_pipeline": {
+      "type": "boolean"
+    },
+    "operator": {
+      "type": "string",
+      "enum": [
+        "SUM",
+        "MAX",
+        "MIN"
+      ]
+    },
+    "clamp_default": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "min",
+        "max"
+      ],
+      "properties": {
+        "min": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

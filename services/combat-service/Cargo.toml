@@ -1,0 +1,38 @@
+[package]
+name = "combat-service"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Combat service for battle mechanics and damage calculation"
+
+[[bin]]
+name = "combat-service"
+path = "src/main.rs"
+
+[dependencies]
+# Workspace dependencies
+shared = { path = "../../crates/shared" }
+actor-core = { path = "../../crates/actor-core" }
+combat-core = { path = "../../crates/combat-core" }
+api = { path = "../../crates/api" }
+
+# Core dependencies
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+anyhow = { workspace = true }
+clap = { workspace = true }
+
+# Database
+sqlx = { workspace = true }
+redis = { workspace = true }
+
+# Web framework
+axum = { workspace = true }
+tower = { workspace = true }
+tower-http = { workspace = true }
+
+# gRPC
+tonic = { workspace = true }

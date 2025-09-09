@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "system",
+    "dimension",
+    "mode",
+    "kind",
+    "value"
+  ],
+  "properties": {
+    "system": {
+      "type": "string"
+    },
+    "dimension": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "BASELINE",
+        "ADDITIVE",
+        "OVERRIDE",
+        "HARD_MAX",
+        "HARD_MIN"
+      ]
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "max",
+        "min"
+      ]
+    },
+    "value": {
+      "type": "number"
+    },
+    "priority": {
+      "type": "integer"
+    },
+    "scope": {
+      "type": "string"
+    },
+    "realm": {
+      "type": "string"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "scope": {
+            "const": "REALM"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "realm"
+        ]
+      }
+    }
+  ]
+}

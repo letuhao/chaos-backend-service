@@ -1,0 +1,13 @@
+{
+  "Primary": {},
+  "Derived": {
+    "move_speed": 3
+  },
+  "CapsUsed": {
+    "move_speed": {
+      "Min": 3,
+      "Max": 12
+    }
+  },
+  "Version": 1
+}

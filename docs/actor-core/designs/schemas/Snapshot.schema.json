@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Primary",
+    "Derived",
+    "CapsUsed",
+    "Version"
+  ],
+  "properties": {
+    "Primary": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number"
+      }
+    },
+    "Derived": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number"
+      }
+    },
+    "CapsUsed": {
+      "$ref": "EffectiveCaps.schema.json"
+    },
+    "Version": {
+      "type": "integer"
+    }
+  }
+}

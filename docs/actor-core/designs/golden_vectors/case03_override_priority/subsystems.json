@@ -1,0 +1,31 @@
+[
+  {
+    "primary": [],
+    "derived": [
+      {
+        "dimension": "crit_rate",
+        "bucket": "FLAT",
+        "value": 0.1,
+        "system": "items"
+      },
+      {
+        "dimension": "crit_rate",
+        "bucket": "OVERRIDE",
+        "value": 0.7,
+        "system": "talent",
+        "priority": 5
+      },
+      {
+        "dimension": "crit_rate",
+        "bucket": "OVERRIDE",
+        "value": 0.65,
+        "system": "effects",
+        "priority": 1
+      }
+    ],
+    "caps": [],
+    "meta": {
+      "system": "talent"
+    }
+  }
+]

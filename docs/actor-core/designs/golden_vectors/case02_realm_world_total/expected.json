@@ -1,0 +1,13 @@
+{
+  "Primary": {
+    "strength": 550
+  },
+  "Derived": {},
+  "CapsUsed": {
+    "strength": {
+      "Min": 0,
+      "Max": 550
+    }
+  },
+  "Version": 1
+}

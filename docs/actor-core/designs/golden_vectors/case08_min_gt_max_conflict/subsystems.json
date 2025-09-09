@@ -1,0 +1,34 @@
+[
+  {
+    "primary": [
+      {
+        "dimension": "defense",
+        "bucket": "FLAT",
+        "value": 10,
+        "system": "base"
+      }
+    ],
+    "derived": [],
+    "caps": [
+      {
+        "system": "buggy",
+        "dimension": "defense",
+        "mode": "HARD_MAX",
+        "kind": "max",
+        "value": 5,
+        "scope": "WORLD"
+      },
+      {
+        "system": "buggy",
+        "dimension": "defense",
+        "mode": "HARD_MIN",
+        "kind": "min",
+        "value": 8,
+        "scope": "WORLD"
+      }
+    ],
+    "meta": {
+      "system": "base"
+    }
+  }
+]

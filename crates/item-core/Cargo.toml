@@ -1,0 +1,34 @@
+[package]
+name = "item-core"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Item generation, properties, and inventory management for Chaos World MMORPG"
+
+[dependencies]
+# Workspace dependencies
+shared = { path = "../shared" }
+actor-core = { path = "../actor-core" }
+
+# Core dependencies
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+async-trait = { workspace = true }
+tokio = { workspace = true }
+
+# Concurrency
+dashmap = { workspace = true }
+
+# Database
+sqlx = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }
+proptest = { workspace = true }

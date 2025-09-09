@@ -1,0 +1,43 @@
+[
+  {
+    "primary": [],
+    "derived": [],
+    "caps": [
+      {
+        "system": "race",
+        "dimension": "lifespan_years",
+        "mode": "BASELINE",
+        "kind": "max",
+        "value": 300,
+        "scope": "TOTAL"
+      },
+      {
+        "system": "talent",
+        "dimension": "lifespan_years",
+        "mode": "ADDITIVE",
+        "kind": "max",
+        "value": 200,
+        "scope": "TOTAL"
+      },
+      {
+        "system": "world",
+        "dimension": "lifespan_years",
+        "mode": "HARD_MIN",
+        "kind": "min",
+        "value": 100,
+        "scope": "WORLD"
+      }
+    ],
+    "meta": {
+      "system": "race"
+    }
+  },
+  {
+    "primary": [],
+    "derived": [],
+    "caps": [],
+    "meta": {
+      "system": "effects"
+    }
+  }
+]

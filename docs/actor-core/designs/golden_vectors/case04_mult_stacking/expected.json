@@ -1,0 +1,13 @@
+{
+  "Primary": {
+    "attack_power": 132
+  },
+  "Derived": {},
+  "CapsUsed": {
+    "attack_power": {
+      "Min": 0,
+      "Max": 1000000
+    }
+  },
+  "Version": 1
+}

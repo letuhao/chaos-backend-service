@@ -1,0 +1,2 @@
+order: [REALM, WORLD, EVENT, TOTAL]
+across_policy: INTERSECT

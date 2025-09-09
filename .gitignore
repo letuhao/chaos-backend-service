@@ -1,32 +1,118 @@
-# If you prefer the allow list template instead of the deny list, see community template:
-# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
-#
-# Binaries for programs and plugins
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
+# Rust
+/target/
+**/*.rs.bk
+*.pdb
 
-# Test binary, built with `go test -c`
-*.test
+# Cargo
+Cargo.lock
+**/Cargo.lock
 
-# Code coverage profiles and other test artifacts
-*.out
-coverage.*
-*.coverprofile
-profile.cov
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 
-# Dependency directories (remove the comment below to include it)
-# vendor/
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 
-# Go workspace file
-go.work
-go.work.sum
+# Logs
+*.log
+logs/
+log/
 
-# env file
+# Runtime
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage
+tarpaulin-report.html
+lcov.info
+coverage/
+
+# Profiling
+perf.data*
+flamegraph.svg
+*.prof
+
+# Fuzzing
+fuzz/artifacts/
+fuzz/corpus/
+fuzz/crash-*
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Cache
+.cache/
+cache/
+
+# Temporary files
+*.tmp
+*.temp
+.tmp/
+.temp/
+
+# Environment
 .env
+.env.local
+.env.*.local
 
-# Editor/IDE
-# .idea/
-# .vscode/
+# Configuration (keep templates)
+config/*.toml
+config/*.yaml
+config/*.yml
+!config/*.example.*
+!config/*.template.*
+
+# Documentation
+/book/
+/docs/book/
+
+# Generated files
+**/generated/
+**/gen/
+
+# Test artifacts
+test-results/
+test-output/
+
+# Benchmark results
+criterion/
+benches/results/
+
+# Docker
+.dockerignore
+Dockerfile.local
+
+# Kubernetes
+k8s/secrets/
+k8s/*.secret.*
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Archive files
+*.zip
+*.tar.gz
+*.tar.bz2
+*.rar
+*.7z
