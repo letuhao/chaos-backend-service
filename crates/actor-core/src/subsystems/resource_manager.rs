@@ -10,6 +10,8 @@ use crate::interfaces::Subsystem;
 use crate::types::{Actor, SubsystemOutput, Contribution, CapContribution};
 use crate::enums::{Bucket, CapMode};
 use crate::ActorCoreResult;
+use std::path::PathBuf;
+use serde::{Deserialize, Serialize};
 
 /// Resource Manager Subsystem for managing game resources
 #[derive(Debug, Clone)]
@@ -80,16 +82,39 @@ pub enum RegenType {
 impl ResourceManagerSubsystem {
     /// Create a new Resource Manager Subsystem
     pub fn new() -> Self {
-        let mut resource_definitions = HashMap::new();
-        
-        // Initialize core resource definitions
-        Self::initialize_core_resources(&mut resource_definitions);
+        let resource_definitions = Self::try_load_definitions_from_config()
+            .unwrap_or_else(|_| {
+                let mut defs = HashMap::new();
+                Self::initialize_core_resources(&mut defs);
+                defs
+            });
         
         Self {
             system_id: "resource_manager".to_string(),
             priority: 100,
             resource_definitions,
         }
+    }
+
+    /// Attempt to load resource definitions from ACTOR_CORE_CONFIG_DIR/resources.(yaml|json)
+    fn try_load_definitions_from_config() -> Result<HashMap<String, ResourceDefinition>, String> {
+        let cfg_dir = std::env::var("ACTOR_CORE_CONFIG_DIR").map_err(|e| e.to_string())?;
+        let mut defs: HashMap<String, ResourceDefinition> = HashMap::new();
+        let yaml = PathBuf::from(&cfg_dir).join("resources.yaml");
+        let json = PathBuf::from(&cfg_dir).join("resources.json");
+        if yaml.exists() {
+            let content = std::fs::read_to_string(&yaml).map_err(|e| e.to_string())?;
+            let cfg: ResourcesConfig = serde_yaml::from_str(&content).map_err(|e| e.to_string())?;
+            for r in cfg.resources { defs.insert(r.id.clone(), r.into()); }
+            return Ok(defs);
+        }
+        if json.exists() {
+            let content = std::fs::read_to_string(&json).map_err(|e| e.to_string())?;
+            let cfg: ResourcesConfig = serde_json::from_str(&content).map_err(|e| e.to_string())?;
+            for r in cfg.resources { defs.insert(r.id.clone(), r.into()); }
+            return Ok(defs);
+        }
+        Err("resources config not found".into())
     }
     
     /// Initialize core resource definitions
@@ -179,9 +204,6 @@ impl ResourceManagerSubsystem {
             if definition.regen_rate > 0.0 {
                 resources.insert(format!("{}_regen", resource_id), definition.regen_rate);
             }
-            
-            // Calculate percentage (initially 100%)
-            resources.insert(format!("{}_percentage", resource_id), 100.0);
         }
         
         resources
@@ -240,42 +262,33 @@ impl ResourceManagerSubsystem {
     }
     
     /// Create contributions from resource values
-    fn create_contributions(&self, resources: HashMap<String, f64>) -> SubsystemOutput {
+    fn create_contributions(&self, resources: HashMap<String, f64>, actor: &Actor) -> SubsystemOutput {
         let mut output = SubsystemOutput::new(self.system_id.clone());
         
         for (dimension, value) in resources {
-            // Determine bucket type based on dimension
             let bucket = self.get_bucket_for_dimension(&dimension);
-            
-            // Create primary contribution
-            let contribution = Contribution::new(
+            let mut contribution = Contribution::new(
                 dimension.clone(),
                 bucket,
                 value,
                 self.system_id.clone(),
             );
-            
-            // Add to appropriate category
-            if dimension.ends_with("_percentage") {
-                output.add_derived(contribution);
-            } else {
-                output.add_primary(contribution);
-            }
+            contribution.priority = Some(100);
+            output.add_primary(contribution);
         }
         
         // Add cap contributions for resource limits
         self.add_cap_contributions(&mut output);
         
+        // Emit tick/decay/offline adjustments
+        self.emit_time_based_contributions(&mut output, actor);
+        
         output
     }
     
     /// Get bucket type for a dimension
-    fn get_bucket_for_dimension(&self, dimension: &str) -> Bucket {
-        if dimension.ends_with("_percentage") {
-            Bucket::Override // Percentages are calculated, not accumulated
-        } else {
-            Bucket::Flat // Most resources are additive
-        }
+    fn get_bucket_for_dimension(&self, _dimension: &str) -> Bucket {
+        Bucket::Flat
     }
     
     /// Add cap contributions for resource limits
@@ -326,10 +339,115 @@ impl Subsystem for ResourceManagerSubsystem {
         let resources = self.calculate_base_resources(actor);
         
         // Create contributions
-        let output = self.create_contributions(resources);
+        let output = self.create_contributions(resources, actor);
         
         Ok(output)
     }
+}
+
+// === Resource config structures ===
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+struct ResourcesConfig { resources: Vec<ResourceDefConfig> }
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+struct ResourceDefConfig {
+    id: String,
+    name: Option<String>,
+    category: Option<String>,
+    resource_type: Option<String>,
+    base_value: Option<f64>,
+    min_value: Option<f64>,
+    max_value: Option<f64>,
+    regen_rate: Option<f64>,
+    regen_type: Option<String>,
+    dependencies: Option<Vec<String>>,
+    tags: Option<HashMap<String, String>>,
+}
+
+impl From<ResourceDefConfig> for ResourceDefinition {
+    fn from(cfg: ResourceDefConfig) -> Self {
+        let category = match cfg.category.as_deref() {
+            Some("health") => ResourceCategory::Health,
+            Some("energy") => ResourceCategory::Energy,
+            Some("physical") => ResourceCategory::Physical,
+            Some("cultivation") => ResourceCategory::Cultivation,
+            _ => ResourceCategory::Special,
+        };
+        let resource_type = match cfg.resource_type.as_deref() {
+            Some("current") => ResourceType::Current,
+            Some("max") => ResourceType::Max,
+            Some("regen") => ResourceType::Regen,
+            Some("percentage") => ResourceType::Percentage,
+            _ => ResourceType::Current,
+        };
+        let regen_type = match cfg.regen_type.as_deref() {
+            Some("continuous") => RegenType::Continuous,
+            Some("tick") => RegenType::Tick,
+            Some("conditional") => RegenType::Conditional,
+            _ => RegenType::None,
+        };
+        ResourceDefinition {
+            id: cfg.id,
+            name: cfg.name.unwrap_or_else(|| "".to_string()),
+            category,
+            resource_type,
+            base_value: cfg.base_value.unwrap_or(0.0),
+            min_value: cfg.min_value.unwrap_or(0.0),
+            max_value: cfg.max_value.unwrap_or(f64::INFINITY),
+            regen_rate: cfg.regen_rate.unwrap_or(0.0),
+            regen_type,
+            dependencies: cfg.dependencies.unwrap_or_default(),
+            tags: cfg.tags.unwrap_or_default(),
+        }
+    }
+}
+
+impl ResourceManagerSubsystem {
+    fn emit_time_based_contributions(&self, output: &mut SubsystemOutput, actor: &Actor) {
+        let delta = actor.get_data().get("tick_delta_seconds").and_then(|v| v.as_f64()).unwrap_or(0.0);
+        if delta > 0.0 {
+            // regen to current
+            for (rid, def) in &self.resource_definitions {
+                if def.regen_rate > 0.0 {
+                    let dim = format!("{}_current", rid);
+                    let mut c = Contribution::new(dim, Bucket::Flat, def.regen_rate * delta, self.system_id.clone());
+                    c.priority = Some(90);
+                    output.add_primary(c);
+                }
+            }
+            // shield decay
+            if let Some(decay) = actor.get_data().get("shield_decay_per_second").and_then(|v| v.as_f64()) {
+                let mut c = Contribution::new("shield_current".into(), Bucket::Flat, -decay * delta, self.system_id.clone());
+                c.priority = Some(95);
+                output.add_primary(c);
+            }
+        }
+        // offline catch-up
+        if let Some(off_secs) = actor.get_data().get("offline_seconds").and_then(|v| v.as_f64()) {
+            let max_secs = actor.get_data().get("offline_regen_max_seconds").and_then(|v| v.as_f64()).unwrap_or(0.0);
+            let window = off_secs.min(max_secs);
+            if window > 0.0 {
+                for (rid, def) in &self.resource_definitions {
+                    if def.regen_rate > 0.0 {
+                        // apply to mana/stamina always, hp only if out of combat
+                        let apply = if rid == "hp" { !actor.is_in_combat() } else { true };
+                        if apply {
+                            let dim = format!("{}_current", rid);
+                            let mut c = Contribution::new(dim, Bucket::Flat, def.regen_rate * window, self.system_id.clone());
+                            c.priority = Some(85);
+                            output.add_primary(c);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Convenience registration helper
+pub fn register_with(plugin: &dyn crate::interfaces::PluginRegistry) -> crate::ActorCoreResult<()> {
+    plugin.register(Box::new(ResourceManagerSubsystem::new()))
 }
 
 #[cfg(test)]
@@ -373,7 +491,7 @@ mod tests {
         
         let output = result.unwrap();
         assert!(!output.primary.is_empty());
-        assert!(!output.derived.is_empty());
+        // Derived percentages are not emitted by subsystem; computed via operator-mode elsewhere
         assert!(!output.caps.is_empty());
     }
     

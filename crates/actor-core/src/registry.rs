@@ -531,7 +531,10 @@ pub struct RegistryFactory;
 impl RegistryFactory {
     /// Create a new plugin registry instance.
     pub fn create_plugin_registry() -> Arc<dyn PluginRegistry> {
-        Arc::new(PluginRegistryImpl::new())
+        let registry: Arc<dyn PluginRegistry> = Arc::new(PluginRegistryImpl::new());
+        // Register default subsystems
+        let _ = crate::subsystems::resource_manager::register_with(&*registry);
+        registry
     }
 
     /// Create a new combiner registry instance.

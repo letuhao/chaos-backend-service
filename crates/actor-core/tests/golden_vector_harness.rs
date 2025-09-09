@@ -1,7 +1,8 @@
 use actor_core::{RegistryFactory, ServiceFactory, CacheFactory};
+use actor_core::interfaces::PluginRegistry;
 use actor_core::interfaces::Subsystem as SubsystemTrait;
-use actor_core::types::{SubsystemOutput, Contribution};
-use actor_core::enums::Bucket;
+use actor_core::types::{SubsystemOutput, Contribution, CapContribution};
+use actor_core::enums::{Bucket, CapMode};
 use serde::Deserialize;
 use std::fs;
 use std::path::Path;
@@ -12,7 +13,7 @@ struct InputContribution { #[allow(dead_code)] dimension: String, #[allow(dead_c
 #[derive(Deserialize)]
 struct VectorFile { #[allow(dead_code)] actor_id: String, #[allow(dead_code)] version: i32, #[allow(dead_code)] inputs: Vec<InputContribution> }
 
-struct InlineSubsystem { id: String, prio: i64, contribs: Vec<Contribution> }
+struct InlineSubsystem { id: String, prio: i64, contribs: Vec<Contribution>, caps: Vec<CapContribution> }
 
 #[async_trait::async_trait]
 impl SubsystemTrait for InlineSubsystem {
@@ -21,18 +22,19 @@ impl SubsystemTrait for InlineSubsystem {
     async fn contribute(&self, _actor: &actor_core::types::Actor) -> actor_core::ActorCoreResult<SubsystemOutput> {
         let mut out = SubsystemOutput::new(self.id.clone());
         for c in &self.contribs { out.add_primary(c.clone()); }
+        for cap in &self.caps { out.add_cap(cap.clone()); }
         Ok(out)
     }
 }
 
 #[test]
 fn run_golden_vector_case01_damage_heal() {
-    run_case("docs/resource-manager/golden_vectors/case01_damage_and_heal_same_tick");
+    run_case("../../docs/resource-manager/golden_vectors/case01_damage_and_heal_same_tick");
 }
 
 #[test]
 fn run_golden_vector_case02_ooc_regen() {
-    run_case("docs/resource-manager/golden_vectors/case02_ooc_regen");
+    run_case("../../docs/resource-manager/golden_vectors/case02_ooc_regen");
 }
 
 fn run_case(dir: &str) {
@@ -47,6 +49,8 @@ fn run_case(dir: &str) {
 
     // Build minimal aggregator (registry + caps + cache)
     let plugin = RegistryFactory::create_plugin_registry();
+    // Remove default resource subsystem to avoid double counting in harness
+    let _ = plugin.unregister("resource_manager");
     let combiner = RegistryFactory::create_combiner_registry();
     let cap_layers = RegistryFactory::create_cap_layer_registry();
     let caps = ServiceFactory::create_caps_provider(cap_layers);
@@ -55,6 +59,7 @@ fn run_case(dir: &str) {
 
     // Map inputs into contributions, with optional tick/decay/offline policies
     let mut contribs: Vec<Contribution> = Vec::new();
+    let mut caps_vec: Vec<CapContribution> = Vec::new();
     if let Some(inputs) = parsed.get("inputs").and_then(|v| v.as_array()) {
         for it in inputs {
             let dim = it.get("dimension").and_then(|v| v.as_str()).unwrap().to_string();
@@ -63,6 +68,28 @@ fn run_case(dir: &str) {
             let system = it.get("system").and_then(|v| v.as_str()).unwrap().to_string();
             let bucket = match bucket_s.as_str() { "FLAT"=>Bucket::Flat, "MULT"=>Bucket::Mult, "POST_ADD"=>Bucket::PostAdd, "OVERRIDE"=>Bucket::Override, _=>Bucket::Flat };
             contribs.push(Contribution{ dimension: dim, bucket, value, system, priority: Some(100), tags: None });
+        }
+    }
+
+    // Parse caps from vector (optional)
+    if let Some(caps) = parsed.get("caps").and_then(|v| v.as_array()) {
+        for cap in caps {
+            let dim = cap.get("dimension").and_then(|v| v.as_str()).unwrap().to_string();
+            let mode_s = cap.get("mode").and_then(|v| v.as_str()).unwrap().to_string();
+            let kind = cap.get("kind").and_then(|v| v.as_str()).unwrap().to_string();
+            let value = cap.get("value").and_then(|v| v.as_f64()).unwrap();
+            let mode = match mode_s.as_str() {
+                "BASELINE"=>CapMode::Baseline,
+                "ADDITIVE"=>CapMode::Additive,
+                "HARD_MIN"=>CapMode::HardMin,
+                "HARD_MAX"=>CapMode::HardMax,
+                "OVERRIDE"=>CapMode::Override,
+                _=>CapMode::HardMin,
+            };
+            let mut cc = CapContribution::new("inline_res".into(), dim, mode, kind, value);
+            cc.priority = Some(100);
+            cc.scope = Some("total".into());
+            caps_vec.push(cc);
         }
     }
 
@@ -96,8 +123,17 @@ fn run_case(dir: &str) {
         }
     }
 
+    // Ensure shield_current is clamped to >=0 if it appears in inputs
+    let has_shield = contribs.iter().any(|c| c.dimension == "shield_current");
+    if has_shield && !caps_vec.iter().any(|c| c.dimension == "shield_current" && matches!(c.mode, CapMode::HardMin|CapMode::Baseline|CapMode::Override)) {
+        let mut cc = CapContribution::new("inline_res".into(), "shield_current".into(), CapMode::HardMin, "min".into(), 0.0);
+        cc.priority = Some(100);
+        cc.scope = Some("total".into());
+        caps_vec.push(cc);
+    }
+
     // Register inline subsystem
-    let inline = InlineSubsystem{ id: "inline_res".into(), prio: 100, contribs };
+    let inline = InlineSubsystem{ id: "inline_res".into(), prio: 100, contribs, caps: caps_vec };
     plugin.register(Box::new(inline)).expect("register subsystem");
 
     // Build dummy actor
