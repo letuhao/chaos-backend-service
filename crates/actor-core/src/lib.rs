@@ -11,12 +11,19 @@ pub mod registry;
 pub mod cache;
 pub mod constants;
 pub mod error;
+pub mod pools;
+pub mod performance;
+
+#[cfg(test)]
+mod integration_tests;
 
 // Re-export commonly used types
-pub use types::*;
 pub use enums::*;
-pub use interfaces::*;
 pub use services::*;
 pub use registry::*;
 pub use cache::*;
 pub use error::*;
+
+// Re-export specific types to avoid conflicts
+pub use types::{Actor, Contribution, CapContribution, Subsystem as SubsystemStruct, SubsystemOutput, Snapshot, Caps, ModifierPack};
+pub use interfaces::{Subsystem as SubsystemTrait, Aggregator, CapsProvider, PluginRegistry, CombinerRegistry, CapLayerRegistry, Cache};

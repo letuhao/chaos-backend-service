@@ -4,28 +4,28 @@ members = [
     # Libraries
     "crates/shared",
     "crates/actor-core",
-    "crates/combat-core", 
-    "crates/leveling-core",
-    "crates/race-core",
-    "crates/world-core",
-    "crates/event-core",
-    "crates/item-core",
-    "crates/job-core",
-    "crates/generator-core",
-    "crates/api",
+    # "crates/combat-core", 
+    # "crates/leveling-core",
+    # "crates/race-core",
+    # "crates/world-core",
+    # "crates/event-core",
+    # "crates/item-core",
+    # "crates/job-core",
+    # "crates/generator-core",
+    # "crates/api",
     
     # Services (binaries)
-    "services/chaos-backend",
-    "services/actor-service",
-    "services/combat-service",
-    "services/world-service",
-    "services/event-service",
+    # "services/chaos-backend",
+    # "services/actor-service",
+    # "services/combat-service",
+    # "services/world-service",
+    # "services/event-service",
     
     # Tools
     "tools/migrate",
     "tools/load-test",
-    "tools/data-gen",
-    "tools/admin-cli",
+    # "tools/data-gen",
+    # "tools/admin-cli",
 ]
 
 [workspace.package]
@@ -54,7 +54,7 @@ crossbeam = "0.8"
 parking_lot = "0.12"
 
 # Caching
-moka = "0.12"
+moka = { version = "0.12", features = ["sync", "future"] }
 memmap2 = "0.9"
 flate2 = "1.0"
 
@@ -107,17 +107,13 @@ cargo-make = "0.37"
 [workspace.lints.rust]
 unsafe_code = "forbid"
 missing_docs = "warn"
-clippy::all = "warn"
-clippy::pedantic = "warn"
-clippy::nursery = "warn"
-clippy::cargo = "warn"
 
 [workspace.lints.clippy]
 # Performance
-all = true
-pedantic = true
-nursery = true
-cargo = true
+all = "warn"
+pedantic = "warn"
+nursery = "warn"
+cargo = "warn"
 
 # Disable some overly pedantic lints
 too_many_arguments = "allow"

@@ -38,6 +38,10 @@ pub enum ActorCoreError {
     #[error("Configuration error: {0}")]
     ConfigurationError(String),
 
+    /// Invalid input error
+    #[error("Invalid input: {0}")]
+    InvalidInput(String),
+
     /// Wrapper for shared errors
     #[error(transparent)]
     Shared(#[from] ChaosError),
