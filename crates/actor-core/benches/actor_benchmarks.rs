@@ -5,11 +5,10 @@
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId, Throughput};
 use actor_core::types::*;
-use actor_core::enums::*;
 use actor_core::services::{AggregatorImpl, CapsProviderImpl};
-use actor_core::registry::{PluginRegistryImpl, CapLayerRegistryImpl, CombinerRegistryImpl};
-use actor_core::interfaces::{Aggregator, CapsProvider, PluginRegistry, Cache};
-use actor_core::InMemoryCache;
+use actor_core::registry::{PluginRegistryImpl, CapLayerRegistryImpl};
+use actor_core::interfaces::{PluginRegistry, Cache};
+use actor_core::{InMemoryCache, ActorCoreResult};
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
@@ -28,28 +27,33 @@ impl BenchmarkSubsystem {
 
 #[async_trait::async_trait]
 impl actor_core::interfaces::Subsystem for BenchmarkSubsystem {
-    async fn process(&self, _actor: &Actor) -> ActorCoreResult<SubsystemOutput> {
+    fn system_id(&self) -> &str {
+        &self.id
+    }
+    
+    fn priority(&self) -> i64 {
+        100
+    }
+    
+    async fn contribute(&self, _actor: &Actor) -> ActorCoreResult<SubsystemOutput> {
         // Simulate processing time
         tokio::time::sleep(self.processing_time).await;
         
         Ok(SubsystemOutput {
-            primary: {
-                let mut stats = HashMap::new();
-                stats.insert("strength".to_string(), 100.0);
-                stats.insert("agility".to_string(), 80.0);
-                stats.insert("intelligence".to_string(), 90.0);
-                stats
-            },
-            derived: {
-                let mut stats = HashMap::new();
-                stats.insert("health".to_string(), 200.0);
-                stats.insert("mana".to_string(), 150.0);
-                stats
-            },
-            contributions: vec![
-                Contribution::new("combat".to_string(), Bucket::Flat, 10.0, "weapon".to_string()),
-                Contribution::new("magic".to_string(), Bucket::Mult, 1.2, "spell".to_string()),
+            primary: vec![
+                Contribution::new("strength".to_string(), Bucket::Flat, 100.0, "weapon".to_string()),
+                Contribution::new("agility".to_string(), Bucket::Flat, 80.0, "weapon".to_string()),
+                Contribution::new("intelligence".to_string(), Bucket::Flat, 90.0, "weapon".to_string()),
             ],
+            derived: vec![
+                Contribution::new("health".to_string(), Bucket::Flat, 200.0, "weapon".to_string()),
+                Contribution::new("mana".to_string(), Bucket::Flat, 150.0, "weapon".to_string()),
+            ],
+            caps: vec![
+                CapContribution::new("combat".to_string(), "strength".to_string(), CapMode::HardMax, "weapon".to_string(), 200.0),
+            ],
+            context: Some(ModifierPack::new()),
+            meta: SubsystemMeta::new("combat".to_string()),
         })
     }
 }
@@ -72,11 +76,11 @@ pub fn bench_actor_operations(c: &mut Criterion) {
         });
         
         group.bench_with_input(BenchmarkId::new("actor_data_operations", count), count, |b, &count| {
-            let mut actors: Vec<Actor> = (0..count)
-                .map(|i| Actor::new(format!("Actor_{}", i), "Human".to_string()))
-                .collect();
-            
             b.iter(|| {
+                let mut actors: Vec<Actor> = (0..count)
+                    .map(|i| Actor::new(format!("Actor_{}", i), "Human".to_string()))
+                    .collect();
+                
                 for (i, actor) in actors.iter_mut().enumerate() {
                     let mut data = HashMap::new();
                     data.insert("level".to_string(), serde_json::Value::Number(serde_json::Number::from(i as i64)));
@@ -87,7 +91,7 @@ pub fn bench_actor_operations(c: &mut Criterion) {
                     actor.set_combat_duration(60);
                     actor.set_guild_id(format!("guild_{}", i % 10));
                 }
-                black_box(&actors)
+                black_box(actors)
             })
         });
     }
@@ -206,14 +210,14 @@ pub fn bench_aggregation_performance(c: &mut Criterion) {
             b.iter(|| {
                 // Setup
                 let cache = Arc::new(InMemoryCache::new(1000, 3600));
-                let mut registry = PluginRegistryImpl::new();
+                let registry = PluginRegistryImpl::new();
                 
                 // Register subsystems
                 for i in 0..subsystem_count {
-                    let subsystem = Arc::new(BenchmarkSubsystem::new(
+                    let subsystem = BenchmarkSubsystem::new(
                         format!("subsystem_{}", i),
                         Duration::from_millis(1) // 1ms processing time
-                    ));
+                    );
                     registry.register(Box::new(subsystem)).unwrap();
                 }
                 
@@ -228,12 +232,12 @@ pub fn bench_aggregation_performance(c: &mut Criterion) {
                 // Create test actor
                 let mut actor = Actor::new("TestActor".to_string(), "Human".to_string());
                 for i in 0..subsystem_count {
-                    let subsystem = Subsystem::new(format!("subsystem_{}", i), "benchmark".to_string());
+                    let subsystem = Subsystem::new(format!("subsystem_{}", i), 100);
                     actor.add_subsystem(subsystem);
                 }
                 
                 // Benchmark aggregation - simplified for sync benchmark
-                black_box(&aggregator)
+                black_box(aggregator)
             })
         });
     }
@@ -257,7 +261,7 @@ pub fn bench_cache_performance(c: &mut Criterion) {
                 for i in 0..size {
                     let key = format!("key_{}", i);
                     let value = format!("value_{}", i);
-                    cache.set(key.clone(), serde_json::Value::String(value), Some(60));
+                    let _ = cache.set(key.clone(), serde_json::Value::String(value), Some(60));
                 }
                 
                 // Get operations
@@ -270,7 +274,7 @@ pub fn bench_cache_performance(c: &mut Criterion) {
                 for i in 0..size {
                     let key = format!("key_{}", i);
                     let value = format!("updated_value_{}", i);
-                    cache.set(key.clone(), serde_json::Value::String(value), Some(60));
+                    let _ = cache.set(key.clone(), serde_json::Value::String(value), Some(60));
                 }
                 
                 black_box(&cache)
@@ -307,7 +311,7 @@ pub fn bench_memory_usage(c: &mut Criterion) {
                 
                 // Add many subsystems
                 for i in 0..(size / 100) {
-                    let subsystem = Subsystem::new(format!("subsystem_{}", i), "benchmark".to_string());
+                    let subsystem = Subsystem::new(format!("subsystem_{}", i), 100);
                     actor.add_subsystem(subsystem);
                 }
                 

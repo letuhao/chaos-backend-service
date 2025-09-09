@@ -1,0 +1,12 @@
+# configs/combiner.yaml — example
+rules:
+  - id: "attack"
+    bucket_order: ["FLAT", "MULT", "POST_ADD", "OVERRIDE"]
+    clamp:
+      min: 0
+      max: 99999
+  - id: "defense"
+    bucket_order: ["FLAT", "MULT", "POST_ADD", "OVERRIDE"]
+    clamp:
+      min: 0
+      max: 99999

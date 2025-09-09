@@ -6,7 +6,6 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId, Throughput};
 use actor_core::registry::loader::*;
 use actor_core::interfaces::{CapLayerRegistry, CombinerRegistry};
-use std::path::Path;
 use tempfile::NamedTempFile;
 use std::io::Write;
 
@@ -102,10 +101,10 @@ pub fn bench_combined_loading(c: &mut Criterion) {
             
             let mut combiner_file = NamedTempFile::new().unwrap();
             combiner_file.write_all(combiner_content.as_bytes()).unwrap();
-            let combiner_path = combiner_file.path();
+            let _combiner_path = combiner_file.path();
             
             b.iter(|| {
-                let result = load_all(cap_layers_path, combiner_path);
+                let result = load_all(cap_layers_path);
                 black_box(result)
             })
         });
@@ -143,12 +142,11 @@ pub fn bench_json_parsing(c: &mut Criterion) {
         
         group.bench_with_input(BenchmarkId::new("parse_json", size), size, |b, &size| {
             let yaml_content = generate_cap_layers_yaml(size);
-            let json_content = serde_yaml::from_str::<serde_yaml::Value>(&yaml_content)
-                .unwrap()
-                .to_string();
+              let json_content = serde_yaml::from_str::<serde_yaml::Value>(&yaml_content)
+                .unwrap();
             
             b.iter(|| {
-                let result: Result<serde_json::Value, _> = serde_json::from_str(&json_content);
+                let result: Result<serde_json::Value, _> = serde_json::from_str(&serde_yaml::to_string(&json_content).unwrap());
                 black_box(result)
             })
         });
@@ -216,7 +214,7 @@ pub fn bench_registry_operations(c: &mut Criterion) {
                 let _policy = registry.get_across_layer_policy();
                 
                 for i in 0..size {
-                    let _layer = registry.get_layer(&format!("layer_{}", i));
+                    let _layer = registry.get_layer_order().iter().find(|l| **l == format!("layer_{}", i));
                 }
                 
                 black_box(&registry)

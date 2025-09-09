@@ -5,7 +5,6 @@
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId, Throughput};
 use actor_core::types::*;
-use actor_core::enums::*;
 use actor_core::bucket_processor::*;
 use std::collections::HashMap;
 
@@ -42,7 +41,7 @@ fn generate_caps(count: usize) -> HashMap<String, Caps> {
 }
 
 /// Benchmark contribution validation
-pub pub fn bench_contribution_validation(c: &mut Criterion) {
+pub fn bench_contribution_validation(c: &mut Criterion) {
     let mut group = c.benchmark_group("contribution_validation");
     
     for count in [100, 1000, 10000].iter() {
@@ -79,7 +78,11 @@ pub fn bench_bucket_ordering(c: &mut Criterion) {
             let contributions = generate_contributions(count);
             
             b.iter(|| {
-                let grouped = group_contributions_by_bucket(&contributions);
+                // Group contributions by bucket type for processing
+                let mut grouped: HashMap<Bucket, Vec<&Contribution>> = HashMap::new();
+                for contrib in &contributions {
+                    grouped.entry(contrib.bucket).or_insert_with(Vec::new).push(contrib);
+                }
                 black_box(grouped)
             })
         });
@@ -119,8 +122,8 @@ pub fn bench_contribution_processing_distributions(c: &mut Criterion) {
                         })
                         .collect();
                     
-                    let caps = generate_caps(20); // 20 different stat caps
-                    let effective_caps = HashMap::new(); // No effective caps for this test
+                    let _caps = generate_caps(20); // 20 different stat caps
+                    let _effective_caps: HashMap<String, Caps> = HashMap::new(); // No effective caps for this test
                     
                     b.iter(|| {
                         let result = process_contributions_in_order(contributions.clone(), 0.0, None);
@@ -143,8 +146,8 @@ pub fn bench_contribution_processing_with_clamping(c: &mut Criterion) {
         
         group.bench_with_input(BenchmarkId::new("process_with_caps", count), count, |b, &count| {
             let contributions = generate_contributions(count);
-            let caps = generate_caps(20); // 20 different stat caps
-            let effective_caps = HashMap::new();
+            let _caps = generate_caps(20); // 20 different stat caps
+            let _effective_caps: HashMap<String, Caps> = HashMap::new();
             
             b.iter(|| {
                 let result = process_contributions_in_order(contributions.clone(), 0.0, None);
@@ -154,8 +157,8 @@ pub fn bench_contribution_processing_with_clamping(c: &mut Criterion) {
         
         group.bench_with_input(BenchmarkId::new("process_with_effective_caps", count), count, |b, &count| {
             let contributions = generate_contributions(count);
-            let caps = generate_caps(20);
-            let effective_caps = generate_caps(20); // Same caps as effective caps
+            let _caps = generate_caps(20);
+            let _effective_caps = generate_caps(20); // Same caps as effective caps
             
             b.iter(|| {
                 let result = process_contributions_in_order(contributions.clone(), 0.0, None);
@@ -202,8 +205,8 @@ pub fn bench_contribution_processing_stat_distributions(c: &mut Criterion) {
                         })
                         .collect();
                     
-                    let caps = generate_caps(*stat_count);
-                    let effective_caps = HashMap::new();
+                    let _caps = generate_caps(*stat_count);
+                    let _effective_caps: HashMap<String, Caps> = HashMap::new();
                     
                     b.iter(|| {
                         let result = process_contributions_in_order(contributions.clone(), 0.0, None);
@@ -254,8 +257,8 @@ pub fn bench_contribution_processing_value_ranges(c: &mut Criterion) {
                         })
                         .collect();
                     
-                    let caps = generate_caps(20);
-                    let effective_caps = HashMap::new();
+                    let _caps = generate_caps(20);
+                    let _effective_caps: HashMap<String, Caps> = HashMap::new();
                     
                     b.iter(|| {
                         let result = process_contributions_in_order(contributions.clone(), 0.0, None);
@@ -304,8 +307,8 @@ pub fn bench_contribution_processing_source_distributions(c: &mut Criterion) {
                         })
                         .collect();
                     
-                    let caps = generate_caps(20);
-                    let effective_caps = HashMap::new();
+                    let _caps = generate_caps(20);
+                    let _effective_caps: HashMap<String, Caps> = HashMap::new();
                     
                     b.iter(|| {
                         let result = process_contributions_in_order(contributions.clone(), 0.0, None);
@@ -348,8 +351,8 @@ pub fn bench_contribution_processing_extra_buckets(c: &mut Criterion) {
                 })
                 .collect();
             
-            let caps = generate_caps(20);
-            let effective_caps = HashMap::new();
+            let _caps = generate_caps(20);
+            let _effective_caps: HashMap<String, Caps> = HashMap::new();
             
             b.iter(|| {
                 let result = process_contributions_in_order(contributions.clone(), 0.0, None);

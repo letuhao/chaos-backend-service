@@ -4,7 +4,6 @@
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId, Throughput};
 use actor_core::types::*;
-use actor_core::enums::*;
 use actor_core::bucket_processor::*;
 use std::collections::HashMap;
 

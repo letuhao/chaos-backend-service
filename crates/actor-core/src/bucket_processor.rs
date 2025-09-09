@@ -127,6 +127,7 @@ fn apply_extra_bucket_contribution(
 /// 
 /// Returns buckets in the order they should be processed.
 pub fn get_bucket_processing_order() -> Vec<Bucket> {
+    #[allow(unused_mut)] // mut is needed when extra_buckets feature is enabled
     let mut order = vec![
         Bucket::Flat,
         Bucket::Mult,

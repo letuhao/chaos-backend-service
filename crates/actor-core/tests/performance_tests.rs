@@ -151,7 +151,7 @@ async fn benchmark_caps_operations() {
     
     // Benchmark range operations
     let start = Instant::now();
-    for i in 0..ITERATIONS {
+    for _i in 0..ITERATIONS {
         let _range = caps.get_range();
         let _center = caps.get_center();
     }
@@ -177,7 +177,7 @@ async fn benchmark_caps_modifications() {
     
     // Benchmark expansion operations
     let start = Instant::now();
-    for i in 0..ITERATIONS {
+    for _i in 0..ITERATIONS {
         caps.expand(1.0);
     }
     let expansion_duration = start.elapsed();
@@ -187,7 +187,7 @@ async fn benchmark_caps_modifications() {
     
     // Benchmark shrinking operations
     let start = Instant::now();
-    for i in 0..ITERATIONS {
+    for _i in 0..ITERATIONS {
         caps.shrink(0.1);
     }
     let shrinking_duration = start.elapsed();
