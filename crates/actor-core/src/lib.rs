@@ -25,5 +25,5 @@ pub use cache::*;
 pub use error::*;
 
 // Re-export specific types to avoid conflicts
-pub use types::{Actor, Contribution, CapContribution, Subsystem as SubsystemStruct, SubsystemOutput, Snapshot, Caps, ModifierPack};
+pub use types::{Actor, Contribution, CapContribution, Subsystem as SubsystemStruct, SubsystemOutput, Snapshot, Caps, ModifierPack, EffectiveCaps};
 pub use interfaces::{Subsystem as SubsystemTrait, Aggregator, CapsProvider, PluginRegistry, CombinerRegistry, CapLayerRegistry, Cache};

@@ -9,6 +9,10 @@ use chrono::Utc;
 use uuid::Uuid;
 use shared::{EntityId, Timestamp, Version, GameEntity};
 
+/// Type alias for effective caps mapping.
+/// Maps dimension names to their effective cap values.
+pub type EffectiveCaps = HashMap<String, Caps>;
+
 /// Actor represents a game character with stats and subsystems.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Actor {
@@ -1158,6 +1162,23 @@ mod tests {
         // Test getting caps
         assert!(snapshot.get_caps("strength").is_some());
         assert!(snapshot.get_caps("dexterity").is_none());
+    }
+    
+    #[test]
+    fn test_effective_caps_alias() {
+        use crate::EffectiveCaps;
+        
+        let mut effective_caps: EffectiveCaps = HashMap::new();
+        effective_caps.insert("attack".to_string(), Caps::new(0.0, 100.0));
+        effective_caps.insert("defense".to_string(), Caps::new(0.0, 50.0));
+        
+        assert_eq!(effective_caps.len(), 2);
+        assert!(effective_caps.contains_key("attack"));
+        assert!(effective_caps.contains_key("defense"));
+        
+        let attack_caps = effective_caps.get("attack").unwrap();
+        assert_eq!(attack_caps.get_min(), 0.0);
+        assert_eq!(attack_caps.get_max(), 100.0);
     }
 }
 
