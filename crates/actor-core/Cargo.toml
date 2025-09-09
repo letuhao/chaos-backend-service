@@ -6,18 +6,23 @@ authors.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "Character stat aggregation and management system for Chaos World MMORPG"
+rust-version = "1.89"
+
+[features]
+default = []
+extra_buckets = []
 
 [dependencies]
 # Workspace dependencies
 shared = { path = "../shared" }
 
 # Core dependencies
-serde = { workspace = true }
-serde_json = { workspace = true }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
 uuid = { workspace = true }
 chrono = { workspace = true }
-anyhow = { workspace = true }
-thiserror = { workspace = true }
+anyhow = "1"
+thiserror = "1"
 tracing = { workspace = true }
 async-trait = { workspace = true }
 tokio = { workspace = true }
@@ -40,8 +45,12 @@ crc32fast = "1.3"
 seahash = "4.1"
 num_cpus = "1.16"
 rand = "0.8"
+serde_yaml = "0.9"
 
 [dev-dependencies]
 tokio = { workspace = true }
 proptest = { workspace = true }
 criterion = { workspace = true }
+tempfile = "3"
+
+# CI and quality tools

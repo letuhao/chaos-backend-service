@@ -9,6 +9,10 @@ use chrono::Utc;
 use uuid::Uuid;
 use shared::{EntityId, Timestamp, Version, GameEntity};
 
+/// Type alias for effective caps mapping.
+/// Maps dimension names to their effective cap values.
+pub type EffectiveCaps = HashMap<String, Caps>;
+
 /// Actor represents a game character with stats and subsystems.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Actor {
@@ -711,8 +715,11 @@ impl Snapshot {
             Bucket::Mult => current_value * contribution.value,
             Bucket::PostAdd => current_value + contribution.value,
             Bucket::Override => contribution.value,
+            #[cfg(feature = "extra_buckets")]
             Bucket::Exponential => current_value * (1.0 + contribution.value),
+            #[cfg(feature = "extra_buckets")]
             Bucket::Logarithmic => current_value + (contribution.value * current_value.ln()),
+            #[cfg(feature = "extra_buckets")]
             Bucket::Conditional => if contribution.value > 0.0 { contribution.value } else { *current_value },
         };
         self.primary.insert(contribution.dimension, new_value);
@@ -726,8 +733,11 @@ impl Snapshot {
             Bucket::Mult => current_value * contribution.value,
             Bucket::PostAdd => current_value + contribution.value,
             Bucket::Override => contribution.value,
+            #[cfg(feature = "extra_buckets")]
             Bucket::Exponential => current_value * (1.0 + contribution.value),
+            #[cfg(feature = "extra_buckets")]
             Bucket::Logarithmic => current_value + (contribution.value * current_value.ln()),
+            #[cfg(feature = "extra_buckets")]
             Bucket::Conditional => if contribution.value > 0.0 { contribution.value } else { *current_value },
         };
         self.derived.insert(contribution.dimension, new_value);
@@ -1158,6 +1168,56 @@ mod tests {
         // Test getting caps
         assert!(snapshot.get_caps("strength").is_some());
         assert!(snapshot.get_caps("dexterity").is_none());
+    }
+    
+    #[test]
+    fn test_effective_caps_alias() {
+        use crate::EffectiveCaps;
+        
+        let mut effective_caps: EffectiveCaps = HashMap::new();
+        effective_caps.insert("attack".to_string(), Caps::new(0.0, 100.0));
+        effective_caps.insert("defense".to_string(), Caps::new(0.0, 50.0));
+        
+        assert_eq!(effective_caps.len(), 2);
+        assert!(effective_caps.contains_key("attack"));
+        assert!(effective_caps.contains_key("defense"));
+        
+        let attack_caps = effective_caps.get("attack").unwrap();
+        assert_eq!(attack_caps.get_min(), 0.0);
+        assert_eq!(attack_caps.get_max(), 100.0);
+    }
+    
+    #[test]
+    fn test_bucket_feature_flags() {
+        // Test that core buckets are always available
+        let core_buckets = vec![
+            Bucket::Flat,
+            Bucket::Mult,
+            Bucket::PostAdd,
+            Bucket::Override,
+        ];
+        
+        for bucket in core_buckets {
+            assert!(bucket.is_valid());
+            assert!(!bucket.display_name().is_empty());
+            assert!(bucket.priority() > 0);
+        }
+        
+        // Test that extra buckets are only available with feature flag
+        #[cfg(feature = "extra_buckets")]
+        {
+            let extra_buckets = vec![
+                Bucket::Exponential,
+                Bucket::Logarithmic,
+                Bucket::Conditional,
+            ];
+            
+            for bucket in extra_buckets {
+                assert!(bucket.is_valid());
+                assert!(!bucket.display_name().is_empty());
+                assert!(bucket.priority() > 0);
+            }
+        }
     }
 }
 

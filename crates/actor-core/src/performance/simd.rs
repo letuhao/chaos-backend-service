@@ -354,8 +354,11 @@ impl SimdAggregationOptimizer {
                 crate::enums::Bucket::Mult => result *= contribution.value,
                 crate::enums::Bucket::PostAdd => result += contribution.value,
                 crate::enums::Bucket::Override => result = contribution.value,
+                #[cfg(feature = "extra_buckets")]
                 crate::enums::Bucket::Exponential => result = result.powf(contribution.value),
+                #[cfg(feature = "extra_buckets")]
                 crate::enums::Bucket::Logarithmic => result = result.log(contribution.value),
+                #[cfg(feature = "extra_buckets")]
                 crate::enums::Bucket::Conditional => result += contribution.value,
             }
         }

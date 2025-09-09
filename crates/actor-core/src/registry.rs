@@ -3,6 +3,8 @@
 //! This module contains the concrete implementations of the registry traits
 //! including plugin registry, combiner registry, and cap layer registry.
 
+pub mod loader;
+
 use async_trait::async_trait;
 use std::collections::HashMap;
 use std::sync::Arc;

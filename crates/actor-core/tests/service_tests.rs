@@ -5,10 +5,10 @@
 
 use actor_core::types::{Actor, Contribution, SubsystemOutput};
 use actor_core::enums::Bucket;
-use actor_core::interfaces::{Aggregator, CapsProvider, PluginRegistry, CapLayerRegistry, AcrossLayerPolicy};
+use actor_core::interfaces::{Aggregator, CapsProvider, PluginRegistry, AcrossLayerPolicy};
 use actor_core::services::{AggregatorImpl, CapsProviderImpl};
 use actor_core::registry::{CapLayerRegistryImpl, PluginRegistryImpl};
-use actor_core::{RegistryFactory, InMemoryCache};
+use actor_core::InMemoryCache;
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -192,7 +192,7 @@ async fn test_aggregator_impl_cache_operations() {
     // Test get_cached_snapshot
     let cached = aggregator.get_cached_snapshot(&actor.id);
     assert!(cached.is_some());
-    assert_eq!(cached.unwrap().actor_id, actor.id);
+    assert_eq!(cached.unwrap().actor_id, snapshot.actor_id);
     
     // Test invalidate_cache
     aggregator.invalidate_cache(&actor.id);
@@ -200,7 +200,8 @@ async fn test_aggregator_impl_cache_operations() {
     assert!(cached.is_none());
     
     // Test clear_cache
-    let _snapshot = aggregator.resolve(&actor).await.unwrap();
+    let snapshot = aggregator.resolve(&actor).await.unwrap();
+    assert_eq!(snapshot.actor_id, actor.id);
     aggregator.clear_cache();
     let cached = aggregator.get_cached_snapshot(&actor.id);
     assert!(cached.is_none());
@@ -224,8 +225,11 @@ async fn test_aggregator_impl_metrics() {
     let actor = Actor::new("TestActor".to_string(), "Human".to_string());
     
     // Perform some operations
-    let _snapshot = aggregator.resolve(&actor).await.unwrap();
-    let _snapshot = aggregator.resolve(&actor).await.unwrap(); // Should hit cache
+    let snapshot1 = aggregator.resolve(&actor).await.unwrap();
+    let snapshot2 = aggregator.resolve(&actor).await.unwrap(); // Should hit cache
+    
+    // Verify both snapshots are identical (cached)
+    assert_eq!(snapshot1.actor_id, snapshot2.actor_id);
     
     // Test get_metrics
     let metrics = aggregator.get_metrics().await;

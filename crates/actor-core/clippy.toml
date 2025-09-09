@@ -1,0 +1,86 @@
+# Clippy configuration for Actor Core
+
+# Allow some lints that are too strict for our use case
+allow = [
+    "clippy::too_many_arguments",  # Some functions legitimately need many args
+    "clippy::module_name_repetitions",  # Module names are descriptive
+    "clippy::missing_errors_doc",  # We use thiserror for error documentation
+    "clippy::missing_panics_doc",  # We don't panic in public APIs
+    "clippy::must_use_candidate",  # Some functions are designed to be used
+    "clippy::needless_pass_by_value",  # Sometimes we want to take ownership
+    "clippy::new_without_default",  # Not all types need Default
+    "clippy::redundant_closure",  # Sometimes closures are clearer
+    "clippy::single_match_else",  # Sometimes if-else is clearer
+    "clippy::unnecessary_wraps",  # Sometimes wrapping is intentional
+    "clippy::unused_async",  # Some async functions are used in tests
+    "clippy::wildcard_imports",  # We use wildcard imports in tests
+]
+
+# Deny some lints that are important for code quality
+deny = [
+    "clippy::all",
+    "clippy::pedantic",
+    "clippy::nursery",
+    "clippy::cargo",
+]
+
+# Specific configurations
+[clippy::all]
+# Allow some specific lints that are too strict
+allow = [
+    "clippy::too_many_arguments",
+    "clippy::module_name_repetitions",
+    "clippy::missing_errors_doc",
+    "clippy::missing_panics_doc",
+    "clippy::must_use_candidate",
+    "clippy::needless_pass_by_value",
+    "clippy::new_without_default",
+    "clippy::redundant_closure",
+    "clippy::single_match_else",
+    "clippy::unnecessary_wraps",
+    "clippy::unused_async",
+    "clippy::wildcard_imports",
+]
+
+# Performance-related lints
+[clippy::perf]
+# Allow some performance lints that are too strict
+allow = [
+    "clippy::large_enum_variant",  # Some enums legitimately have large variants
+    "clippy::vec_init_then_push",  # Sometimes this is clearer
+]
+
+# Correctness-related lints
+[clippy::correctness]
+# Allow some correctness lints that are too strict
+allow = [
+    "clippy::float_cmp",  # We need to compare floats in tests
+    "clippy::float_equality_without_abs",  # We handle NaN properly
+]
+
+# Style-related lints
+[clippy::style]
+# Allow some style lints that are too strict
+allow = [
+    "clippy::module_name_repetitions",  # Module names are descriptive
+    "clippy::similar_names",  # Some names are legitimately similar
+    "clippy::too_many_lines",  # Some functions are legitimately long
+]
+
+# Complexity-related lints
+[clippy::complexity]
+# Allow some complexity lints that are too strict
+allow = [
+    "clippy::too_many_arguments",  # Some functions legitimately need many args
+    "clippy::too_many_lines",  # Some functions are legitimately long
+    "clippy::cognitive_complexity",  # Some functions are legitimately complex
+]
+
+# Suspicious lints
+[clippy::suspicious]
+# Allow some suspicious lints that are too strict
+allow = [
+    "clippy::float_equality_without_abs",  # We handle NaN properly
+    "clippy::cast_precision_loss",  # Sometimes precision loss is acceptable
+    "clippy::cast_possible_truncation",  # Sometimes truncation is acceptable
+]

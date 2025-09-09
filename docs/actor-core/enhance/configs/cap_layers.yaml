@@ -1,0 +1,26 @@
+# configs/cap_layers.yaml — example
+layers:
+  - name: "base"
+    priority: 0
+    caps:
+      - id: "hp_max"
+        cap_mode: "BASELINE"
+        min: 0
+        max: 999999
+      - id: "attack"
+        cap_mode: "BASELINE"
+        min: 0
+        max: 99999
+  - name: "equipment"
+    priority: 10
+    caps:
+      - id: "attack"
+        cap_mode: "ADDITIVE"
+      - id: "defense"
+        cap_mode: "ADDITIVE"
+  - name: "buffs"
+    priority: 20
+    caps:
+      - id: "attack"
+        cap_mode: "HARD_MAX"
+        max: 5000
