@@ -164,6 +164,7 @@ pub mod error;
 pub mod pools;
 pub mod performance;
 pub mod bucket_processor;
+pub mod production;
 
 #[cfg(test)]
 mod integration_tests;

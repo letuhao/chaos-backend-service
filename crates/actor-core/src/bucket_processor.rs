@@ -8,6 +8,22 @@ use crate::enums::Bucket;
 use crate::types::{Contribution, Caps};
 use crate::ActorCoreResult;
 
+/// Sort contributions deterministically within a bucket.
+/// Order: priority DESC (None treated as 0), then system ASC, then value ASC for stability.
+fn sort_contributions_deterministic(contribs: &mut Vec<Contribution>) {
+    contribs.sort_by(|a, b| {
+        let pa = a.priority.unwrap_or(0);
+        let pb = b.priority.unwrap_or(0);
+        match pb.cmp(&pa) { // DESC by priority
+            std::cmp::Ordering::Equal => match a.system.cmp(&b.system) { // ASC by system
+                std::cmp::Ordering::Equal => a.value.partial_cmp(&b.value).unwrap_or(std::cmp::Ordering::Equal),
+                other => other,
+            },
+            other => other,
+        }
+    });
+}
+
 /// Process contributions in the correct bucket order.
 /// 
 /// The order is: FLAT → MULT → POST_ADD → OVERRIDE
@@ -34,31 +50,36 @@ pub fn process_contributions_in_order(
     // Then extra buckets if feature is enabled
     
     // 1. FLAT contributions
-    if let Some(flat_contribs) = contributions_by_bucket.remove(&Bucket::Flat) {
+    if let Some(mut flat_contribs) = contributions_by_bucket.remove(&Bucket::Flat) {
+        sort_contributions_deterministic(&mut flat_contribs);
         for contrib in flat_contribs {
             value += contrib.value;
         }
     }
     
     // 2. MULT contributions
-    if let Some(mult_contribs) = contributions_by_bucket.remove(&Bucket::Mult) {
+    if let Some(mut mult_contribs) = contributions_by_bucket.remove(&Bucket::Mult) {
+        sort_contributions_deterministic(&mut mult_contribs);
         for contrib in mult_contribs {
             value *= contrib.value;
         }
     }
     
     // 3. POST_ADD contributions
-    if let Some(post_add_contribs) = contributions_by_bucket.remove(&Bucket::PostAdd) {
+    if let Some(mut post_add_contribs) = contributions_by_bucket.remove(&Bucket::PostAdd) {
+        sort_contributions_deterministic(&mut post_add_contribs);
         for contrib in post_add_contribs {
             value += contrib.value;
         }
     }
     
     // 4. OVERRIDE contributions (last core bucket)
-    if let Some(override_contribs) = contributions_by_bucket.remove(&Bucket::Override) {
-        // Override replaces the value, so we only use the last one
-        if let Some(last_override) = override_contribs.last() {
-            value = last_override.value;
+    if let Some(mut override_contribs) = contributions_by_bucket.remove(&Bucket::Override) {
+        // Deterministic tie-break: priority DESC, system ASC
+        sort_contributions_deterministic(&mut override_contribs);
+        // Override replaces the value, so pick the highest-priority first element
+        if let Some(top_override) = override_contribs.first() {
+            value = top_override.value;
         }
     }
     

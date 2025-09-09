@@ -75,6 +75,12 @@
 1. **Review Updated README**: Check the cleaned documentation structure
 2. **Follow Migration Plan**: Use the migration guides for Rust implementation
 3. **Reference Test Vectors**: Use golden vectors for validation
+4. **Update Implementation Notes**: Reflect recent changes:
+   - Deterministic within-bucket sorting and OVERRIDE tie-break
+   - Operator-mode respected via CombinerRegistry
+   - Clamp precedence: EffectiveCaps → Combiner clamp_default → constants clamp_ranges
+   - Config loader supports `ACTOR_CORE_CONFIG_DIR` (YAML preferred, JSON fallback)
+   - MULT semantics: treated as multiplicative factor (e.g., 1.10 for +10%)
 
 ### Implementation
 1. **Start with Core Design**: Read essential documents (01, 03, 06)
@@ -85,6 +91,7 @@
 
 - **No Design Loss**: All essential design content preserved
 - **Rust Focused**: Documentation now specifically targets Rust implementation
+- **Behavior Clarified**: MULT treated as factor; clamp precedence and operator-mode documented
 - **Clean Structure**: Easier navigation and maintenance
 - **Migration Ready**: Ready to guide Go to Rust migration
 

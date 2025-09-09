@@ -33,11 +33,11 @@ Actor Core v3 is a metadata-only aggregator system that:
 
 | Component | Description | Status |
 |-----------|-------------|--------|
-| **Aggregator** | Core stat aggregation engine | 🚧 In Development |
-| **Caps Provider** | Cap calculation and layer management | 📋 Planned |
-| **Registry System** | Configuration and rule management | 📋 Planned |
-| **Cache System** | Multi-layer performance optimization | 📋 Planned |
-| **Subsystem Interface** | Plugin system for game modules | 📋 Planned |
+| **Aggregator** | Core stat aggregation engine | ✅ Implemented |
+| **Caps Provider** | Cap calculation and layer management | ✅ Implemented |
+| **Registry System** | Configuration and rule management | ✅ Implemented |
+| **Cache System** | In-memory cache implemented; advanced multi-layer optional | ✅ Implemented (basic) |
+| **Subsystem Interface** | Plugin system for game modules | ✅ Implemented |
 
 ## 🚀 Quick Start
 
@@ -45,6 +45,7 @@ Actor Core v3 is a metadata-only aggregator system that:
 1. Read [Designs/01_Executive_Summary.md](designs/01_Executive_Summary.md)
 2. Study [Designs/03_Domain_Model.md](designs/03_Domain_Model.md)
 3. Review [Designs/06_Aggregation_Algorithm.md](designs/06_Aggregation_Algorithm.md)
+4. See examples: [appendix/Combiner.operator_examples.yaml](designs/appendix/Combiner.operator_examples.yaml), [appendix/CapLayerRegistry.layered_examples.yaml](designs/appendix/CapLayerRegistry.layered_examples.yaml)
 
 ### For Developers
 1. Follow [Migrations/GO_TO_RUST_MIGRATION_PLAN.md](migrations/GO_TO_RUST_MIGRATION_PLAN.md)
@@ -74,28 +75,60 @@ Actor Core v3 is a metadata-only aggregator system that:
 - [x] Basic trait definitions
 
 ### Phase 2: Core Services (Weeks 3-6) 🚧
-- [ ] Aggregator implementation
-- [ ] Caps provider implementation
-- [ ] Registry system implementation
-- [ ] Basic testing framework
+- [x] Aggregator implementation
+- [x] Caps provider implementation
+- [x] Registry system implementation
+- [x] Basic testing framework
 
 ### Phase 3: Performance (Weeks 7-10) 📋
-- [ ] Lock-free cache implementation
-- [ ] Memory-mapped cache (L2)
-- [ ] Persistent cache (L3)
-- [ ] Performance optimization
+- [x] Lock-free cache implementation (optional advanced)
+- [x] Memory-mapped cache (L2) (optional advanced)
+- [x] Persistent cache (L3) (optional advanced)
+- [x] Performance optimization
 
 ### Phase 4: Advanced Features (Weeks 11-14) 📋
-- [ ] Async/await integration
-- [ ] Error handling enhancement
-- [ ] Comprehensive testing
-- [ ] Property-based testing
+- [x] Async/await integration
+- [x] Error handling enhancement
+- [x] Comprehensive testing
+- [x] Property-based testing
 
 ### Phase 5: Integration (Weeks 15-18) 📋
-- [ ] API compatibility layer
-- [ ] Deployment and monitoring
-- [ ] Documentation completion
+- [x] API compatibility layer
+- [x] Deployment and monitoring
+- [x] Documentation completion
 - [ ] Production readiness
+
+### Production readiness checklist
+- Add health/readiness endpoints in your service to call `actor_core::production::check_readiness(...)`
+- Validate registries at startup; fail fast on invalid configuration
+- Configure cache via env (basic/lock_free/multi; Redis URL optional)
+- Enable structured logging (tracing) and error aggregation
+- Set alerts on cache miss spikes and aggregation latency
+
+#### Example: readiness probe in a service
+
+```rust
+use actor_core::{RegistryFactory, ServiceFactory, CacheFactory};
+use actor_core::production::check_readiness;
+
+fn readiness_probe() -> Result<(), String> {
+    // Build registries and services
+    let plugin = RegistryFactory::create_plugin_registry();
+    let combiner = RegistryFactory::create_combiner_registry();
+    let cap_layers = RegistryFactory::create_cap_layer_registry();
+    let caps = ServiceFactory::create_caps_provider(cap_layers);
+
+    // Pick a cache (basic/lock_free/multi)
+    let cache = CacheFactory::create_default_multi_layer_cache();
+
+    // Perform readiness checks
+    check_readiness(plugin.as_ref(), combiner.as_ref(), caps.as_ref(), cache.as_ref())
+        .map_err(|e| e.to_string())
+}
+
+// In your web framework handler:
+// if readiness_probe().is_ok() { return 200 OK } else { return 503 Service Unavailable }
+```
 
 ## 🧪 Testing Strategy
 
@@ -111,6 +144,91 @@ Actor Core v3 is a metadata-only aggregator system that:
 - **JSON Schemas**: Data validation schemas
 - **Example Configs**: Configuration templates
 - **Test Vectors**: Edge case and stress testing
+
+## 🔧 Configuration Examples
+
+- Combiner rules (pipeline and operator-mode):
+  - `designs/appendix/Combiner.operator_examples.yaml`
+- Cap layer registry (REALM/WORLD/EVENT/TOTAL with INTERSECT policy):
+  - `designs/appendix/CapLayerRegistry.layered_examples.yaml`
+
+To load examples at runtime:
+
+```powershell
+$env:ACTOR_CORE_CONFIG_DIR = (Resolve-Path ./docs/actor-core/designs/appendix)
+cargo test -p actor-core
+```
+
+## ⚙️ Cache Options: How to switch caches
+
+```rust
+use actor_core::{RegistryFactory, ServiceFactory, CacheFactory};
+
+// Registries and services
+let plugin_registry = RegistryFactory::create_plugin_registry();
+let combiner_registry = RegistryFactory::create_combiner_registry();
+let cap_layer_registry = RegistryFactory::create_cap_layer_registry();
+let caps_provider = ServiceFactory::create_caps_provider(cap_layer_registry);
+
+// 1) Basic in-memory cache
+let cache = CacheFactory::create_in_memory_cache(100_000, 600);
+
+// 2) Lock-free in-memory cache (DashMap-based)
+// let cache = CacheFactory::create_lock_free_in_memory_cache(100_000, 300);
+
+// 3) Default multi-layer cache (L1 lock-free, L2 in-memory, L3 optional Redis)
+// std::env::set_var("ACTOR_CORE_REDIS_URL", "redis://127.0.0.1:6379"); // optional
+// let cache = CacheFactory::create_default_multi_layer_cache();
+
+// Aggregator with selected cache
+let aggregator = ServiceFactory::create_aggregator(
+    plugin_registry,
+    combiner_registry,
+    caps_provider,
+    cache,
+);
+```
+
+### Benchmarking cache options
+
+```powershell
+# Basic benches
+cargo bench -p actor-core
+
+# Quick compare: run with basic in-memory
+$env:ACTOR_CORE_CACHE_KIND = "basic"
+cargo bench -p actor-core -- bench_cache
+
+# Compare lock-free
+$env:ACTOR_CORE_CACHE_KIND = "lock_free"
+cargo bench -p actor-core -- bench_cache
+
+# Compare multi-layer (optionally set Redis URL)
+$env:ACTOR_CORE_CACHE_KIND = "multi"
+$env:ACTOR_CORE_REDIS_URL = "redis://127.0.0.1:6379"
+cargo bench -p actor-core -- bench_cache
+```
+
+Notes:
+- The environment variable `ACTOR_CORE_CACHE_KIND` is a suggested toggle; wire it in your app when constructing the cache (pick the factory accordingly).
+- Use the existing `performance/benchmarks.rs` or add a small `bench_cache` that batters get/set patterns for the chosen cache.
+
+## 🧯 Error taxonomy
+
+Actor Core centralizes errors via `ActorCoreError` and returns `ActorCoreResult<T>` across APIs.
+
+- InvalidActor: bad or incomplete actor data (empty name/race, invalid version)
+- InvalidContribution: dimension empty, non-finite value, negative priority
+- InvalidCap: malformed cap contribution (min>max, invalid mode/kind)
+- SubsystemError: a subsystem’s `contribute` failed; aggregator logs and continues
+- CacheError: cache set/get/delete/sync failures (e.g., filesystem/Redis issues)
+- RegistryError: duplicate/missing subsystem, invalid priority, bad rules
+- AggregationError: unexpected aggregation state or configuration mismatch
+- ConfigurationError: invalid loader config, bad paths, invalid YAML/JSON
+- InvalidInput: generic validation failure for API inputs
+- Shared(ChaosError): wrapped errors bubbling from `shared` crate
+
+Recommended action: fix inputs or config; for operational errors (Cache/Subsystem), check logs and environment. All errors are non-panicking and surfaced as Results.
 
 ## 📚 Key Concepts
 
@@ -149,6 +267,6 @@ Actor Core v3 is a metadata-only aggregator system that:
 
 ---
 
-**Last Updated**: 2025-01-27  
-**Status**: Design Complete, Implementation In Progress  
-**Next Milestone**: Core Services Implementation (Weeks 3-6)
+**Last Updated**: 2025-09-09  
+**Status**: Design Complete, Core Services Implemented  
+**Next Milestone**: Optional Performance (Advanced Cache) & Production Readiness

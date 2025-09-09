@@ -1,0 +1,41 @@
+# Combiner Registry — Operator-Mode Examples
+#
+# How to use:
+# - Place this file (or its contents) as `combiner.yaml` in your config dir
+# - Point `ACTOR_CORE_CONFIG_DIR` to the directory containing `combiner.yaml`
+# - Aggregator will load rules and apply:
+#   Clamp precedence: EffectiveCaps -> clamp_default -> constants clamp ranges
+#   MULT semantics: multiplicative factor (1.10 = +10%)
+
+rules:
+  - id: "attack"                 # Pipeline example (bucket order)
+    bucket_order: ["FLAT", "MULT", "POST_ADD", "OVERRIDE"]
+    clamp:
+      min: 0
+      max: 100000
+
+  - id: "poise_rank"             # Operator-mode example (MAX)
+    bucket_order: []               # Ignored in operator mode by runtime loader
+    clamp:
+      min: 0
+      max: 10
+    # At runtime, set use_pipeline=false, operator=MAX via registry API
+
+  - id: "cooldown_reduction"     # Pipeline with strict clamp
+    bucket_order: ["FLAT", "MULT", "POST_ADD", "OVERRIDE"]
+    clamp:
+      min: 0
+      max: 0.5
+
+  - id: "threat_level"           # Operator-mode example (SUM)
+    bucket_order: []
+    clamp:
+      min: 0
+      max: 100
+
+  - id: "defense"                # Operator-mode example (MIN)
+    bucket_order: []
+    clamp:
+      min: 0
+      max: 100000
+

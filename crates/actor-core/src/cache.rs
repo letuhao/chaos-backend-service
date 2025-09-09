@@ -13,6 +13,92 @@ use crate::ActorCoreResult;
 
 pub mod multi_layer;
 
+/// Lock-free in-memory cache implementation using DashMap.
+pub struct LockFreeInMemoryCache {
+    storage: Arc<dashmap::DashMap<String, CacheEntry>>,
+    default_ttl: u64,
+    max_entries: usize,
+    metrics: Arc<std::sync::RwLock<CacheStats>>,
+}
+
+impl LockFreeInMemoryCache {
+    pub fn new(max_entries: usize, default_ttl: u64) -> Self {
+        Self {
+            storage: Arc::new(dashmap::DashMap::new()),
+            default_ttl,
+            max_entries,
+            metrics: Arc::new(std::sync::RwLock::new(CacheStats::default())),
+        }
+    }
+
+    fn is_expired(&self, entry: &CacheEntry) -> bool {
+        let now = std::time::Instant::now();
+        let elapsed = now.duration_since(entry.created_at).as_secs();
+        elapsed >= entry.ttl
+    }
+
+    fn evict_if_needed(&self) {
+        if self.storage.len() <= self.max_entries { return; }
+        // Remove oldest entries until under max_entries
+        let mut entries: Vec<(String, std::time::Instant)> = Vec::new();
+        for item in self.storage.iter() {
+            entries.push((item.key().clone(), item.created_at));
+        }
+        entries.sort_by_key(|(_, created_at)| *created_at);
+        let mut to_remove = self.storage.len().saturating_sub(self.max_entries);
+        for (k, _) in entries {
+            if to_remove == 0 { break; }
+            self.storage.remove(&k);
+            to_remove -= 1;
+        }
+    }
+}
+
+#[async_trait]
+impl Cache for LockFreeInMemoryCache {
+    fn get(&self, key: &str) -> Option<serde_json::Value> {
+        if let Some(entry) = self.storage.get(key) {
+            if self.is_expired(&entry) { return None; }
+            let mut metrics = self.metrics.write().unwrap();
+            metrics.hits += 1;
+            return Some(entry.value.clone());
+        }
+        let mut metrics = self.metrics.write().unwrap();
+        metrics.misses += 1;
+        None
+    }
+
+    fn set(&self, key: String, value: serde_json::Value, ttl: Option<u64>) -> ActorCoreResult<()> {
+        let ttl = ttl.unwrap_or(self.default_ttl);
+        let entry = CacheEntry { value, created_at: std::time::Instant::now(), ttl };
+        self.storage.insert(key, entry);
+        self.evict_if_needed();
+        let mut metrics = self.metrics.write().unwrap();
+        metrics.sets += 1;
+        Ok(())
+    }
+
+    fn delete(&self, key: &str) -> ActorCoreResult<()> {
+        self.storage.remove(key);
+        let mut metrics = self.metrics.write().unwrap();
+        metrics.deletes += 1;
+        Ok(())
+    }
+
+    fn clear(&self) -> ActorCoreResult<()> {
+        self.storage.clear();
+        let mut metrics = self.metrics.write().unwrap();
+        metrics.sets = 0; metrics.hits = 0; metrics.misses = 0; metrics.deletes = 0;
+        Ok(())
+    }
+
+    fn get_stats(&self) -> CacheStats {
+        let mut metrics = self.metrics.write().unwrap();
+        metrics.memory_usage = (self.storage.len() * 1024) as u64; // rough estimate
+        metrics.clone()
+    }
+}
+
 /// InMemoryCache is a simple in-memory cache implementation.
 pub struct InMemoryCache {
     /// The actual cache storage
@@ -542,6 +628,11 @@ impl CacheFactory {
         Arc::new(InMemoryCache::new(max_entries, default_ttl))
     }
 
+    /// Create a new lock-free in-memory cache instance.
+    pub fn create_lock_free_in_memory_cache(max_entries: usize, default_ttl: u64) -> Arc<dyn Cache> {
+        Arc::new(LockFreeInMemoryCache::new(max_entries, default_ttl))
+    }
+
     /// Create a new distributed cache instance.
     pub fn create_distributed_cache(redis_url: &str, default_ttl: u64) -> ActorCoreResult<Arc<dyn Cache>> {
         Ok(Arc::new(DistributedCache::new(redis_url, default_ttl)?))
@@ -554,5 +645,22 @@ impl CacheFactory {
         l3_cache: Arc<dyn Cache>,
     ) -> Arc<dyn Cache> {
         Arc::new(MultiLayerCache::new(l1_cache, l2_cache, l3_cache))
+    }
+
+    /// Create a sensible default multi-layer cache.
+    /// L1: lock-free in-memory; L2: in-memory; L3: distributed if REDIS url is provided, otherwise in-memory.
+    pub fn create_default_multi_layer_cache() -> Arc<dyn Cache> {
+        let l1 = Self::create_lock_free_in_memory_cache(50_000, 300);
+        let l2 = Self::create_in_memory_cache(200_000, 600);
+        let l3 = if let Ok(url) = std::env::var("ACTOR_CORE_REDIS_URL") {
+            if let Ok(redis_cache) = Self::create_distributed_cache(&url, 1800) {
+                redis_cache
+            } else {
+                Self::create_in_memory_cache(500_000, 1800)
+            }
+        } else {
+            Self::create_in_memory_cache(500_000, 1800)
+        };
+        Self::create_multi_layer_cache(l1, l2, l3)
     }
 }

@@ -4,7 +4,7 @@
 //! from YAML/JSON configuration files at runtime.
 
 use std::collections::HashMap;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use anyhow::Result;
 use thiserror::Error;
 use serde::{Deserialize, Serialize};
@@ -145,14 +145,31 @@ pub fn load_combiner<P: AsRef<Path>>(path: P) -> Result<CombinerRegistryImpl, Lo
 
 /// Load both cap layers and combiner configurations from a directory.
 pub fn load_all<P: AsRef<Path>>(cfg_dir: P) -> Result<(CapLayerRegistryImpl, CombinerRegistryImpl), LoaderError> {
-    let cfg_dir = cfg_dir.as_ref();
-    
-    let cap_layers_path = cfg_dir.join("cap_layers.yaml");
-    let combiner_path = cfg_dir.join("combiner.yaml");
-    
-    let cap_layers = load_cap_layers(cap_layers_path)?;
-    let combiner = load_combiner(combiner_path)?;
-    
+    // Resolve directory order: env override -> provided -> default ./configs
+    let resolved_dir: PathBuf = if let Ok(env_dir) = std::env::var("ACTOR_CORE_CONFIG_DIR") {
+        PathBuf::from(env_dir)
+    } else {
+        cfg_dir.as_ref().to_path_buf()
+    };
+
+    let cap_layers_path_yaml = resolved_dir.join("cap_layers.yaml");
+    let cap_layers_path_json = resolved_dir.join("cap_layers.json");
+    let combiner_path_yaml = resolved_dir.join("combiner.yaml");
+    let combiner_path_json = resolved_dir.join("combiner.json");
+
+    // Try YAML first, then JSON for each registry
+    let cap_layers = if cap_layers_path_yaml.exists() {
+        load_cap_layers(&cap_layers_path_yaml)?
+    } else {
+        load_cap_layers(&cap_layers_path_json)?
+    };
+
+    let combiner = if combiner_path_yaml.exists() {
+        load_combiner(&combiner_path_yaml)?
+    } else {
+        load_combiner(&combiner_path_json)?
+    };
+
     Ok((cap_layers, combiner))
 }
 

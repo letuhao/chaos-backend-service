@@ -11,3 +11,9 @@ Per dimension:
 4) Else (operator mode): `candidate = SUM | MAX | MIN(values)`
 5) Compute **EffectiveCapsFinal** (Section 07) and **clamp** `candidate` → `final`.
 6) Write to Snapshot.
+
+### Determinism & Semantics (Implementation Notes)
+- Within-bucket sort: priority DESC, then system ASC; deterministic across runs.
+- OVERRIDE: highest priority wins; if tie, system ASC.
+- MULT semantics: treated as multiplicative factor (e.g., 1.10 = +10%).
+- Clamp precedence: EffectiveCaps → Combiner clamp_default → constants clamp ranges.

@@ -81,12 +81,23 @@ impl AggregatorImpl {
             
             // Get merge rule for this dimension from CombinerRegistry
             let merge_rule = self.combiner_registry.get_rule(&dimension);
-            
-            // Get effective caps for this dimension
-            let clamp_caps = effective_caps.get(&dimension);
+
+            // Determine clamping caps in priority order:
+            // 1) effective caps (runtime, layered)
+            // 2) combiner rule default clamp (if configured)
+            // 3) constants::clamp_ranges fallback (built-in)
+            let rule_clamp_default = merge_rule.as_ref().and_then(|r| r.clamp_default.as_ref());
+            let mut _builtin_caps_holder: Option<Caps> = None;
+            let mut clamp_caps = effective_caps.get(&dimension).or(rule_clamp_default);
+            if clamp_caps.is_none() {
+                if let Some((min, max)) = crate::constants::clamp_ranges::get_range(&dimension) {
+                    _builtin_caps_holder = Some(Caps::new(min, max));
+                    clamp_caps = _builtin_caps_holder.as_ref();
+                }
+            }
             
             // Process contributions using the appropriate method based on merge rule
-            let value = if let Some(rule) = merge_rule {
+            let value = if let Some(rule) = merge_rule.as_ref() {
                 if rule.use_pipeline {
                     // Use pipeline processing (bucket order)
                     process_contributions_in_order(
@@ -194,12 +205,23 @@ impl AggregatorImpl {
             
             // Get merge rule for this dimension from CombinerRegistry
             let merge_rule = self.combiner_registry.get_rule(&dimension);
-            
-            // Get effective caps for this dimension
-            let clamp_caps = effective_caps.get(&dimension);
+
+            // Determine clamping caps in priority order:
+            // 1) effective caps (runtime, layered)
+            // 2) combiner rule default clamp (if configured)
+            // 3) constants::clamp_ranges fallback (built-in)
+            let rule_clamp_default = merge_rule.as_ref().and_then(|r| r.clamp_default.as_ref());
+            let mut _builtin_caps_holder: Option<Caps> = None;
+            let mut clamp_caps = effective_caps.get(&dimension).or(rule_clamp_default);
+            if clamp_caps.is_none() {
+                if let Some((min, max)) = crate::constants::clamp_ranges::get_range(&dimension) {
+                    _builtin_caps_holder = Some(Caps::new(min, max));
+                    clamp_caps = _builtin_caps_holder.as_ref();
+                }
+            }
             
             // Process contributions using the appropriate method based on merge rule
-            let value = if let Some(rule) = merge_rule {
+            let value = if let Some(rule) = merge_rule.as_ref() {
                 if rule.use_pipeline {
                     // Use pipeline processing (bucket order)
                     process_contributions_in_order(

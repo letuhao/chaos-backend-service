@@ -1,0 +1,64 @@
+# Cap Layer Registry — Layered Caps Examples
+#
+# How to use:
+# - Place this as `cap_layers.yaml` in your config directory
+# - Point `ACTOR_CORE_CONFIG_DIR` to that directory
+# - Aggregator clamp precedence:
+#   EffectiveCaps (computed from these layers) → Combiner clamp_default → constants clamp ranges
+
+# Across-layer policy and order
+across_layer_policy: INTERSECT   # Most restrictive across layers
+order:
+  - REALM
+  - WORLD
+  - EVENT
+  - TOTAL
+
+# Per-layer caps
+layers:
+  - name: REALM
+    priority: 10
+    caps:
+      - id: "attack_power"   # Realm sets a generous max
+        cap_mode: "HARD_MAX"
+        max: 120000
+      - id: "cooldown_reduction"   # Realm soft limit via baseline+additive
+        cap_mode: "BASELINE"
+        min: 0
+        max: 0.4
+
+  - name: WORLD
+    priority: 20
+    caps:
+      - id: "attack_power"   # World narrows the max further
+        cap_mode: "HARD_MAX"
+        max: 100000
+      - id: "cooldown_reduction"   # Slightly stricter world rule
+        cap_mode: "HARD_MAX"
+        max: 0.35
+
+  - name: EVENT
+    priority: 30
+    caps:
+      - id: "attack_power"   # Event temporarily tightens cap
+        cap_mode: "HARD_MAX"
+        max: 80000
+      - id: "poise_rank"     # Event lower bound
+        cap_mode: "HARD_MIN"
+        min: 1
+
+  - name: TOTAL
+    priority: 40
+    caps:
+      - id: "cooldown_reduction"   # Global absolute upper bound
+        cap_mode: "HARD_MAX"
+        max: 0.5
+      - id: "poise_rank"           # Global max
+        cap_mode: "HARD_MAX"
+        max: 10
+
+# Notes:
+# - With INTERSECT policy, the final caps are the most restrictive across the present layers.
+# - Example: attack_power max becomes min(120000, 100000, 80000, +inf) = 80000.
+# - Example: cooldown_reduction max becomes min(0.4, 0.35, +inf, 0.5) = 0.35.
+
