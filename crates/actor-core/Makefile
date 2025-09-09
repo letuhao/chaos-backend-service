@@ -1,7 +1,7 @@
 # Actor Core Makefile
 # Provides convenient commands for development and CI
 
-.PHONY: help test test-configs validate-configs clean build check format clippy ci audit outdated docs
+.PHONY: help test test-configs validate-configs clean build check format clippy ci audit outdated docs bench bench-quick bench-comprehensive bench-actor bench-bucket bench-registry bench-extra bench-report
 
 # Default target
 help:
@@ -18,6 +18,14 @@ help:
 	@echo "  audit             - Run security audit"
 	@echo "  outdated          - Check for outdated dependencies"
 	@echo "  docs              - Generate documentation"
+	@echo "  bench             - Run all benchmarks"
+	@echo "  bench-quick       - Run quick benchmarks"
+	@echo "  bench-comprehensive - Run comprehensive benchmarks"
+	@echo "  bench-actor       - Run actor benchmarks only"
+	@echo "  bench-bucket      - Run bucket processor benchmarks only"
+	@echo "  bench-registry    - Run registry loader benchmarks only"
+	@echo "  bench-extra       - Run benchmarks with extra buckets feature"
+	@echo "  bench-report      - Generate benchmark reports"
 
 # Run all tests
 test:
@@ -63,6 +71,39 @@ outdated:
 # Generate documentation
 docs:
 	cargo doc --no-deps --all-features --open
+
+# Run benchmarks
+bench:
+	cargo bench
+
+# Run quick benchmarks
+bench-quick:
+	cargo bench --bench quick_benches
+
+# Run comprehensive benchmarks
+bench-comprehensive:
+	cargo bench --bench comprehensive_benches
+
+# Run actor benchmarks only
+bench-actor:
+	cargo bench --bench actor_benches
+
+# Run bucket processor benchmarks only
+bench-bucket:
+	cargo bench --bench bucket_processor_benches
+
+# Run registry loader benchmarks only
+bench-registry:
+	cargo bench --bench registry_loader_benches
+
+# Run benchmarks with extra buckets feature
+bench-extra:
+	cargo bench --features extra_buckets
+
+# Generate benchmark reports
+bench-report:
+	cargo bench -- --save-baseline main
+	cargo bench -- --baseline main --plotting-backend gnuplot
 
 # CI validation (runs all checks)
 ci: validate-configs test-configs test clippy format check audit outdated docs
