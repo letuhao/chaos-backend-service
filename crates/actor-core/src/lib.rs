@@ -165,6 +165,7 @@ pub mod pools;
 pub mod performance;
 pub mod bucket_processor;
 pub mod production;
+pub mod subsystems;
 
 #[cfg(test)]
 mod integration_tests;
@@ -175,6 +176,7 @@ pub use services::*;
 pub use registry::*;
 pub use cache::*;
 pub use error::*;
+pub use subsystems::*;
 
 // Re-export specific types to avoid conflicts
 pub use types::{Actor, Contribution, CapContribution, Subsystem as SubsystemStruct, SubsystemOutput, Snapshot, Caps, ModifierPack, EffectiveCaps};
