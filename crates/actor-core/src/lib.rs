@@ -13,6 +13,7 @@ pub mod constants;
 pub mod error;
 pub mod pools;
 pub mod performance;
+pub mod bucket_processor;
 
 #[cfg(test)]
 mod integration_tests;

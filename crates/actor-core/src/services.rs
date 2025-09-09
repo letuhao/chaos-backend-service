@@ -15,6 +15,7 @@ use crate::interfaces::{
 };
 use crate::types::*;
 use crate::ActorCoreResult;
+use crate::bucket_processor::*;
 
 /// AggregatorImpl is the main implementation of the Aggregator trait.
 pub struct AggregatorImpl {
@@ -65,50 +66,24 @@ impl AggregatorImpl {
 
         // Process each dimension
         for (dimension, contributions) in contributions_by_dimension {
-            let mut value = 0.0;
+            // Convert references to owned values for the bucket processor
+            let owned_contributions: Vec<Contribution> = contributions
+                .into_iter()
+                .map(|c| c.clone())
+                .collect();
             
-            // Sort contributions by priority (higher priority first)
-            let mut sorted_contributions = contributions;
-            sorted_contributions.sort_by(|a, b| {
-                b.priority.unwrap_or(0).cmp(&a.priority.unwrap_or(0))
-            });
-
-            // Apply contributions based on bucket type
-            for contribution in sorted_contributions {
-                match contribution.bucket {
-                    crate::enums::Bucket::Flat => {
-                        value += contribution.value;
-                    }
-                    crate::enums::Bucket::Mult => {
-                        value *= contribution.value;
-                    }
-                    crate::enums::Bucket::PostAdd => {
-                        value += contribution.value;
-                    }
-                    crate::enums::Bucket::Override => {
-                        value = contribution.value;
-                    }
-                    #[cfg(feature = "extra_buckets")]
-                    crate::enums::Bucket::Exponential => {
-                        value = value.powf(contribution.value);
-                    }
-                    #[cfg(feature = "extra_buckets")]
-                    crate::enums::Bucket::Logarithmic => {
-                        value = value.log(contribution.value);
-                    }
-                    #[cfg(feature = "extra_buckets")]
-                    crate::enums::Bucket::Conditional => {
-                        // For now, treat conditional as flat
-                        // In a real implementation, this would check conditions
-                        value += contribution.value;
-                    }
-                }
-            }
-
-            // Apply caps if available
-            if let Some(caps) = effective_caps.get(&dimension) {
-                value = caps.clamp(value);
-            }
+            // Validate contributions before processing
+            validate_contributions(&owned_contributions)?;
+            
+            // Get effective caps for this dimension
+            let clamp_caps = effective_caps.get(&dimension);
+            
+            // Process contributions in correct bucket order with clamping
+            let value = process_contributions_in_order(
+                owned_contributions,
+                0.0, // Initial value
+                clamp_caps,
+            )?;
 
             primary_stats.insert(dimension, value);
         }
@@ -139,48 +114,24 @@ impl AggregatorImpl {
 
         // Process each dimension
         for (dimension, contributions) in contributions_by_dimension {
-            let mut value = 0.0;
+            // Convert references to owned values for the bucket processor
+            let owned_contributions: Vec<Contribution> = contributions
+                .into_iter()
+                .map(|c| c.clone())
+                .collect();
             
-            // Sort contributions by priority
-            let mut sorted_contributions = contributions;
-            sorted_contributions.sort_by(|a, b| {
-                b.priority.unwrap_or(0).cmp(&a.priority.unwrap_or(0))
-            });
-
-            // Apply contributions
-            for contribution in sorted_contributions {
-                match contribution.bucket {
-                    crate::enums::Bucket::Flat => {
-                        value += contribution.value;
-                    }
-                    crate::enums::Bucket::Mult => {
-                        value *= contribution.value;
-                    }
-                    crate::enums::Bucket::PostAdd => {
-                        value += contribution.value;
-                    }
-                    crate::enums::Bucket::Override => {
-                        value = contribution.value;
-                    }
-                    #[cfg(feature = "extra_buckets")]
-                    crate::enums::Bucket::Exponential => {
-                        value = value.powf(contribution.value);
-                    }
-                    #[cfg(feature = "extra_buckets")]
-                    crate::enums::Bucket::Logarithmic => {
-                        value = value.log(contribution.value);
-                    }
-                    #[cfg(feature = "extra_buckets")]
-                    crate::enums::Bucket::Conditional => {
-                        value += contribution.value;
-                    }
-                }
-            }
-
-            // Apply caps if available
-            if let Some(caps) = effective_caps.get(&dimension) {
-                value = caps.clamp(value);
-            }
+            // Validate contributions before processing
+            validate_contributions(&owned_contributions)?;
+            
+            // Get effective caps for this dimension
+            let clamp_caps = effective_caps.get(&dimension);
+            
+            // Process contributions in correct bucket order with clamping
+            let value = process_contributions_in_order(
+                owned_contributions,
+                0.0, // Initial value
+                clamp_caps,
+            )?;
 
             derived_stats.insert(dimension, value);
         }
