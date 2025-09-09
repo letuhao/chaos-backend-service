@@ -1,0 +1,6 @@
+{
+  "primary": {
+    "shield_current": 50.0
+  },
+  "notes": "Decay 15/s over 10s from 200 => 50"
+}

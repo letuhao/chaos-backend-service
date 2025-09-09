@@ -592,6 +592,52 @@ func (rm *ResourceManagerSubsystem) ProcessBatch(ctx context.Context, actors []*
 4. **Resource Events**: Làm thế nào để handle resource events?
 5. **Performance**: Làm thế nào để optimize resource calculations?
 
+### ✅ Proposed Answers / 建议 / Gợi ý
+
+- **Resource Dependencies** (依赖关系 / Phụ thuộc)
+  - Model derived stats explicitly (e.g., `hp_percentage` via operator mode) and keep a DAG of dependencies; forbid cycles at load-time.
+  - Use Combiner rules to separate pipeline dimensions (e.g., `hp_current`, `hp_max`, `*_regen`) from operator-mode ratios to avoid accidental reordering effects.
+
+- **Resource Conflicts** (冲突处理 / Xung đột)
+  - Deterministic resolution within a bucket: sort by `priority DESC, system ASC, value ASC`; `OVERRIDE` selects last after sort.
+  - Across layers use `CapLayerRegistry` policy (recommend `INTERSECT`) to ensure conservative caps; document any prioritized-override exceptions.
+
+- **Resource Persistence** (事件溯源 + 快照 / Ghi nhật ký sự kiện + snapshot)
+  - Event-sourcing of deltas with idempotency key; periodic snapshots of `*_current` for fast warm start.
+  - Write-ahead log (WAL) before apply; batch operations are transactional (all-or-nothing).
+  - Tables: `resource_events(actor_id, ts, dimension, delta, cause, idem_key)` and `resource_snapshots(actor_id, version, map)`.
+
+- **Resource Events** (事件与可观测性 / Sự kiện & Quan sát)
+  - Emit `resource_change`, `resource_cap_change`, `resource_conflict` with `actor_id`, `dimension`, `delta`, `cause`, `correlation_id`.
+  - Consumers: UI state, combat log, analytics, and cache invalidation; support sampling to reduce load.
+
+- **Performance** (性能建议 / Hiệu năng)
+  - Batch contributions; reuse Aggregator/registries; avoid per-request I/O.
+  - Cache strategy: L1 lock-free in-memory, L2 memory-mapped, optional L3 persistent/Redis; warm critical actors.
+  - Prefer operator-mode for simple aggregates; clamp early using precedence: EffectiveCaps → Combiner `clamp_default` → constants clamp ranges.
+
+## 🛠️ Implementation Plan & Overview Checklist / 实施计划与清单 / Kế hoạch & Checklist
+
+### Milestones
+- Phase A: Configuration wiring (Combiner & Cap layers) ready and documented.
+- Phase B: Subsystem skeleton (`ResourceManagerSubsystem`) created and registered.
+- Phase C: Tick/decay/offline semantics implemented.
+- Phase D: Golden vectors + property tests passing and stable.
+- Phase E: Production readiness (readiness check, logging, metrics).
+
+### Checklist (高层清单 / Danh sách kiểm)
+- [ ] Configs published: `configs/combiner.resources.yaml`, `configs/cap_layers.resources.yaml` loaded via `ACTOR_CORE_CONFIG_DIR`.
+- [ ] Subsystem file added: `crates/actor-core/src/subsystems/resource_manager.rs`.
+- [ ] Module exposed: `crates/actor-core/src/subsystems/mod.rs` + `lib.rs` exports.
+- [ ] Implements `interfaces::Subsystem` with `system_id`, `priority`, `contribute`.
+- [ ] Emits contributions: `hp_max`, `hp_current`, `hp_regen`, `mana_*`, `stamina_*`, `shield_*`.
+- [ ] Derived via operator-mode: `hp_percentage`.
+- [ ] Tick pipeline: regen to current, shield decay, clamped by caps/combiner/constants.
+- [ ] Offline catch-up bounded by `offline_regen_max_seconds`.
+- [ ] Golden vectors pass in harness; order invariance tested.
+- [ ] Proptests for clamp invariants, idempotency, monotonicity.
+- [ ] Readiness probe validates registries and cache round-trip.
+
 ## 🎯 **Next Steps**
 
 1. **Implement Resource Registry**: Define all resource types

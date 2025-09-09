@@ -1,0 +1,8 @@
+{
+  "primary": {
+    "mana_current": 100.0 + 1.0 * 1800,
+    "mana_max": 1000.0,
+    "mana_regen": 1.0
+  },
+  "notes": "Offline 7200s but capped to 1800s catch-up: +1800 mana, clamped to mana_max if exceeded."
+}

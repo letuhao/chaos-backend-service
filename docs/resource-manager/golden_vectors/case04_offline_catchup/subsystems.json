@@ -1,0 +1,16 @@
+{
+  "actor_id": "00000000-0000-0000-0000-000000000004",
+  "version": 1,
+  "metadata": { "offline_seconds": 7200 },
+  "policy": { "offline_regen_max_seconds": 1800 },
+  "inputs": [
+    { "dimension": "mana_current", "bucket": "FLAT", "value": 100.0, "system": "resource" },
+    { "dimension": "mana_max",     "bucket": "FLAT", "value": 1000.0, "system": "resource" },
+    { "dimension": "mana_regen",   "bucket": "FLAT", "value": 1.0,   "system": "resource" }
+  ],
+  "combiner": {
+    "mana_current": { "use_pipeline": true },
+    "mana_regen":   { "use_pipeline": true },
+    "mana_max":     { "use_pipeline": true }
+  }
+}

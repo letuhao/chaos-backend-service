@@ -388,3 +388,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 *Resource Manager System - A flexible and performant resource management subsystem for Actor Core v3.*
+
+## 📦 Examples & Golden Vectors
+
+- Combiner/Cap configs (for Actor Core integration via ACTOR_CORE_CONFIG_DIR):
+  - `docs/resource-manager/configs/combiner.resources.yaml`
+  - `docs/resource-manager/configs/cap_layers.resources.yaml`
+- Golden vectors (core scenarios):
+  - `golden_vectors/case01_damage_and_heal_same_tick/`
+  - `golden_vectors/case02_ooc_regen/`
+  - `golden_vectors/case03_shield_decay/`
+  - `golden_vectors/case04_offline_catchup/`

@@ -1,0 +1,75 @@
+# Combiner rules for core resources (HP/Mana/Stamina/Shield)
+# Use with ACTOR_CORE_CONFIG_DIR pointing to this directory.
+
+rules:
+  - id: "hp_max"
+    bucket_order: ["FLAT", "MULT", "POST_ADD", "OVERRIDE"]
+    clamp:
+      min: 1
+      max: 2000000
+
+  - id: "hp_current"
+    bucket_order: ["FLAT", "MULT", "POST_ADD", "OVERRIDE"]
+    clamp:
+      min: 0
+      max: 9000000000
+
+  - id: "hp_regen"
+    bucket_order: ["FLAT", "MULT", "POST_ADD", "OVERRIDE"]
+    clamp:
+      min: 0
+      max: 100000
+
+  - id: "mana_max"
+    bucket_order: ["FLAT", "MULT", "POST_ADD", "OVERRIDE"]
+    clamp:
+      min: 1
+      max: 2000000
+
+  - id: "mana_current"
+    bucket_order: ["FLAT", "MULT", "POST_ADD", "OVERRIDE"]
+    clamp:
+      min: 0
+      max: 9000000000
+
+  - id: "mana_regen"
+    bucket_order: ["FLAT", "MULT", "POST_ADD", "OVERRIDE"]
+    clamp:
+      min: 0
+      max: 100000
+
+  - id: "stamina_max"
+    bucket_order: ["FLAT", "MULT", "POST_ADD", "OVERRIDE"]
+    clamp:
+      min: 1
+      max: 2000000
+
+  - id: "stamina_current"
+    bucket_order: ["FLAT", "MULT", "POST_ADD", "OVERRIDE"]
+    clamp:
+      min: 0
+      max: 9000000000
+
+  - id: "stamina_regen"
+    bucket_order: ["FLAT", "MULT", "POST_ADD", "OVERRIDE"]
+    clamp:
+      min: 0
+      max: 100000
+
+  - id: "shield_max"
+    bucket_order: ["FLAT", "MULT", "POST_ADD", "OVERRIDE"]
+    clamp:
+      min: 0
+      max: 2000000
+
+  - id: "shield_current"
+    bucket_order: ["FLAT", "MULT", "POST_ADD", "OVERRIDE"]
+    clamp:
+      min: 0
+      max: 9000000000
+
+  - id: "hp_percentage"
+    bucket_order: []
+    clamp:
+      min: 0
+      max: 1

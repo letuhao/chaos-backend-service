@@ -1,0 +1,16 @@
+{
+  "actor_id": "00000000-0000-0000-0000-000000000002",
+  "version": 1,
+  "metadata": { "in_combat": false },
+  "inputs": [
+    { "dimension": "hp_current", "bucket": "FLAT", "value": 800.0, "system": "resource" },
+    { "dimension": "hp_max",     "bucket": "FLAT", "value": 1000.0, "system": "resource" },
+    { "dimension": "hp_regen",   "bucket": "FLAT", "value": 20.0,   "system": "resource" }
+  ],
+  "tick": { "delta_seconds": 10 },
+  "combiner": {
+    "hp_current": { "use_pipeline": true },
+    "hp_regen":   { "use_pipeline": true },
+    "hp_max":     { "use_pipeline": true }
+  }
+}

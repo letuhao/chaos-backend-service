@@ -1,0 +1,11 @@
+{
+  "primary": {
+    "hp_current": 1000.0,
+    "hp_max": 1000.0,
+    "hp_regen": 20.0
+  },
+  "derived": {
+    "hp_percentage": 1.0
+  },
+  "notes": "OOC regen: 20 hp/s * 10s = +200, clamped to hp_max."
+}

@@ -890,6 +890,33 @@ func (rm *ResourceManagerSubsystem) BatchProcessResources(ctx context.Context, a
 4. **Resource Performance**: Làm thế nào để optimize resource calculations?
 5. **Resource Testing**: Làm thế nào để test resource integrations?
 
+### ✅ Proposed Answers / 建议 / Gợi ý
+
+- **Resource Persistence** (事件溯源 + 快照 / Ghi nhật ký sự kiện + snapshot)
+  - Event-sourcing deltas with idempotency keys; periodic snapshots of `*_current` for fast loads.
+  - Atomic batches (transactional apply) with WAL before commit. Include `correlation_id` for auditing.
+  - Storage model: `resource_events(actor_id, ts, dimension, delta, cause, idem_key)` + `resource_snapshots(actor_id, version, map)`.
+
+- **Resource Synchronization** (单写者分片 + 乐观并发 / Một writer theo shard + ETag)
+  - Single-writer-per-actor via shard routing (e.g., consistent hash). All writes go through that shard.
+  - Optimistic concurrency: include `actor_version`/ETag; on mismatch, re-read and retry.
+  - Async fan-out to caches and subscribers via `resource_change` events (eventual consistency for reads).
+
+- **Resource Validation** (分层夹紧 + 业务不变量 / Kiểm tra clamp + bất biến)
+  - Enforce clamp pipeline: EffectiveCaps → Combiner `clamp_default` → constants clamp ranges.
+  - Validate invariants before persist: `0 ≤ *_current ≤ *_max`, `regen ≥ 0` (unless designed negative), shield-first absorption, etc.
+  - Schema validation on API (types/ranges), and per-dimension business rules.
+
+- **Resource Performance** (批量化 + 无锁L1缓存 / Gộp batch + cache L1 không khóa)
+  - Batch contributions; avoid per-request file I/O; reuse Aggregator and registries.
+  - Cache: L1 lock-free, L2 memory-mapped, optional L3 persistent/Redis; warm critical keys.
+  - Prefer operator-mode for aggregate ratios where pipeline is unnecessary; short-circuit no-op deltas.
+
+- **Resource Testing** (Golden + Property-based / Bộ mẫu vàng + Proptest)
+  - Golden vectors for common MMO flows (DPS + heal same tick, OOC regen, shield decay, offline catch-up).
+  - Property tests for determinism (order invariance), clamp invariants, idempotency, and monotonicity.
+  - Harness executes vectors via a temporary subsystem; asserts numeric equality on `primary` and derived.
+
 ## 🎯 **Next Steps**
 
 1. **Implement Resource Manager Subsystem**: Basic structure
@@ -901,3 +928,178 @@ func (rm *ResourceManagerSubsystem) BatchProcessResources(ctx context.Context, a
 ---
 
 *Tài liệu này sẽ được cập nhật khi có thêm yêu cầu và feedback từ team.*
+
+## API Contracts
+
+### Transactional Consumption
+
+#### POST /resource/consume
+- Description: Consume an amount from a resource with version precondition and idempotency.
+- Request
+```json
+{
+  "actor_id": "uuid",
+  "resource_id": "hp_current",
+  "amount": 150.0,
+  "snapshot_version": 42,
+  "idempotency_key": "skill_12345_cast_67890"
+}
+```
+- Responses
+  - 200 OK
+  ```json
+  { "ok": true, "new_value": 850.0, "version": 43 }
+  ```
+  - 409 Conflict (stale version)
+  ```json
+  { "ok": false, "error": "version_conflict", "latest_version": 44 }
+  ```
+  - 422 Unprocessable
+  ```json
+  { "ok": false, "error": "insufficient_resource", "current": 50.0 }
+  ```
+
+#### POST /resource/restore
+- Same schema as consume; adds amount to the resource (clamped to max).
+
+#### POST /resource/batch_consume
+- Description: Atomic multi-resource consumption (all-or-none).
+- Request
+```json
+{
+  "actor_id": "uuid",
+  "costs": [
+    { "resource_id": "mana_current", "amount": 80.0 },
+    { "resource_id": "stamina_current", "amount": 25.0 }
+  ],
+  "snapshot_version": 42,
+  "idempotency_key": "skill_abc_combo_1"
+}
+```
+- Responses
+  - 200 OK with new values per resource
+  - 409 Conflict with `latest_version`
+  - 422 Unprocessable with `insufficient_resource` and offending resource list
+
+### Error Codes
+- `version_conflict`: Provided `snapshot_version` differs from latest.
+- `insufficient_resource`: Cannot cover the requested amount.
+- `invalid_resource`: Unknown or immutable resource.
+- `invalid_input`: Schema/validation errors.
+- `internal_error`: Unexpected failure.
+
+### Notes
+- All mutations are server-authoritative; client may predict UI but must reconcile.
+- Idempotency keys should be unique per actor-action; TTL aligns with server retry window.
+- Prefer using `actor_core` snapshot immediately before consumption to minimize conflicts.
+
+## 🔧 Implement Guide: Integrate Resource Manager with Actor Core / 实施指南 / Hướng dẫn tích hợp
+
+This section provides exact steps, file paths, Rust types, and commands to integrate Resource Manager as an Actor Core subsystem.
+
+### 1) Module scaffolding (模块骨架/Khung module)
+- Create files:
+  - `crates/actor-core/src/subsystems/mod.rs`
+  - `crates/actor-core/src/subsystems/resource_manager.rs`
+
+Add module index:
+```rust
+// crates/actor-core/src/subsystems/mod.rs
+pub mod resource_manager;
+```
+
+Export from library:
+```rust
+// crates/actor-core/src/lib.rs
+pub mod subsystems; // ensure this line exists
+```
+
+### 2) Implement `ResourceManagerSubsystem` (实现子系统/Cài đặt subsystem)
+- File: `crates/actor-core/src/subsystems/resource_manager.rs`
+- Struct: `ResourceManagerSubsystem`
+- Implements: `crate::interfaces::Subsystem`
+
+Template:
+```rust
+use crate::interfaces::Subsystem as SubsystemTrait;
+use crate::types::{SubsystemOutput, Contribution};
+use crate::enums::Bucket;
+
+pub struct ResourceManagerSubsystem {
+    system_id: String,
+    priority: i64,
+}
+
+impl ResourceManagerSubsystem {
+    pub fn new() -> Self { Self { system_id: "resource_manager".into(), priority: 100 } }
+}
+
+#[async_trait::async_trait]
+impl SubsystemTrait for ResourceManagerSubsystem {
+    fn system_id(&self) -> &str { &self.system_id }
+    fn priority(&self) -> i64 { self.priority }
+    async fn contribute(&self, _actor: &crate::types::Actor) -> crate::ActorCoreResult<SubsystemOutput> {
+        let mut out = SubsystemOutput::new(self.system_id.clone());
+        // Emit baseline/example contributions. Replace with real actor state.
+        out.add_primary(Contribution{ dimension: "hp_max".into(), bucket: Bucket::Flat, value: 1000.0, system: self.system_id.clone(), priority: Some(100), tags: None });
+        out.add_primary(Contribution{ dimension: "hp_current".into(), bucket: Bucket::Flat, value: 960.0, system: self.system_id.clone(), priority: Some(100), tags: None });
+        Ok(out)
+    }
+}
+```
+
+### 3) Register subsystem (注册/Cấu hình đăng ký)
+- File: `crates/actor-core/src/registry.rs`
+- In the default registration path, add:
+```rust
+self.register(Box::new(crate::subsystems::resource_manager::ResourceManagerSubsystem::new()))?;
+```
+
+Place the line where other subsystems are registered (e.g., in `PluginRegistryImpl` bootstrap).
+
+### 4) Configuration wiring (配置接入/Cấu hình)
+- Ensure loader reads from env var:
+  - `ACTOR_CORE_CONFIG_DIR = docs/resource-manager/configs`
+- Files provided:
+  - `docs/resource-manager/configs/combiner.resources.yaml`
+  - `docs/resource-manager/configs/cap_layers.resources.yaml`
+- Combiner rules specify pipeline vs operator mode and clamp defaults per dimension.
+
+PowerShell example:
+```powershell
+$Env:ACTOR_CORE_CONFIG_DIR = "docs/resource-manager/configs"
+```
+
+### 5) Tick/decay/offline semantics (逻辑/Ngữ nghĩa)
+- Tick: add `*_regen * delta_seconds` to `*_current` using `Bucket::Flat`.
+- Shield decay: add `-shield_per_second * delta_seconds` to `shield_current`.
+- Offline catch-up: add `min(offline_seconds, offline_regen_max_seconds) * regen` to current.
+- Clamp precedence: EffectiveCaps → Combiner `clamp_default` → constants clamp ranges.
+- Derived: `hp_percentage` via operator-mode configured in combiner.
+
+### 6) End-to-end usage (端到端/Đầu-cuối)
+Minimal example to resolve an actor snapshot:
+```rust
+use actor_core::{RegistryFactory, ServiceFactory, CacheFactory};
+
+let plugin = RegistryFactory::create_plugin_registry();
+let combiner = RegistryFactory::create_combiner_registry();
+let cap_layers = RegistryFactory::create_cap_layer_registry();
+let caps = ServiceFactory::create_caps_provider(cap_layers);
+let cache = CacheFactory::create_in_memory_cache(10_000, 600);
+let aggregator = ServiceFactory::create_aggregator(plugin, combiner, caps, cache);
+
+let rt = tokio::runtime::Runtime::new().unwrap();
+let actor = actor_core::types::Actor::new("ActorA".into(), "Human".into());
+let snapshot = rt.block_on(aggregator.resolve(&actor)).unwrap();
+assert!(snapshot.primary.get("hp_current").is_some());
+```
+
+### 7) Golden vectors & tests (用例/Kiểm thử)
+- Harness: `crates/actor-core/tests/golden_vector_harness.rs`
+- Set env and run:
+```powershell
+$Env:ACTOR_CORE_CONFIG_DIR = "docs/resource-manager/configs"
+cargo test golden_vector_harness -- --nocapture
+```
+- Run property and operator tests; use `--features extra_buckets` if needed.

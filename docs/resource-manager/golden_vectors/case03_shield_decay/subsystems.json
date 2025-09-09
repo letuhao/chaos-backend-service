@@ -1,0 +1,13 @@
+{
+  "actor_id": "00000000-0000-0000-0000-000000000003",
+  "version": 1,
+  "inputs": [
+    { "dimension": "shield_current", "bucket": "FLAT", "value": 200.0, "system": "buff" }
+  ],
+  "tick": { "delta_seconds": 10 },
+  "decay": { "shield_per_second": 15.0 },
+  "combiner": {
+    "shield_current": { "use_pipeline": true },
+    "shield_max": { "use_pipeline": true }
+  }
+}

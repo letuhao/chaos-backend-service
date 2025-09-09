@@ -1,0 +1,54 @@
+# Cap Layer Registry for core resources
+across_layer_policy: INTERSECT
+order:
+  - REALM
+  - WORLD
+  - EVENT
+  - TOTAL
+
+layers:
+  - name: REALM
+    priority: 10
+    caps:
+      - id: "hp_max"
+        cap_mode: "HARD_MAX"
+        max: 2000000
+      - id: "mana_max"
+        cap_mode: "HARD_MAX"
+        max: 2000000
+      - id: "stamina_max"
+        cap_mode: "HARD_MAX"
+        max: 2000000
+
+  - name: WORLD
+    priority: 20
+    caps:
+      - id: "hp_regen"
+        cap_mode: "HARD_MAX"
+        max: 100000
+      - id: "mana_regen"
+        cap_mode: "HARD_MAX"
+        max: 100000
+      - id: "stamina_regen"
+        cap_mode: "HARD_MAX"
+        max: 100000
+
+  - name: EVENT
+    priority: 30
+    caps:
+      - id: "shield_max"
+        cap_mode: "HARD_MAX"
+        max: 500000
+
+  - name: TOTAL
+    priority: 40
+    caps:
+      - id: "hp_max"
+        cap_mode: "HARD_MAX"
+        max: 2000000
+      - id: "mana_max"
+        cap_mode: "HARD_MAX"
+        max: 2000000
+      - id: "stamina_max"
+        cap_mode: "HARD_MAX"
+        max: 2000000

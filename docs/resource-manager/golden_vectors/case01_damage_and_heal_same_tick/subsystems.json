@@ -1,0 +1,17 @@
+{
+  "actor_id": "00000000-0000-0000-0000-000000000001",
+  "version": 1,
+  "inputs": [
+    { "dimension": "hp_current", "bucket": "FLAT", "value": 1000.0, "system": "baseline" },
+    { "dimension": "shield_current", "bucket": "FLAT", "value": -50.0, "system": "combat" },
+    { "dimension": "hp_current", "bucket": "FLAT", "value": -100.0, "system": "combat" },
+    { "dimension": "hp_current", "bucket": "FLAT", "value": 60.0,  "system": "healing" }
+  ],
+  "caps": [
+    { "dimension": "hp_current", "mode": "HARD_MIN", "kind": "min", "value": 0 }
+  ],
+  "combiner": {
+    "hp_current": { "use_pipeline": true },
+    "shield_current": { "use_pipeline": true }
+  }
+}

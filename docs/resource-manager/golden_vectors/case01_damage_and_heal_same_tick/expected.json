@@ -1,0 +1,12 @@
+{
+  "primary": {
+    "shield_current": 0.0,
+    "hp_current": 960.0
+  },
+  "derived": {
+    "hp_percentage": 0.96
+  },
+  "caps_used": {
+    "hp_current": { "min": 0.0, "max": 9000000000.0 }
+  }
+}
