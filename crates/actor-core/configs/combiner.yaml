@@ -1,0 +1,39 @@
+# Combiner Configuration
+# Defines bucket ordering and clamping rules for stat aggregation
+
+rules:
+  - id: "attack"
+    bucket_order: ["FLAT", "MULT", "POST_ADD", "OVERRIDE"]
+    clamp:
+      min: 0
+      max: 99999
+
+  - id: "defense"
+    bucket_order: ["FLAT", "MULT", "POST_ADD", "OVERRIDE"]
+    clamp:
+      min: 0
+      max: 99999
+
+  - id: "speed"
+    bucket_order: ["FLAT", "MULT", "POST_ADD", "OVERRIDE"]
+    clamp:
+      min: 0
+      max: 1000
+
+  - id: "hp_max"
+    bucket_order: ["FLAT", "MULT", "POST_ADD", "OVERRIDE"]
+    clamp:
+      min: 1
+      max: 999999
+
+  - id: "mana_max"
+    bucket_order: ["FLAT", "MULT", "POST_ADD", "OVERRIDE"]
+    clamp:
+      min: 0
+      max: 99999
+
+  - id: "stamina_max"
+    bucket_order: ["FLAT", "MULT", "POST_ADD", "OVERRIDE"]
+    clamp:
+      min: 0
+      max: 99999

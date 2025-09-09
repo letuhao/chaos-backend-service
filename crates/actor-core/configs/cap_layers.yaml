@@ -1,0 +1,59 @@
+# Cap Layers Configuration
+# Defines the priority order and cap modes for different layers
+
+layers:
+  - name: "base"
+    priority: 0
+    caps:
+      - id: "hp_max"
+        cap_mode: "BASELINE"
+        min: 0
+        max: 999999
+      - id: "attack"
+        cap_mode: "BASELINE"
+        min: 0
+        max: 99999
+      - id: "defense"
+        cap_mode: "BASELINE"
+        min: 0
+        max: 99999
+      - id: "speed"
+        cap_mode: "BASELINE"
+        min: 0
+        max: 1000
+
+  - name: "equipment"
+    priority: 10
+    caps:
+      - id: "attack"
+        cap_mode: "ADDITIVE"
+      - id: "defense"
+        cap_mode: "ADDITIVE"
+      - id: "speed"
+        cap_mode: "ADDITIVE"
+
+  - name: "buffs"
+    priority: 20
+    caps:
+      - id: "attack"
+        cap_mode: "HARD_MAX"
+        max: 5000
+      - id: "defense"
+        cap_mode: "HARD_MAX"
+        max: 5000
+      - id: "speed"
+        cap_mode: "HARD_MAX"
+        max: 2000
+
+  - name: "debuffs"
+    priority: 30
+    caps:
+      - id: "attack"
+        cap_mode: "HARD_MIN"
+        min: 1
+      - id: "defense"
+        cap_mode: "HARD_MIN"
+        min: 1
+      - id: "speed"
+        cap_mode: "HARD_MIN"
+        min: 1
