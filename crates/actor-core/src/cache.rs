@@ -215,37 +215,176 @@ impl DistributedCache {
 
 #[async_trait]
 impl Cache for DistributedCache {
-    fn get(&self, _key: &str) -> Option<serde_json::Value> {
-        // This is a simplified implementation
-        // In a real implementation, this would be async
-        warn!("DistributedCache::get is not fully implemented");
-        None
+    fn get(&self, key: &str) -> Option<serde_json::Value> {
+        // For now, we'll use a blocking approach since the Cache trait is not async
+        // In a real implementation, this would need to be async or use a different approach
+        let rt = tokio::runtime::Handle::current();
+        rt.block_on(async {
+            match self.get_connection().await {
+                Ok(mut conn) => {
+                    let result: Result<Option<String>, redis::RedisError> = redis::cmd("GET")
+                        .arg(key)
+                        .query_async(&mut conn)
+                        .await;
+                    
+                    match result {
+                        Ok(Some(value)) => {
+                            match serde_json::from_str(&value) {
+                                Ok(json_value) => {
+                                    let mut metrics = self.metrics.write().unwrap();
+                                    metrics.hits += 1;
+                                    Some(json_value)
+                                }
+                                Err(_) => {
+                                    let mut metrics = self.metrics.write().unwrap();
+                                    metrics.misses += 1;
+                                    None
+                                }
+                            }
+                        }
+                        Ok(None) => {
+                            let mut metrics = self.metrics.write().unwrap();
+                            metrics.misses += 1;
+                            None
+                        }
+                        Err(e) => {
+                            warn!("Redis GET error: {}", e);
+                            let mut metrics = self.metrics.write().unwrap();
+                            metrics.misses += 1;
+                            None
+                        }
+                    }
+                }
+                Err(e) => {
+                    warn!("Failed to get Redis connection: {}", e);
+                    let mut metrics = self.metrics.write().unwrap();
+                    metrics.misses += 1;
+                    None
+                }
+            }
+        })
     }
 
-    fn set(&self, _key: String, _value: serde_json::Value, _ttl: Option<u64>) -> ActorCoreResult<()> {
-        // This is a simplified implementation
-        // In a real implementation, this would be async
-        warn!("DistributedCache::set is not fully implemented");
-        Ok(())
+    fn set(&self, key: String, value: serde_json::Value, ttl: Option<u64>) -> ActorCoreResult<()> {
+        let rt = tokio::runtime::Handle::current();
+        rt.block_on(async {
+            match self.get_connection().await {
+                Ok(mut conn) => {
+                    let json_str = serde_json::to_string(&value)
+                        .map_err(|e| crate::ActorCoreError::CacheError(
+                            format!("Failed to serialize value: {}", e)
+                        ))?;
+                    
+                    let ttl_seconds = ttl.unwrap_or(self.default_ttl);
+                    let result: Result<(), redis::RedisError> = if ttl_seconds > 0 {
+                        redis::cmd("SETEX")
+                            .arg(&key)
+                            .arg(ttl_seconds)
+                            .arg(&json_str)
+                            .query_async(&mut conn)
+                            .await
+                    } else {
+                        redis::cmd("SET")
+                            .arg(&key)
+                            .arg(&json_str)
+                            .query_async(&mut conn)
+                            .await
+                    };
+                    
+                    match result {
+                        Ok(()) => {
+                            let mut metrics = self.metrics.write().unwrap();
+                            metrics.sets += 1;
+                            Ok(())
+                        }
+                        Err(e) => {
+                            warn!("Redis SET error: {}", e);
+                            Err(crate::ActorCoreError::CacheError(
+                                format!("Failed to set cache value: {}", e)
+                            ))
+                        }
+                    }
+                }
+                Err(e) => {
+                    warn!("Failed to get Redis connection: {}", e);
+                    Err(crate::ActorCoreError::CacheError(
+                        format!("Failed to get Redis connection: {}", e)
+                    ))
+                }
+            }
+        })
     }
 
-    fn delete(&self, _key: &str) -> ActorCoreResult<()> {
-        // This is a simplified implementation
-        // In a real implementation, this would be async
-        warn!("DistributedCache::delete is not fully implemented");
-        Ok(())
+    fn delete(&self, key: &str) -> ActorCoreResult<()> {
+        let rt = tokio::runtime::Handle::current();
+        rt.block_on(async {
+            match self.get_connection().await {
+                Ok(mut conn) => {
+                    let result: Result<u32, redis::RedisError> = redis::cmd("DEL")
+                        .arg(key)
+                        .query_async(&mut conn)
+                        .await;
+                    
+                    match result {
+                        Ok(_) => {
+                            let mut metrics = self.metrics.write().unwrap();
+                            metrics.deletes += 1;
+                            Ok(())
+                        }
+                        Err(e) => {
+                            warn!("Redis DEL error: {}", e);
+                            Err(crate::ActorCoreError::CacheError(
+                                format!("Failed to delete cache value: {}", e)
+                            ))
+                        }
+                    }
+                }
+                Err(e) => {
+                    warn!("Failed to get Redis connection: {}", e);
+                    Err(crate::ActorCoreError::CacheError(
+                        format!("Failed to get Redis connection: {}", e)
+                    ))
+                }
+            }
+        })
     }
 
     fn clear(&self) -> ActorCoreResult<()> {
-        // This is a simplified implementation
-        // In a real implementation, this would be async
-        warn!("DistributedCache::clear is not fully implemented");
-        Ok(())
+        let rt = tokio::runtime::Handle::current();
+        rt.block_on(async {
+            match self.get_connection().await {
+                Ok(mut conn) => {
+                    let result: Result<(), redis::RedisError> = redis::cmd("FLUSHDB")
+                        .query_async(&mut conn)
+                        .await;
+                    
+                    match result {
+                        Ok(()) => {
+                    let mut metrics = self.metrics.write().unwrap();
+                    metrics.sets += 1; // Using sets as a proxy for clears
+                            Ok(())
+                        }
+                        Err(e) => {
+                            warn!("Redis FLUSHDB error: {}", e);
+                            Err(crate::ActorCoreError::CacheError(
+                                format!("Failed to clear cache: {}", e)
+                            ))
+                        }
+                    }
+                }
+                Err(e) => {
+                    warn!("Failed to get Redis connection: {}", e);
+                    Err(crate::ActorCoreError::CacheError(
+                        format!("Failed to get Redis connection: {}", e)
+                    ))
+                }
+            }
+        })
     }
 
     fn get_stats(&self) -> CacheStats {
-        // This is a simplified implementation
-        CacheStats::default()
+        let metrics = self.metrics.read().unwrap();
+        metrics.clone()
     }
 }
 

@@ -11,7 +11,7 @@ use tracing::{info, warn, error};
 
 use crate::interfaces::{
     Aggregator, CapsProvider, AcrossLayerPolicy,
-    PluginRegistry, Cache, CapLayerRegistry, AggregatorMetrics, CapStatistics
+    PluginRegistry, Cache, CapLayerRegistry, CombinerRegistry, AggregatorMetrics, CapStatistics
 };
 use crate::types::*;
 use crate::ActorCoreResult;
@@ -21,6 +21,8 @@ use crate::bucket_processor::*;
 pub struct AggregatorImpl {
     /// Registry for managing subsystems
     subsystem_registry: Arc<dyn PluginRegistry>,
+    /// Registry for merge rules and operators
+    combiner_registry: Arc<dyn CombinerRegistry>,
     /// Provider for cap calculations
     caps_provider: Arc<dyn CapsProvider>,
     /// Cache for storing snapshots
@@ -33,11 +35,13 @@ impl AggregatorImpl {
     /// Create a new aggregator instance.
     pub fn new(
         subsystem_registry: Arc<dyn PluginRegistry>,
+        combiner_registry: Arc<dyn CombinerRegistry>,
         caps_provider: Arc<dyn CapsProvider>,
         cache: Arc<dyn Cache>,
     ) -> Self {
         Self {
             subsystem_registry,
+            combiner_registry,
             caps_provider,
             cache,
             metrics: Arc::new(RwLock::new(AggregatorMetrics::default())),
@@ -75,20 +79,85 @@ impl AggregatorImpl {
             // Validate contributions before processing
             validate_contributions(&owned_contributions)?;
             
+            // Get merge rule for this dimension from CombinerRegistry
+            let merge_rule = self.combiner_registry.get_rule(&dimension);
+            
             // Get effective caps for this dimension
             let clamp_caps = effective_caps.get(&dimension);
             
-            // Process contributions in correct bucket order with clamping
-            let value = process_contributions_in_order(
-                owned_contributions,
-                0.0, // Initial value
-                clamp_caps,
-            )?;
+            // Process contributions using the appropriate method based on merge rule
+            let value = if let Some(rule) = merge_rule {
+                if rule.use_pipeline {
+                    // Use pipeline processing (bucket order)
+                    process_contributions_in_order(
+                        owned_contributions,
+                        0.0, // Initial value
+                        clamp_caps,
+                    )?
+                } else {
+                    // Use operator-based processing
+                    self.process_contributions_with_operator(
+                        owned_contributions,
+                        rule.operator,
+                        clamp_caps,
+                    )?
+                }
+            } else {
+                // Default to pipeline processing if no rule is found
+                process_contributions_in_order(
+                    owned_contributions,
+                    0.0, // Initial value
+                    clamp_caps,
+                )?
+            };
 
             primary_stats.insert(dimension, value);
         }
 
         Ok(primary_stats)
+    }
+
+    /// Process contributions using a specific operator instead of pipeline processing.
+    fn process_contributions_with_operator(
+        &self,
+        contributions: Vec<Contribution>,
+        operator: crate::enums::Operator,
+        clamp_caps: Option<&Caps>,
+    ) -> ActorCoreResult<f64> {
+        if contributions.is_empty() {
+            return Ok(0.0);
+        }
+
+        let values: Vec<f64> = contributions.into_iter().map(|c| c.value).collect();
+        let mut result = match operator {
+            crate::enums::Operator::Sum => {
+                values.iter().sum()
+            }
+            crate::enums::Operator::Max => {
+                values.into_iter().fold(f64::NEG_INFINITY, f64::max)
+            }
+            crate::enums::Operator::Min => {
+                values.into_iter().fold(f64::INFINITY, f64::min)
+            }
+            crate::enums::Operator::Average => {
+                let sum: f64 = values.iter().sum();
+                sum / values.len() as f64
+            }
+            crate::enums::Operator::Multiply => {
+                values.into_iter().fold(1.0, |acc, val| acc * val)
+            }
+            crate::enums::Operator::Intersect => {
+                // For intersect, we take the minimum value (most restrictive)
+                values.into_iter().fold(f64::INFINITY, f64::min)
+            }
+        };
+
+        // Apply clamping if provided
+        if let Some(caps) = clamp_caps {
+            result = caps.clamp(result);
+        }
+
+        Ok(result)
     }
 
     /// Aggregate derived stats from subsystem outputs.
@@ -123,15 +192,37 @@ impl AggregatorImpl {
             // Validate contributions before processing
             validate_contributions(&owned_contributions)?;
             
+            // Get merge rule for this dimension from CombinerRegistry
+            let merge_rule = self.combiner_registry.get_rule(&dimension);
+            
             // Get effective caps for this dimension
             let clamp_caps = effective_caps.get(&dimension);
             
-            // Process contributions in correct bucket order with clamping
-            let value = process_contributions_in_order(
-                owned_contributions,
-                0.0, // Initial value
-                clamp_caps,
-            )?;
+            // Process contributions using the appropriate method based on merge rule
+            let value = if let Some(rule) = merge_rule {
+                if rule.use_pipeline {
+                    // Use pipeline processing (bucket order)
+                    process_contributions_in_order(
+                        owned_contributions,
+                        0.0, // Initial value
+                        clamp_caps,
+                    )?
+                } else {
+                    // Use operator-based processing
+                    self.process_contributions_with_operator(
+                        owned_contributions,
+                        rule.operator,
+                        clamp_caps,
+                    )?
+                }
+            } else {
+                // Default to pipeline processing if no rule is found
+                process_contributions_in_order(
+                    owned_contributions,
+                    0.0, // Initial value
+                    clamp_caps,
+                )?
+            };
 
             derived_stats.insert(dimension, value);
         }
@@ -480,10 +571,11 @@ impl ServiceFactory {
     /// Create a new aggregator instance.
     pub fn create_aggregator(
         subsystem_registry: Arc<dyn PluginRegistry>,
+        combiner_registry: Arc<dyn CombinerRegistry>,
         caps_provider: Arc<dyn CapsProvider>,
         cache: Arc<dyn Cache>,
     ) -> Arc<dyn Aggregator> {
-        Arc::new(AggregatorImpl::new(subsystem_registry, caps_provider, cache))
+        Arc::new(AggregatorImpl::new(subsystem_registry, combiner_registry, caps_provider, cache))
     }
 
     /// Create a new caps provider instance.

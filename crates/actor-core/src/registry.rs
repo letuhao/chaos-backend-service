@@ -14,36 +14,24 @@ use crate::interfaces::{PluginRegistry, CombinerRegistry, CapLayerRegistry, Comb
 use crate::types::*;
 use crate::ActorCoreResult;
 
-/// Mock subsystem for registry testing
-struct MockSubsystemForRegistry {
-    system_id: String,
-    priority: i64,
+
+/// Wrapper to convert Arc<dyn SubsystemTrait> to Box<dyn SubsystemTrait>
+struct SubsystemWrapper {
+    inner: Arc<dyn SubsystemTrait>,
 }
 
 #[async_trait::async_trait]
-impl SubsystemTrait for MockSubsystemForRegistry {
+impl SubsystemTrait for SubsystemWrapper {
     fn system_id(&self) -> &str {
-        &self.system_id
+        self.inner.system_id()
     }
     
     fn priority(&self) -> i64 {
-        self.priority
+        self.inner.priority()
     }
     
-    async fn contribute(&self, _actor: &Actor) -> ActorCoreResult<SubsystemOutput> {
-        // Create a simple output for testing
-        let mut output = SubsystemOutput::new(self.system_id.clone());
-        
-        // Add a simple contribution
-        let contribution = Contribution::new(
-            "strength".to_string(),
-            crate::enums::Bucket::Flat,
-            10.0,
-            self.system_id.clone(),
-        );
-        output.add_primary(contribution);
-        
-        Ok(output)
+    async fn contribute(&self, actor: &Actor) -> ActorCoreResult<SubsystemOutput> {
+        self.inner.contribute(actor).await
     }
 }
 
@@ -70,19 +58,16 @@ impl PluginRegistryImpl {
         let subsystems = self.subsystems.read().unwrap();
         let mut subsystem_list: Vec<Box<dyn SubsystemTrait>> = Vec::new();
         
-        // We need to return Box<dyn SubsystemTrait> but we have Arc<dyn SubsystemTrait>
-        // This is a limitation of the current design. For now, we'll return an empty vector
-        // In a real implementation, the PluginRegistry trait should use Arc<dyn SubsystemTrait>
-        // or we need to implement a different approach
-        
-        // For testing purposes, let's create a simple mock that works
-        for (system_id, _subsystem) in subsystems.iter() {
-            // Create a simple mock subsystem for testing
-            let mock_subsystem = MockSubsystemForRegistry {
-                system_id: system_id.clone(),
-                priority: 100, // Default priority
+        // Convert Arc<dyn SubsystemTrait> to Box<dyn SubsystemTrait>
+        // This is a limitation of the current design, but we can work around it
+        // by cloning the Arc and then converting to Box
+        for (_, subsystem) in subsystems.iter() {
+            // We need to create a wrapper that implements the trait
+            // Since we can't directly convert Arc to Box, we'll create a wrapper
+            let wrapper = SubsystemWrapper {
+                inner: subsystem.clone(),
             };
-            subsystem_list.push(Box::new(mock_subsystem));
+            subsystem_list.push(Box::new(wrapper));
         }
         
         // Sort by priority (higher priority first)
@@ -135,20 +120,42 @@ impl PluginRegistry for PluginRegistryImpl {
         }
     }
 
-    fn get_by_id(&self, _system_id: &str) -> Option<Box<dyn SubsystemTrait>> {
-        // This is a simplified implementation
-        // In a real implementation, this would need to handle the async nature properly
-        None
+    fn get_by_id(&self, system_id: &str) -> Option<Box<dyn SubsystemTrait>> {
+        let subsystems = self.subsystems.read().unwrap();
+        
+        if let Some(subsystem) = subsystems.get(system_id) {
+            // Create a wrapper to convert Arc<dyn SubsystemTrait> to Box<dyn SubsystemTrait>
+            let wrapper = SubsystemWrapper {
+                inner: subsystem.clone(),
+            };
+            Some(Box::new(wrapper))
+        } else {
+            None
+        }
     }
 
     fn get_by_priority(&self) -> Vec<Box<dyn SubsystemTrait>> {
         self.get_subsystems_by_priority()
     }
 
-    fn get_by_priority_range(&self, _min_priority: i64, _max_priority: i64) -> Vec<Box<dyn SubsystemTrait>> {
-        // This is a simplified implementation
-        // In a real implementation, we would need to handle the Clone issue differently
-        Vec::new()
+    fn get_by_priority_range(&self, min_priority: i64, max_priority: i64) -> Vec<Box<dyn SubsystemTrait>> {
+        let subsystems = self.subsystems.read().unwrap();
+        let mut subsystem_list: Vec<Box<dyn SubsystemTrait>> = Vec::new();
+        
+        // Filter subsystems by priority range
+        for (_, subsystem) in subsystems.iter() {
+            let priority = subsystem.priority();
+            if priority >= min_priority && priority <= max_priority {
+                let wrapper = SubsystemWrapper {
+                    inner: subsystem.clone(),
+                };
+                subsystem_list.push(Box::new(wrapper));
+            }
+        }
+        
+        // Sort by priority (higher priority first)
+        subsystem_list.sort_by(|a, b| b.priority().cmp(&a.priority()));
+        subsystem_list
     }
 
     fn is_registered(&self, system_id: &str) -> bool {

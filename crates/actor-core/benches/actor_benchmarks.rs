@@ -6,7 +6,7 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId, Throughput};
 use actor_core::types::*;
 use actor_core::services::{AggregatorImpl, CapsProviderImpl};
-use actor_core::registry::{PluginRegistryImpl, CapLayerRegistryImpl};
+use actor_core::registry::{PluginRegistryImpl, CapLayerRegistryImpl, CombinerRegistryImpl};
 use actor_core::interfaces::{PluginRegistry, Cache};
 use actor_core::{InMemoryCache, ActorCoreResult};
 use std::collections::HashMap;
@@ -222,9 +222,11 @@ pub fn bench_aggregation_performance(c: &mut Criterion) {
                 }
                 
                 let cap_layer_registry = Arc::new(CapLayerRegistryImpl::new());
+                let combiner_registry = Arc::new(CombinerRegistryImpl::new());
                 let caps_provider = CapsProviderImpl::new(cap_layer_registry);
                 let aggregator = AggregatorImpl::new(
                     Arc::new(registry),
+                    combiner_registry,
                     Arc::new(caps_provider),
                     cache,
                 );

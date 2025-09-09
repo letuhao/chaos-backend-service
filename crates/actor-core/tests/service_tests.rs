@@ -7,7 +7,7 @@ use actor_core::types::{Actor, Contribution, SubsystemOutput};
 use actor_core::enums::Bucket;
 use actor_core::interfaces::{Aggregator, CapsProvider, PluginRegistry, AcrossLayerPolicy};
 use actor_core::services::{AggregatorImpl, CapsProviderImpl};
-use actor_core::registry::{CapLayerRegistryImpl, PluginRegistryImpl};
+use actor_core::registry::{CapLayerRegistryImpl, PluginRegistryImpl, CombinerRegistryImpl};
 use actor_core::InMemoryCache;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -85,12 +85,14 @@ async fn test_aggregator_impl_basic() {
     assert_eq!(plugin_registry.count(), 2);
     
     let cap_layer_registry = Arc::new(CapLayerRegistryImpl::new());
+    let combiner_registry = Arc::new(CombinerRegistryImpl::new());
     let caps_provider = Arc::new(CapsProviderImpl::new(cap_layer_registry));
     let cache = Arc::new(InMemoryCache::new(1000, 3600));
     
     // Create aggregator
     let aggregator = AggregatorImpl::new(
         plugin_registry,
+        combiner_registry,
         caps_provider,
         cache,
     );
@@ -121,8 +123,10 @@ async fn test_aggregator_impl_with_context() {
     let caps_provider = Arc::new(CapsProviderImpl::new(cap_layer_registry));
     let cache = Arc::new(InMemoryCache::new(1000, 3600));
     
+    let combiner_registry = Arc::new(CombinerRegistryImpl::new());
     let aggregator = AggregatorImpl::new(
         plugin_registry,
+        combiner_registry,
         caps_provider,
         cache,
     );
@@ -147,8 +151,10 @@ async fn test_aggregator_impl_batch_resolution() {
     let caps_provider = Arc::new(CapsProviderImpl::new(cap_layer_registry));
     let cache = Arc::new(InMemoryCache::new(1000, 3600));
     
+    let combiner_registry = Arc::new(CombinerRegistryImpl::new());
     let aggregator = AggregatorImpl::new(
         plugin_registry,
+        combiner_registry,
         caps_provider,
         cache,
     );
@@ -178,8 +184,10 @@ async fn test_aggregator_impl_cache_operations() {
     let caps_provider = Arc::new(CapsProviderImpl::new(cap_layer_registry));
     let cache = Arc::new(InMemoryCache::new(1000, 3600));
     
+    let combiner_registry = Arc::new(CombinerRegistryImpl::new());
     let aggregator = AggregatorImpl::new(
         plugin_registry,
+        combiner_registry,
         caps_provider,
         cache,
     );
@@ -216,8 +224,10 @@ async fn test_aggregator_impl_metrics() {
     let caps_provider = Arc::new(CapsProviderImpl::new(cap_layer_registry));
     let cache = Arc::new(InMemoryCache::new(1000, 3600));
     
+    let combiner_registry = Arc::new(CombinerRegistryImpl::new());
     let aggregator = AggregatorImpl::new(
         plugin_registry,
+        combiner_registry,
         caps_provider,
         cache,
     );
@@ -283,8 +293,10 @@ async fn test_service_error_handling() {
     let caps_provider = Arc::new(CapsProviderImpl::new(cap_layer_registry));
     let cache = Arc::new(InMemoryCache::new(1000, 3600));
     
+    let combiner_registry = Arc::new(CombinerRegistryImpl::new());
     let aggregator = AggregatorImpl::new(
         plugin_registry,
+        combiner_registry,
         caps_provider,
         cache,
     );
@@ -318,8 +330,10 @@ async fn test_service_performance_many_subsystems() {
     let caps_provider = Arc::new(CapsProviderImpl::new(cap_layer_registry));
     let cache = Arc::new(InMemoryCache::new(1000, 3600));
     
+    let combiner_registry = Arc::new(CombinerRegistryImpl::new());
     let aggregator = AggregatorImpl::new(
         plugin_registry,
+        combiner_registry,
         caps_provider,
         cache,
     );
@@ -344,8 +358,10 @@ async fn test_cache_performance() {
     let caps_provider = Arc::new(CapsProviderImpl::new(cap_layer_registry));
     let cache = Arc::new(InMemoryCache::new(1000, 3600));
     
+    let combiner_registry = Arc::new(CombinerRegistryImpl::new());
     let aggregator = AggregatorImpl::new(
         plugin_registry,
+        combiner_registry,
         caps_provider,
         cache,
     );

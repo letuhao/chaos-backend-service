@@ -7,7 +7,7 @@ use actor_core::types::{Actor, Subsystem as SubsystemStruct, Contribution, Subsy
 use actor_core::enums::Bucket;
 use actor_core::interfaces::{Aggregator, PluginRegistry, Cache};
 use actor_core::services::{AggregatorImpl, CapsProviderImpl};
-use actor_core::registry::{CapLayerRegistryImpl, PluginRegistryImpl};
+use actor_core::registry::{CapLayerRegistryImpl, PluginRegistryImpl, CombinerRegistryImpl};
 use actor_core::InMemoryCache;
 use std::sync::Arc;
 use std::time::Instant;
@@ -235,8 +235,10 @@ async fn benchmark_aggregation_subsystem_scaling() {
             plugin_registry.register(Box::new(subsystem)).unwrap();
         }
         
+        let combiner_registry = Arc::new(CombinerRegistryImpl::new());
         let aggregator = AggregatorImpl::new(
             plugin_registry,
+            combiner_registry,
             caps_provider.clone(),
             cache.clone(),
         );
@@ -313,11 +315,13 @@ async fn benchmark_batch_processing() {
     let caps_provider = Arc::new(CapsProviderImpl::new(cap_layer_registry));
     let cache = Arc::new(InMemoryCache::new(1000, 3600));
     
-    let aggregator = AggregatorImpl::new(
-        plugin_registry,
-        caps_provider,
-        cache,
-    );
+        let combiner_registry = Arc::new(CombinerRegistryImpl::new());
+        let aggregator = AggregatorImpl::new(
+            plugin_registry,
+            combiner_registry,
+            caps_provider,
+            cache,
+        );
     
     for batch_size in [1, 10, 50, 100, 500] {
         // Create batch of actors
@@ -394,11 +398,13 @@ async fn benchmark_memory_usage() {
 async fn benchmark_concurrent_operations() {
     let plugin_registry = Arc::new(PluginRegistryImpl::new());
     let cap_layer_registry = Arc::new(CapLayerRegistryImpl::new());
+    let combiner_registry = Arc::new(CombinerRegistryImpl::new());
     let caps_provider = Arc::new(CapsProviderImpl::new(cap_layer_registry));
     let cache = Arc::new(InMemoryCache::new(1000, 3600));
     
     let aggregator = Arc::new(AggregatorImpl::new(
         plugin_registry,
+        combiner_registry,
         caps_provider,
         cache,
     ));
