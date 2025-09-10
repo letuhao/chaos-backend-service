@@ -4,7 +4,7 @@
 
 use anyhow::Result;
 use clap::Parser;
-use tracing::{info, error};
+use tracing::info;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]

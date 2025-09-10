@@ -167,8 +167,7 @@ pub mod bucket_processor;
 pub mod production;
 pub mod subsystems;
 
-#[cfg(test)]
-mod integration_tests;
+// Integration tests are now part of the subsystems module
 
 // Re-export commonly used types
 pub use enums::*;

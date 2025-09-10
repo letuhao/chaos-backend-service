@@ -39,6 +39,8 @@ memmap2 = { workspace = true }
 # Database
 sqlx = { workspace = true }
 redis = { workspace = true }
+mongodb = "2.8"
+bson = "2.8"
 
 # Performance and SIMD
 crc32fast = "1.3"

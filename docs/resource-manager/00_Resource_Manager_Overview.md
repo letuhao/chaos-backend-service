@@ -6,40 +6,59 @@ Resource Manager là một **Subsystem** của Actor Core v3, được thiết k
 
 ## 🎯 **Nguyên Tắc Thiết Kế**
 
-### **1. Tuân Thủ Actor Core Architecture**
+### **1. Enhanced Hybrid Architecture**
+- **Shared Resources (Folder)**: Always cached, calculated from all systems
+- **System Resources (Files)**: Delegated to individual cultivation systems
+- **Database Storage**: Inactive actors stored in MongoDB to reduce memory overhead
+- **Smart Recalculation**: Only when primary stats change, not on every resource consumption
+
+### **2. Tuân Thủ Actor Core Architecture**
 - **Subsystem Pattern**: Resource Manager là một Subsystem, không phải Core component
 - **Contribution-Based**: Sử dụng Contribution system để output resource values
 - **Snapshot Integration**: Resources được expose qua Snapshot của Actor Core
 - **No State Storage**: Không lưu trữ state, chỉ tính toán dựa trên Actor metadata
 
-### **2. Flexible & Extensible**
+### **3. Flexible & Extensible**
 - Hỗ trợ nhiều loại resources khác nhau
 - Dễ dàng thêm mới resource types
 - Tương thích với các cultivation systems
+- Delegated calculation to child systems
 
-### **3. Performance Optimized**
+### **4. Performance Optimized**
 - Sử dụng caching của Actor Core
 - Batch processing cho multiple actors
 - Lazy calculation khi cần thiết
+- Database persistence for inactive actors
 
-## 🏗️ **Kiến Trúc Resource Manager**
+## 🏗️ **Enhanced Hybrid Resource Manager Architecture**
+
+### **Core Concept: Folder + File + Database**
+
+The Enhanced Hybrid Resource Manager combines the best of all approaches:
+
+- **Shared Resources (Folder)**: Always cached, calculated from all systems
+- **System Resources (Files)**: Delegated to individual cultivation systems  
+- **Database Storage**: Inactive actors stored in MongoDB to reduce memory overhead
+- **Smart Recalculation**: Only when primary stats change, not on every resource consumption
 
 ### **Core Components**
 
 ```
-Resource Manager Subsystem
+Enhanced Hybrid Resource Manager
+├── Shared Resource Manager (Folder Level)
+│   ├── Shared Resource Cache (Always Cached)
+│   ├── Resource Aggregator
+│   ├── Database Storage (MongoDB)
+│   └── Stat Change Notifier
+├── System Resource Managers (File Level)
+│   ├── Jindan Resource Manager
+│   ├── RPG Resource Manager
+│   ├── Magic Resource Manager
+│   └── Custom System Managers
 ├── Resource Registry
 │   ├── Resource Definitions
 │   ├── Resource Categories
 │   └── Resource Validation
-├── Resource Calculator
-│   ├── Base Resource Calculation
-│   ├── Resource Modifiers
-│   └── Resource Caps
-├── Resource Aggregator
-│   ├── Multi-System Aggregation
-│   ├── Resource Conflicts Resolution
-│   └── Resource Priority Handling
 └── Resource Events
     ├── Resource Change Events
     ├── Resource Depletion Events

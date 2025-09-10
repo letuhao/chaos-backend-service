@@ -1,5 +1,4 @@
 use actor_core::{RegistryFactory, ServiceFactory, CacheFactory};
-use actor_core::interfaces::PluginRegistry;
 use actor_core::interfaces::Subsystem as SubsystemTrait;
 use actor_core::types::{SubsystemOutput, Contribution, CapContribution};
 use actor_core::enums::{Bucket, CapMode};
