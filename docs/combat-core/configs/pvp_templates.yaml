@@ -1,0 +1,27 @@
+version: 1
+
+templates:
+  arena_3v3:
+    normalize:
+      primary_stats:
+        hp_max: 80000
+        stamina: 2000
+        mana: 5000
+      multipliers:
+        damage: 0.9
+        healing: 0.85
+    overrides:
+      protection:
+        stacking_layers: 2
+      true_damage:
+        cooldown_ms_min: 60000
+  battleground_10v10:
+    normalize:
+      primary_stats:
+        hp_max: 120000
+        stamina: 3000
+        mana: 7000
+      multipliers:
+        damage: 1.0
+        healing: 0.9
+

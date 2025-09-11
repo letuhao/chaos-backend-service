@@ -1,0 +1,18 @@
+version: 1
+categories:
+  - id: physical
+  - id: magical
+  - id: elemental
+  - id: spiritual
+  - id: poison
+  - id: true
+types:
+  - id: sword
+    category: physical
+  - id: fireball
+    category: elemental
+  - id: spiritual_strike
+    category: spiritual
+  - id: true_strike
+    category: true
+

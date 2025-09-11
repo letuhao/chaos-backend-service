@@ -1,0 +1,49 @@
+version: 1
+action:
+  fields:
+    - name: action_id
+      type: string
+    - name: action_name
+      type: string
+    - name: action_type
+      type: enum
+    - name: resource_consumption
+      type: list
+    - name: damage_types
+      type: list
+    - name: duration
+      type: duration
+    - name: cooldown
+      type: object
+    - name: internal_cooldown_ms
+      type: integer
+    - name: attack_range
+      type: object
+    - name: target_selection
+      type: object
+    - name: latency_queue_window_ms
+      type: integer
+    - name: trigger_conditions
+      type: list
+    - name: status_effects
+      type: list
+    - name: metadata
+      type: object
+    - name: sacrifice_costs
+      type: object
+      fields:
+        - name: hp_cost
+          type: object
+          fields:
+            - name: base
+              type: number
+            - name: reducible
+              type: boolean
+        - name: lifespan_cost
+          type: object
+          fields:
+            - name: base_years
+              type: integer
+            - name: reducible
+              type: boolean
+

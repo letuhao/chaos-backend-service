@@ -1,0 +1,7 @@
+version: 1
+pairs:
+  - types: [fire, ice]
+    modifier: 1.10
+  - types: [lightning, water]
+    modifier: 1.15
+

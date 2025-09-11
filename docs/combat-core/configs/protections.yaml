@@ -1,0 +1,31 @@
+version: 1
+
+immunity_flags:
+  - absolute_immunity
+  - physical_immunity
+  - magical_immunity
+  - elemental_immunity
+  - status_immunity
+
+shield_tags:
+  dispel:
+    - MagicShield
+    - ElementalShield
+    - SpiritualShield
+  shatter:
+    - ArmorShield
+    - PhysicalShield
+  drain:
+    - AbsorptionShield
+    - LifeForceShield
+
+dispel_taxonomy:
+  - id: magic
+    removes: ["MagicShield", "magic_buffs"]
+  - id: curse
+    removes: ["curse_buffs"]
+  - id: poison
+    removes: ["poison"]
+  - id: technique
+    removes: ["technique_buffs"]
+

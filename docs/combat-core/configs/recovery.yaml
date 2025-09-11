@@ -1,0 +1,34 @@
+version: 1
+
+hp_recovery:
+  scaling: absolute_only   # No %-based scaling; recovery does NOT scale with character level
+  base_rate_per_hour: 50   # base absolute HP per real-world hour (example)
+  high_level_modifier:
+    # As level increases, practical full recovery time increases nonlinearly
+    levels:
+      - level: 50
+        multiplier: 0.5
+      - level: 100
+        multiplier: 0.2
+      - level: 150
+        multiplier: 0.1
+  cap_behavior:
+    # No hard cap; recovery slows at very high max HP
+    soft_knee_hp: 100000
+    post_knee_exponent: 0.85
+
+lifespan_recovery:
+  allowed: true
+  methods:
+    - type: rare_consumable
+      item_ids: ["elixir_of_years", "fruit_of_time"]
+      restore_years:
+        min: 1
+        max: 10
+    - type: ritual
+      duration_hours: 24
+      reagent_cost: very_high
+      restore_years:
+        min: 5
+        max: 20
+

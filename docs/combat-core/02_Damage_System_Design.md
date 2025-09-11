@@ -100,7 +100,7 @@ const (
     MagicalCategory     DamageCategory = "magical"      // Ma pháp
     ArcaneCategory      DamageCategory = "arcane"       // Huyền bí
     MysticalCategory    DamageCategory = "mystical"     // Thần bí
-    SpiritualCategory   DamageCategory = "spiritual"    // Tinh thần
+    SpiritualCategory   DamageCategory = "spiritual"    // Tinh thần (category name; not to be confused with cultivation system naming)
     MentalCategory      DamageCategory = "mental"       // Tâm trí
     
     // Elemental Categories
@@ -161,7 +161,7 @@ const (
     
     // Cultivation Types
     QiBlastDamage       DamageType = "qi_blast"        // Phóng khí
-    SpiritualStrikeDamage DamageType = "spiritual_strike" // Đánh tinh thần
+    SpiritualStrikeDamage DamageType = "spiritual_strike" // Đánh tinh thần (matches Spiritual category)
     DaoSwordDamage      DamageType = "dao_sword"       // Đạo kiếm
     ProfoundMeaningDamage DamageType = "profound_meaning" // Áo nghĩa
     

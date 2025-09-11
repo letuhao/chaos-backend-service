@@ -1,0 +1,7 @@
+version: 1
+method: weighted_sum_decay
+base_value: 100.0
+weight: 0.8
+decay: 0.3
+max_systems: 5
+

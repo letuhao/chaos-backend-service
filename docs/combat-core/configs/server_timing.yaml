@@ -1,0 +1,22 @@
+version: 1
+
+tick:
+  interval_ms: 50          # server tick rate (20 TPS)
+  batch_max_entities: 256  # per-shard per-tick
+  shard_count: auto
+
+latency_compensation:
+  input_buffer_ms: 100     # grace window for late inputs
+  ability_queue_window_ms: 200  # FFXIV-style queue window before GCD ends
+  reconciliation: last_write_wins
+
+queues:
+  event_queue_max: 50000
+  backpressure_policy: drop_sample
+  sample_rate: 0.1
+
+turn_based_defaults:
+  input_window_ms: 1500
+  afk_timeout_ms: 5000
+  round_time_ms: 3000
+

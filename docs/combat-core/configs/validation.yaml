@@ -1,0 +1,22 @@
+version: 1
+
+rate_limits:
+  actions_per_second: 10
+  projectiles_per_second: 20
+
+range_checks:
+  enable: true
+  tolerance_m: 0.5
+
+los_checks:
+  enable: true
+  use_navmesh: true
+
+cooldown_enforcement:
+  server_authoritative: true
+  audit_log: true
+
+dot_hot_policy:
+  snapshot_on_apply: true
+  refresh_behavior: pandemic
+

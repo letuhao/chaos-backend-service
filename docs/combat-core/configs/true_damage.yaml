@@ -1,0 +1,40 @@
+version: 1
+
+availability:
+  rarity: high
+  requires_consumable: true
+  minimum_level: 20
+  cooldown_ms: 30000  # 30s default
+
+defaults:
+  bypass:
+    shields: true
+    secondary_resources: true
+    absolute_immunity_required: true
+  sacrifice_costs:
+    hp_cost:
+      base: 0.10           # 10% of max HP flat cost (not reducible)
+      reducible: false
+    lifespan_cost:
+      base_years: 1        # consumes 1 in-world year by default
+      reducible: false
+      recovery: rare_consumable
+  safety:
+    can_self_kill: false   # true if allowed to reduce HP below 0 on cast
+
+skills:
+  true_strike:
+    cooldown_ms: 45000
+    sacrifice_costs:
+      hp_cost: { base: 0.15, reducible: false }
+      lifespan_cost: { base_years: 3, reducible: false }
+    multipliers:
+      damage: 1.0
+  reality_bend:
+    cooldown_ms: 120000
+    sacrifice_costs:
+      hp_cost: { base: 0.20, reducible: false }
+      lifespan_cost: { base_years: 10, reducible: false }
+    multipliers:
+      damage: 1.25
+

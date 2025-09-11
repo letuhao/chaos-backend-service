@@ -1,0 +1,34 @@
+version: 1
+
+initiative:
+  # Deterministic initiative per round; higher is earlier
+  formula: "(speed * 1.0) + (haste * 0.5) + rng_seed_tiebreaker"
+  rng_seed_tiebreaker: true
+  clamp_min: 0
+  clamp_max: null
+
+action_points:
+  # Variable AP per round; default 1.0 AP; actions consume AP derived from duration/cooldown
+  base_ap_per_round: 1.0
+  carry_over_ap: false
+  # Configurable AP cost formula from action attributes
+  # Example: 50% weight to duration (in seconds), 50% to cooldown (in seconds), with floor of 0.25 and ceil 2.0
+  ap_cost_formula: "max(0.25, min(2.0, (duration_s * 0.5) + (cooldown_s * 0.5)))"
+  minor_action_threshold_ap: 0.5  # actions below this cost considered minor
+
+phases:
+  input_window_ms: 1500
+  afk_timeout_ms: 5000
+  round_time_ms: 3000   # soft budget; round ends after last actor resolves or timeout
+
+events:
+  emit:
+    - TurnStarted
+    - ActorTurnStarted
+    - ActorTurnEnded
+    - TurnEnded
+
+area_binding:
+  # World-core defines which areas/instances are turn_based vs realtime
+  provided_by_world_core: true
+

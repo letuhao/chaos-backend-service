@@ -1,0 +1,48 @@
+version: 1
+
+categories:
+  - id: stun
+    dr_curve: exponential
+    base_duration_ms: 3000
+    pve_modifier: 1.0
+    pvp_modifier: 0.5
+    decay_window_ms: 15000
+  - id: root
+    dr_curve: linear
+    base_duration_ms: 4000
+    pve_modifier: 1.0
+    pvp_modifier: 0.7
+    decay_window_ms: 12000
+  - id: silence
+    dr_curve: exponential
+    base_duration_ms: 2500
+    pve_modifier: 1.0
+    pvp_modifier: 0.6
+    decay_window_ms: 12000
+  - id: knockback
+    dr_curve: flat
+    base_duration_ms: 500
+    pve_modifier: 1.0
+    pvp_modifier: 0.8
+    decay_window_ms: 8000
+
+dr_rules:
+  exponential:
+    stacks:
+      - multiplier: 1.0
+      - multiplier: 0.5
+      - multiplier: 0.25
+      - multiplier: 0.0     # immune
+  linear:
+    stacks:
+      - multiplier: 1.0
+      - multiplier: 0.75
+      - multiplier: 0.5
+      - multiplier: 0.25
+  flat:
+    stacks:
+      - multiplier: 1.0
+      - multiplier: 1.0
+      - multiplier: 1.0
+      - multiplier: 1.0
+

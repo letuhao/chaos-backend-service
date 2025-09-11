@@ -1,0 +1,16 @@
+version: 1
+
+events:
+  per_actor_caps:
+    DamageAppliedEvent: 50   # per tick
+    ShieldBrokenEvent: 10
+    ResourceDepletedEvent: 10
+    ResourceExhaustedEvent: 10
+    ResourceRecoveredEvent: 10
+  sampling:
+    default_rate: 0.05
+    high_load_rate: 0.01
+  payloads:
+    minimal_fields: true
+    include_breakdowns: false
+
