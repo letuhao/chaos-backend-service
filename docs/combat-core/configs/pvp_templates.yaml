@@ -15,6 +15,23 @@ templates:
         stacking_layers: 2
       true_damage:
         cooldown_ms_min: 60000
+      shields:
+        penetration_caps:
+          default_percent_cap: 0.75
+          per_type_percent_cap:
+            MagicShield: 0.75
+            ElementalShield: 0.75
+            PhysicalShield: 0.75
+            ArmorShield: 0.75
+            SpiritualShield: 0.75
+            QiShield: 0.75
+        stack_limits:
+          max_stacks:
+            AbsorptionShield: 3
+            MagicShield: 2
+            ElementalShield: 2
+            PhysicalShield: 2
+            ArmorShield: 2
   battleground_10v10:
     normalize:
       primary_stats:
@@ -24,4 +41,16 @@ templates:
       multipliers:
         damage: 1.0
         healing: 0.9
+    overrides:
+      shields:
+        penetration_caps:
+          default_percent_cap: 0.85
+          per_type_percent_cap:
+            MagicShield: 0.85
+            ElementalShield: 0.85
+        stack_limits:
+          max_stacks:
+            AbsorptionShield: 4
+            MagicShield: 3
+            ElementalShield: 3
 

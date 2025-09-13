@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "resource_exhaustion.schema.json",
+  "type": "object",
+  "required": ["version"],
+  "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+    "hysteresis_default": { "type": "number", "minimum": 0, "maximum": 1 },
+    "events": {
+      "type": "object",
+      "properties": {
+        "coalesce_window_ms": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "priorities": {
+      "type": "object",
+      "properties": {
+        "categories": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "archetypes": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "description": "resource → spec",
+        "additionalProperties": {
+          "type": "object",
+          "properties": {
+            "thresholds": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/threshold" },
+              "minItems": 1
+            }
+          },
+          "required": ["thresholds"],
+          "additionalProperties": false
+        }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "threshold": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "order": { "type": "integer", "minimum": 0 },
+        "enter_percent_lte": { "type": "number", "minimum": 0, "maximum": 1 },
+        "exit_percent_gte": { "type": "number", "minimum": 0, "maximum": 1 },
+        "enter_value_eq": { "type": "number", "minimum": 0 },
+        "exit_value_ge": { "type": "number", "minimum": 0 },
+        "effects": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/effect" },
+          "minItems": 1
+        }
+      },
+      "allOf": [
+        {
+          "oneOf": [
+            { "required": ["enter_percent_lte"] },
+            { "required": ["enter_value_eq"] }
+          ]
+        },
+        {
+          "if": { "required": ["enter_percent_lte", "exit_percent_gte"] },
+          "then": {
+            "properties": {
+              "exit_percent_gte": { "type": "number", "minimum": 0 }
+            }
+          }
+        },
+        {
+          "if": { "required": ["enter_value_eq", "exit_value_ge"] },
+          "then": {
+            "properties": { "exit_value_ge": { "type": "number", "minimum": { "$data": "1/enter_value_eq" } } }
+          }
+        }
+      ],
+      "required": ["id", "effects"],
+      "additionalProperties": false
+    },
+    "effect": {
+      "type": "object",
+      "oneOf": [
+        { "properties": { "type": { "const": "disable_tags" }, "values": { "type": "array", "items": { "type": "string" }, "uniqueItems": true } }, "required": ["type", "values"], "additionalProperties": false },
+        { "properties": { "type": { "const": "disable_cost_type" }, "values": { "type": "array", "items": { "type": "string" }, "uniqueItems": true } }, "required": ["type", "values"], "additionalProperties": false },
+        { "properties": { "type": { "const": "damage_multiplier" }, "categories": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }, "modifier": { "type": "number" } }, "required": ["type", "categories", "modifier"], "additionalProperties": false },
+        { "properties": { "type": { "const": "incoming_multiplier" }, "categories": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }, "modifier": { "type": "number" } }, "required": ["type", "categories", "modifier"], "additionalProperties": false },
+        { "properties": { "type": { "const": "cast_time_modifier" }, "modifier": { "type": "number" } }, "required": ["type", "modifier"], "additionalProperties": false },
+        { "properties": { "type": { "const": "move_speed_modifier" }, "modifier": { "type": "number" } }, "required": ["type", "modifier"], "additionalProperties": false },
+        { "properties": { "type": { "const": "break_active_shields" }, "values": { "type": "array", "items": { "type": "string" }, "uniqueItems": true } }, "required": ["type", "values"], "additionalProperties": false },
+        { "properties": { "type": { "const": "set_flag" }, "name": { "type": "string" }, "value": { "type": "boolean" } }, "required": ["type", "name", "value"], "additionalProperties": false },
+        { "properties": { "type": { "const": "action_lockout" }, "values": { "type": "array", "items": { "type": "string" }, "uniqueItems": true } }, "required": ["type", "values"], "additionalProperties": false },
+        { "properties": { "type": { "const": "stagger_susceptibility" }, "level": { "type": "string", "enum": ["light", "medium", "heavy"] } }, "required": ["type", "level"], "additionalProperties": false },
+        { "properties": { "type": { "const": "taunt_effectiveness_modifier" }, "modifier": { "type": "number" } }, "required": ["type", "modifier"], "additionalProperties": false },
+        { "properties": { "type": { "const": "regen_modifier" }, "resource": { "type": "string" }, "modifier": { "type": "number" } }, "required": ["type", "resource", "modifier"], "additionalProperties": false }
+      ]
+    }
+  }
+}
+
+

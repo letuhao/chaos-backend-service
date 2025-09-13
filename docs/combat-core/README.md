@@ -54,6 +54,10 @@ Tài liệu này cung cấp hướng dẫn chi tiết về hệ thống Combat C
   - Event system integration
   - Performance optimizations
   - Testing strategy
+  - Split docs:
+    - [09_Shields_and_Protections.md](./09_Shields_and_Protections.md)
+    - [10_Resource_Damage_Distribution.md](./10_Resource_Damage_Distribution.md)
+    - [11_Damage_Application_Engine.md](./11_Damage_Application_Engine.md)
 
 ### **6. [05_Flexible_Action_System.md](./05_Flexible_Action_System.md)**
 - **Mục đích**: Hệ thống action linh hoạt, data-driven
@@ -76,6 +80,17 @@ Tài liệu này cung cấp hướng dẫn chi tiết về hệ thống Combat C
   - Testing strategy
 
 ### **8. [07_Implementation_Roadmap.md](./07_Implementation_Roadmap.md)**
+### **9. [08_World_Core_Binding.md](./08_World_Core_Binding.md)**
+### **10. [09_Shields_and_Protections.md](./09_Shields_and_Protections.md)**
+- **Mục đích**: Định nghĩa shields/protections, stacking, penetration và precedence
+- **Nội dung**: Loại shield, merge/replace, stacking math, penetration, reflection, precedence, sự kiện
+- **Mục đích**: Ràng buộc world-core ↔ combat-core theo area và combat mode
+- **Nội dung**:
+  - Area-to-mode API (enter/leave hooks)
+  - Snapshot handoff & idempotency
+  - Cross-border artifact policy
+  - RT shard & TB encounter lifecycles
+  - Initiative/AP, phases & timeouts
 - **Mục đích**: Roadmap triển khai hệ thống
 - **Nội dung**:
   - 4 phases implementation
@@ -188,6 +203,7 @@ The following YAML configs live under `docs/combat-core/configs/` and are refere
  - `telemetry.yaml`
  - `validation.yaml`
  - `turn_based.yaml`
+ - `shields.yaml`
 
 ## 🧪 **Testing Strategy**
 

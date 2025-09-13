@@ -1,0 +1,12 @@
+{
+  "events": [
+    { "t": 0,   "type": "ResourceExhaustedEvent", "resource": "mana", "threshold_id": "low_mana" },
+    { "t": 100, "type": "(coalesced)" },
+    { "t": 150, "type": "(coalesced)" },
+    { "t": 180, "type": "(coalesced)" },
+    { "t": 400, "type": "ResourceRecoveredEvent", "resource": "mana", "threshold_id": "low_mana" }
+  ],
+  "notes": "Hysteresis prevents flapping between 10% and 12%; coalescing suppresses duplicate events within 200ms."
+}
+
+

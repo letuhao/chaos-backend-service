@@ -131,6 +131,7 @@ if err != nil {
 - [00_Resource_Manager_Overview.md](00_Resource_Manager_Overview.md) - Tổng quan hệ thống
 - [01_Resource_System_Design.md](01_Resource_System_Design.md) - Thiết kế chi tiết
 - [02_Resource_Integration_Guide.md](02_Resource_Integration_Guide.md) - Hướng dẫn tích hợp
+- [08_Resource_Exhaustion_System.md](08_Resource_Exhaustion_System.md) - Hệ thống kiệt quệ tài nguyên (global + combat)
 
 ## 🚀 **Quick Start**
 

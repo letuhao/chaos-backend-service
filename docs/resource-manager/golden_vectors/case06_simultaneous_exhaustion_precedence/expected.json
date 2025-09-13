@@ -1,0 +1,15 @@
+{
+  "merged_final_config_note": "PvP overrides applied over area, which applied over global; see merged_final_config block.
+Health gains +10% incoming multiplier; Stamina gains -10% move speed; Stamina exit hysteresis 0.16 (from area).",
+  "events": [
+    { "t": 0,   "type": "ResourceExhaustedEvent", "resource": "health",  "threshold_id": "low_health" },
+    { "t": 0,   "type": "ResourceExhaustedEvent", "resource": "stamina", "threshold_id": "low_stamina" },
+    { "t": 50,  "type": "(coalesced)" },
+    { "t": 100, "type": "(coalesced)" },
+    { "t": 180, "type": "(coalesced)" },
+    { "t": 600, "type": "ResourceRecoveredEvent", "resource": "health",  "threshold_id": "low_health" },
+    { "t": 600, "type": "ResourceRecoveredEvent", "resource": "stamina", "threshold_id": "low_stamina" }
+  ]
+}
+
+

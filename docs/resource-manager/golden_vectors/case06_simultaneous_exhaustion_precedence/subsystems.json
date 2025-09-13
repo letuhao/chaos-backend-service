@@ -1,0 +1,129 @@
+{
+  "merge_precedence": ["pvp_template_overrides", "area_overrides", "global"],
+  "global": {
+    "version": 1,
+    "hysteresis_default": 0.02,
+    "events": { "coalesce_window_ms": 200 },
+    "priorities": { "categories": ["health","lifeforce","lifespan","qi","spiritual","mana","stamina","other"] },
+    "archetypes": {
+      "warrior": {
+        "health": {
+          "thresholds": [
+            {
+              "id": "low_health",
+              "order": 10,
+              "enter_percent_lte": 0.10,
+              "exit_percent_gte": 0.12,
+              "effects": [
+                { "type": "set_flag", "name": "critical_health", "value": true }
+              ]
+            }
+          ]
+        },
+        "stamina": {
+          "thresholds": [
+            {
+              "id": "low_stamina",
+              "order": 10,
+              "enter_percent_lte": 0.15,
+              "exit_percent_gte": 0.17,
+              "effects": [
+                { "type": "disable_cost_type", "values": ["stamina"] }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  },
+  "area_overrides": {
+    "archetypes": {
+      "warrior": {
+        "stamina": {
+          "thresholds": [
+            {
+              "id": "low_stamina",
+              "exit_percent_gte": 0.16
+            }
+          ]
+        }
+      }
+    }
+  },
+  "pvp_template_overrides": {
+    "archetypes": {
+      "warrior": {
+        "health": {
+          "thresholds": [
+            {
+              "id": "low_health",
+              "effects": [
+                { "type": "incoming_multiplier", "categories": ["all"], "modifier": 0.10 }
+              ]
+            }
+          ]
+        },
+        "stamina": {
+          "thresholds": [
+            {
+              "id": "low_stamina",
+              "effects": [
+                { "type": "move_speed_modifier", "modifier": -0.10 }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  },
+  "merged_final_config": {
+    "version": 1,
+    "hysteresis_default": 0.02,
+    "events": { "coalesce_window_ms": 200 },
+    "priorities": { "categories": ["health","lifeforce","lifespan","qi","spiritual","mana","stamina","other"] },
+    "archetypes": {
+      "warrior": {
+        "health": {
+          "thresholds": [
+            {
+              "id": "low_health",
+              "order": 10,
+              "enter_percent_lte": 0.10,
+              "exit_percent_gte": 0.12,
+              "effects": [
+                { "type": "incoming_multiplier", "categories": ["all"], "modifier": 0.10 }
+              ]
+            }
+          ]
+        },
+        "stamina": {
+          "thresholds": [
+            {
+              "id": "low_stamina",
+              "order": 10,
+              "enter_percent_lte": 0.15,
+              "exit_percent_gte": 0.16,
+              "effects": [
+                { "type": "move_speed_modifier", "modifier": -0.10 }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  },
+  "actor": {
+    "id": "actor_warrior_001",
+    "archetype": "warrior",
+    "resources": { "hp_current": 1000, "hp_max": 1000, "stamina_current": 1000, "stamina_max": 1000 }
+  },
+  "timeline_ms": [
+    { "t": 0,    "delta_hp": -910,  "delta_stamina": -850 },   
+    { "t": 50,   "delta_hp": +5,    "delta_stamina": +5   },   
+    { "t": 100,  "delta_hp": -5,    "delta_stamina": -5   },   
+    { "t": 180,  "delta_hp": +5,    "delta_stamina": +5   },   
+    { "t": 600,  "delta_hp": +200,  "delta_stamina": +60  }    
+  ]
+}
+
+

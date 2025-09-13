@@ -2,33 +2,25 @@
 //!
 //! This module contains various subsystems that contribute to actor stats
 //! and provide specialized functionality within the Actor Core framework.
+//!
+//! ## Organization
+//!
+//! The subsystems are organized into logical groups:
+//! - `resource_management/` - All resource management related subsystems
+//! - `exhaustion/` - Resource exhaustion system components
+//! - `performance/` - Performance monitoring and optimization tools
+//! - `core/` - Core system functionality
+//! - `testing/` - Testing utilities and integration tests
 
-pub mod resource_manager;
-pub mod enhanced_hybrid_resource_manager;
-pub mod resource_database;
-pub mod system_resource_manager;
-pub mod resource_cache;
-pub mod stat_change_notifier;
-pub mod rpg_resource_manager;
-pub mod magic_resource_manager;
-pub mod resource_regeneration;
-pub mod resource_events;
-pub mod performance_monitor;
-pub mod integration_tests;
+pub mod resource_management;
+pub mod exhaustion;
+pub mod performance;
+pub mod core;
+pub mod testing;
 
-// Re-export commonly used subsystems
-pub use resource_manager::ResourceManagerSubsystem;
-pub use enhanced_hybrid_resource_manager::EnhancedHybridResourceManager;
-pub use resource_database::{MongoResourceDatabase, InMemoryResourceDatabase};
-pub use system_resource_manager::{
-    SystemResourceCalculator, JindanSystemResourceCalculator, 
-    RpgSystemResourceCalculator, MagicSystemResourceCalculator
-};
-pub use resource_cache::{ResourceCache, CacheConfig, CacheStats};
-pub use stat_change_notifier::{StatChangeNotifier, StatChangeEvent, StatChangeListener};
-pub use rpg_resource_manager::{RpgResourceManager, RpgResourceCategory, RpgResourceEvent};
-pub use magic_resource_manager::{MagicResourceManager, MagicResourceCategory, MagicSchool, MagicResourceEvent};
-pub use resource_regeneration::{ResourceRegenerationManager, RegenerationConfig, RegenerationStats};
-pub use resource_events::{ResourceEventManager, ResourceEvent, ResourceEventType, EventConfig, EventStats};
-pub use performance_monitor::{PerformanceMonitor, PerformanceConfig, PerformanceStats, LoadTestingSuite};
-pub use integration_tests::{IntegrationTestSuite, ComprehensiveTestResults};
+// Re-export commonly used subsystems for backward compatibility
+pub use resource_management::*;
+pub use exhaustion::*;
+pub use performance::*;
+pub use core::*;
+pub use testing::*;

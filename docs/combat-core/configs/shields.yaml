@@ -1,0 +1,101 @@
+version: 1
+
+merge_precedence:
+  # Keys from higher precedence override lower. Deep-merge:
+  # - scalars: replace
+  # - maps: recursive merge
+  # - lists: replace unless explicitly marked append in consumers
+  order:
+    - pvp_template_overrides
+    - area_overrides
+    - global
+
+type_policies:
+  ImmunityShield:
+    conflict_policy: single_instance        # replace by newer
+    merge: false
+  AbsorptionShield:
+    conflict_policy: merge
+    merge: true
+    max_stacks: 5
+    stacking_value_scalar: 0.8              # s for capacity
+    stacking_regen_scalar: 0.7              # r for regen
+  ReflectionShield:
+    conflict_policy: replace_weakest
+    merge: false
+    reflect:
+      absorb_pct: 0.5
+      reflect_pct: 0.5
+      chain: false
+  PhysicalShield:
+    conflict_policy: replace_oldest
+    merge: true
+    max_stacks: 3
+    stacking_value_scalar: 0.8
+    stacking_regen_scalar: 0.7
+  ArmorShield:
+    conflict_policy: replace_oldest
+    merge: true
+    max_stacks: 3
+    stacking_value_scalar: 0.8
+    stacking_regen_scalar: 0.7
+  WeaponShield:
+    conflict_policy: single_instance
+    merge: false
+  MagicShield:
+    conflict_policy: merge
+    merge: true
+    max_stacks: 4
+    stacking_value_scalar: 0.8
+    stacking_regen_scalar: 0.7
+  ElementalShield:
+    conflict_policy: merge
+    merge: true
+    max_stacks: 4
+    stacking_value_scalar: 0.8
+    stacking_regen_scalar: 0.7
+  SpiritualShield:
+    conflict_policy: merge
+    merge: true
+    max_stacks: 4
+    stacking_value_scalar: 0.8
+    stacking_regen_scalar: 0.7
+  QiShield:
+    conflict_policy: merge
+    merge: true
+    max_stacks: 4
+    stacking_value_scalar: 0.8
+    stacking_regen_scalar: 0.7
+
+penetration:
+  order: [flat, percent]
+  caps:
+    # Default unlimited; can set per shield type if needed
+    default_percent_cap: null
+    per_type_percent_cap:
+      MagicShield: null
+      ElementalShield: null
+      PhysicalShield: null
+      ArmorShield: null
+      SpiritualShield: null
+      QiShield: null
+  mappings:
+    armor_pen:
+      applies_to: [PhysicalShield, ArmorShield, WeaponShield]
+    magic_pen:
+      applies_to: [MagicShield, SpiritualShield]
+    elemental_pen:
+      applies_to: [ElementalShield]
+    universal_pen:
+      applies_to: ["*"]
+
+type_modifiers:
+  # Optional damage-type modifiers per shield type
+  MagicShield:
+    fire: 1.0
+    ice: 1.0
+  ElementalShield:
+    fire: 1.0
+    ice: 1.0
+    lightning: 1.0
+

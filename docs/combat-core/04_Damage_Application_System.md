@@ -47,486 +47,19 @@ Damage Application System
 ```
 
 ## 🛡️ **Shield Order System**
+Note: Detailed shield/protection semantics have been moved to `09_Shields_and_Protections.md`. This section focuses on processing flow and references the dedicated document for policies and math.
 
 ### **1. Shield as Independent Actors**
-
-```rust
-// Shield as independent actors with their own HP and behavior
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct ShieldActor {
-    pub shield_id: String,
-    pub shield_type: ShieldType,
-    pub owner_actor_id: String,
-    pub shield_hp: f64,           // Shield's own HP (like actor's HP)
-    pub max_shield_hp: f64,       // Maximum shield HP
-    pub damage_types: Vec<String>, // Only takes specific damage types
-    pub priority: i64,            // Lower number = damaged first
-    pub created_at: u64,
-    pub expires_at: Option<u64>,
-    pub lifetime_decay_rate: f64, // HP decay per second
-    pub restoration_events: Vec<String>, // Events that restore shield HP
-    pub is_active: bool,
-    pub subsystem_id: String,     // Which subsystem registered this shield
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum ShieldType {
-    // Physical shields
-    PhysicalShield,
-    ArmorShield,
-    WeaponShield,
-    
-    // Magical shields
-    MagicShield,
-    FireShield,
-    IceShield,
-    LightningShield,
-    EarthShield,
-    WindShield,
-    WaterShield,
-    
-    // Special shields
-    AbsorptionShield,
-    ReflectionShield,
-    ImmunityShield,
-    
-    // Cultivation shields
-    QiShield,
-    SpiritualShield,
-    LifeForceShield,
-    SoulShield,
-}
-
-impl ShieldActor {
-    /// Calculate shield priority (lower = damaged first)
-    pub fn calculate_priority(&self, damage_type: &str) -> i64 {
-        // Base priority from subsystem registration
-        let base_priority = self.priority;
-        
-        // Type-specific modifier for damage type
-        let type_modifier = self.get_damage_type_modifier(damage_type);
-        
-        // Remaining HP percentage modifier
-        let hp_percentage = (self.shield_hp / self.max_shield_hp * 100.0) as i64;
-        
-        // Formula: base + floor(remaining/max × 100) + type_modifier
-        base_priority + hp_percentage + type_modifier
-    }
-    
-    /// Check if shield can take this damage type
-    pub fn can_take_damage_type(&self, damage_type: &str) -> bool {
-        self.damage_types.is_empty() || self.damage_types.contains(&damage_type.to_string())
-    }
-    
-    /// Apply damage to shield (like damage to actor)
-    pub fn apply_damage(&mut self, damage: f64) -> f64 {
-        if !self.is_active || self.shield_hp <= 0.0 {
-            return 0.0;
-        }
-        
-        let actual_damage = self.shield_hp.min(damage);
-        self.shield_hp -= actual_damage;
-        
-        // Check if shield is broken
-        if self.shield_hp <= 0.0 {
-            self.is_active = false;
-        }
-        
-        actual_damage
-    }
-    
-    /// Apply lifetime decay
-    pub fn apply_lifetime_decay(&mut self, delta_time: f64) {
-        if self.is_active && self.lifetime_decay_rate > 0.0 {
-            let decay = self.lifetime_decay_rate * delta_time;
-            self.shield_hp = (self.shield_hp - decay).max(0.0);
-            
-            if self.shield_hp <= 0.0 {
-                self.is_active = false;
-            }
-        }
-    }
-    
-    /// Restore shield HP from events
-    pub fn restore_hp(&mut self, amount: f64) {
-        if self.is_active {
-            self.shield_hp = (self.shield_hp + amount).min(self.max_shield_hp);
-        }
-    }
-    
-    /// Get damage type modifier
-    fn get_damage_type_modifier(&self, damage_type: &str) -> i64 {
-        match (&self.shield_type, damage_type) {
-            (ShieldType::FireShield, "fire") => 50,    // Fire shield resists fire
-            (ShieldType::IceShield, "ice") => 50,      // Ice shield resists ice
-            (ShieldType::PhysicalShield, "physical") => 30,
-            (ShieldType::MagicShield, "magical") => 30,
-            _ => 0,
-        }
-    }
-}
-```
+See detailed reference in `09_Shields_and_Protections.md`.
 
 ### **2. Subsystem Shield Registration System**
-
-```rust
-// Subsystem shield registration system
-pub struct ShieldRegistrationSystem {
-    registered_shield_types: HashMap<String, ShieldTypeConfig>,
-    active_shields: HashMap<String, Vec<ShieldActor>>,
-    max_shield_stacks: usize,
-    shield_priority_cache: HashMap<String, Vec<ShieldActor>>,
-}
-
-#[derive(Debug, Clone)]
-pub struct ShieldTypeConfig {
-    pub shield_type: ShieldType,
-    pub base_priority: i64,
-    pub max_hp: f64,
-    pub lifetime_decay_rate: f64,
-    pub damage_types: Vec<String>,
-    pub restoration_events: Vec<String>,
-    pub subsystem_id: String,
-}
-
-impl ShieldRegistrationSystem {
-    /// Register shield type from subsystem
-    pub async fn register_shield_type(
-        &mut self,
-        subsystem_id: &str,
-        config: ShieldTypeConfig,
-    ) -> ActorCoreResult<()> {
-        let key = format!("{}:{}", subsystem_id, config.shield_type);
-        self.registered_shield_types.insert(key, config);
-        Ok(())
-    }
-    
-    /// Create shield instance
-    pub async fn create_shield(
-        &mut self,
-        owner_actor_id: &str,
-        shield_type: &ShieldType,
-        subsystem_id: &str,
-        custom_config: Option<ShieldCustomConfig>,
-    ) -> ActorCoreResult<ShieldActor> {
-        // Check shield stack limit
-        if self.get_active_shield_count(owner_actor_id) >= self.max_shield_stacks {
-            return Err(ActorCoreError::ShieldStackLimitExceeded(
-                format!("Actor {} has reached maximum shield stacks: {}", 
-                    owner_actor_id, self.max_shield_stacks)
-            ));
-        }
-        
-        // Get shield type configuration
-        let key = format!("{}:{:?}", subsystem_id, shield_type);
-        let config = self.registered_shield_types.get(&key)
-            .ok_or_else(|| ActorCoreError::ShieldTypeNotRegistered(key.clone()))?;
-        
-        // Create shield actor
-        let shield = ShieldActor {
-            shield_id: generate_shield_id(),
-            shield_type: shield_type.clone(),
-            owner_actor_id: owner_actor_id.to_string(),
-            shield_hp: config.max_hp,
-            max_shield_hp: config.max_hp,
-            damage_types: config.damage_types.clone(),
-            priority: config.base_priority,
-            created_at: current_timestamp(),
-            expires_at: custom_config.and_then(|c| c.expires_at),
-            lifetime_decay_rate: config.lifetime_decay_rate,
-            restoration_events: config.restoration_events.clone(),
-            is_active: true,
-            subsystem_id: subsystem_id.to_string(),
-        };
-        
-        // Add to active shields
-        self.active_shields.entry(owner_actor_id.to_string())
-            .or_insert_with(Vec::new)
-            .push(shield.clone());
-        
-        // Invalidate priority cache
-        self.invalidate_priority_cache(owner_actor_id);
-        
-        Ok(shield)
-    }
-    
-    /// Get shields sorted by priority for damage type
-    pub async fn get_shields_for_damage(
-        &mut self,
-        actor_id: &str,
-        damage_type: &str,
-    ) -> ActorCoreResult<Vec<ShieldActor>> {
-        // Check cache first
-        let cache_key = format!("{}:{}", actor_id, damage_type);
-        if let Some(cached) = self.shield_priority_cache.get(&cache_key) {
-            return Ok(cached.clone());
-        }
-        
-        // Get active shields for actor
-        let shields = self.active_shields.get(actor_id)
-            .cloned()
-            .unwrap_or_default();
-        
-        // Filter by damage type compatibility
-        let compatible_shields: Vec<ShieldActor> = shields
-            .into_iter()
-            .filter(|shield| shield.is_active && shield.can_take_damage_type(damage_type))
-            .collect();
-        
-        // Sort by priority (lower number = damaged first)
-        let mut sorted_shields = compatible_shields;
-        sorted_shields.sort_by(|a, b| {
-            let priority_a = a.calculate_priority(damage_type);
-            let priority_b = b.calculate_priority(damage_type);
-            
-            // Primary sort: priority (lower first)
-            match priority_a.cmp(&priority_b) {
-                std::cmp::Ordering::Equal => {
-                    // Tie-breaker: prefer newer if remaining > 50% else older
-                    let remaining_a = a.shield_hp / a.max_shield_hp;
-                    let remaining_b = b.shield_hp / b.max_shield_hp;
-                    
-                    if remaining_a > 0.5 && remaining_b > 0.5 {
-                        // Both > 50%, prefer newer (higher created_at)
-                        b.created_at.cmp(&a.created_at)
-                    } else if remaining_a <= 0.5 && remaining_b <= 0.5 {
-                        // Both <= 50%, prefer older (lower created_at)
-                        a.created_at.cmp(&b.created_at)
-                    } else {
-                        // Mixed, prefer higher remaining percentage
-                        remaining_b.partial_cmp(&remaining_a).unwrap_or(std::cmp::Ordering::Equal)
-                    }
-                }
-                other => other,
-            }
-        });
-        
-        // Cache result
-        self.shield_priority_cache.insert(cache_key, sorted_shields.clone());
-        
-        Ok(sorted_shields)
-    }
-    
-    /// Apply lifetime decay to all shields
-    pub async fn apply_lifetime_decay(&mut self, delta_time: f64) -> ActorCoreResult<()> {
-        for shields in self.active_shields.values_mut() {
-            for shield in shields.iter_mut() {
-                shield.apply_lifetime_decay(delta_time);
-            }
-        }
-        
-        // Clean up broken shields
-        self.cleanup_broken_shields().await?;
-        
-        Ok(())
-    }
-    
-    /// Handle shield restoration events
-    pub async fn handle_restoration_event(
-        &mut self,
-        actor_id: &str,
-        event_type: &str,
-        amount: f64,
-    ) -> ActorCoreResult<()> {
-        if let Some(shields) = self.active_shields.get_mut(actor_id) {
-            for shield in shields.iter_mut() {
-                if shield.restoration_events.contains(&event_type.to_string()) {
-                    shield.restore_hp(amount);
-                }
-            }
-        }
-        Ok(())
-    }
-}
-```
+See detailed reference in `09_Shields_and_Protections.md`.
 
 ### **3. Enhanced Shield Order Processing**
-
-```rust
-// Enhanced shield order processing with subsystem support
-pub struct ShieldOrderProcessor {
-    registration_system: Arc<ShieldRegistrationSystem>,
-    penetration_calculator: PenetrationCalculator,
-}
-
-impl ShieldOrderProcessor {
-    /// Process damage through shields with subsystem priority
-    pub async fn process_damage_through_shields(
-        &mut self,
-        actor_id: &str,
-        damage: &mut DamageResult,
-    ) -> ActorCoreResult<ShieldProcessingResult> {
-        let mut remaining_damage = damage.final_damage;
-        let mut shield_results = Vec::new();
-        let mut total_absorbed = 0.0;
-        let mut shields_broken = Vec::new();
-        
-        // Get shields sorted by priority (lower number = damaged first)
-        let shields = self.registration_system
-            .get_shields_for_damage(actor_id, &damage.damage_type)
-            .await?;
-        
-        // Linear scan through active, compatible shields
-        for mut shield in shields {
-            if remaining_damage <= 0.0 {
-                break; // Stop when damage <= 0
-            }
-            
-            if !shield.is_active || shield.shield_hp <= 0.0 {
-                continue;
-            }
-            
-            // Apply damage to shield (like damage to actor)
-            let shield_damage = self.calculate_shield_damage(&shield, remaining_damage, &damage.damage_type).await?;
-            let actual_damage = shield.apply_damage(shield_damage);
-            
-            remaining_damage -= actual_damage;
-            total_absorbed += actual_damage;
-            
-            // Check if shield is broken
-            if shield.shield_hp <= 0.0 {
-                shields_broken.push(shield.shield_id.clone());
-                shield.is_active = false;
-            }
-            
-            // Record shield result
-            shield_results.push(ShieldResult {
-                shield_id: shield.shield_id.clone(),
-                shield_type: shield.shield_type.clone(),
-                damage_absorbed: actual_damage,
-                remaining_hp: shield.shield_hp,
-                is_broken: shield.shield_hp <= 0.0,
-                subsystem_id: shield.subsystem_id.clone(),
-            });
-            
-            // Update shield in registration system
-            self.registration_system.update_shield(actor_id, &shield).await?;
-        }
-        
-        // Update damage result
-        damage.final_damage = remaining_damage;
-        damage.shield_absorbed = total_absorbed;
-        
-        Ok(ShieldProcessingResult {
-            original_damage: damage.final_damage + total_absorbed,
-            final_damage: damage.final_damage,
-            total_absorbed,
-            shield_results,
-            shields_broken,
-            processing_time: current_timestamp(),
-        })
-    }
-    
-    /// Get shields sorted by priority (highest first)
-    async fn get_shields_sorted_by_priority(
-        &self,
-        actor_id: &str,
-    ) -> ActorCoreResult<Vec<ShieldInfo>> {
-        if let Some(actor_shields) = self.shields.get(actor_id) {
-            let mut shields = actor_shields.clone();
-            shields.sort_by(|a, b| b.calculate_priority().cmp(&a.calculate_priority()));
-            Ok(shields)
-        } else {
-            Ok(Vec::new())
-        }
-    }
-    
-    /// Calculate damage to a specific shield
-    async fn calculate_shield_damage(
-        &self,
-        shield: &ShieldInfo,
-        incoming_damage: f64,
-        damage_type: &str,
-    ) -> ActorCoreResult<f64> {
-        // Base damage to shield
-        let mut shield_damage = incoming_damage;
-        
-        // Apply penetration resistance
-        let penetration = self.penetration_calculator
-            .calculate_penetration(damage_type, &shield.damage_types)
-            .await?;
-        
-        let penetration_factor = 1.0 - (shield.penetration_resistance * (1.0 - penetration));
-        shield_damage *= penetration_factor;
-        
-        // Apply shield type modifiers
-        let type_modifier = self.get_shield_type_modifier(&shield.shield_type, damage_type);
-        shield_damage *= type_modifier;
-        
-        Ok(shield_damage)
-    }
-}
-```
+See detailed reference in `09_Shields_and_Protections.md`.
 
 ### **3. Shield Stacking Rules**
-
-```rust
-// Shield stacking rules and management
-pub struct ShieldRules {
-    pub max_shields_per_type: HashMap<ShieldType, usize>,
-    pub stacking_modifiers: HashMap<ShieldType, f64>,
-    pub conflict_resolution: ConflictResolutionStrategy,
-}
-
-#[derive(Debug, Clone)]
-pub enum ConflictResolutionStrategy {
-    /// Replace oldest shield of same type
-    ReplaceOldest,
-    /// Replace weakest shield of same type
-    ReplaceWeakest,
-    /// Merge shields of same type
-    Merge,
-    /// Reject new shield
-    Reject,
-}
-
-impl ShieldRules {
-    /// Check if new shield can be added
-    pub fn can_add_shield(
-        &self,
-        existing_shields: &[ShieldInfo],
-        new_shield: &ShieldInfo,
-    ) -> bool {
-        let max_count = self.max_shields_per_type
-            .get(&new_shield.shield_type)
-            .copied()
-            .unwrap_or(1);
-        
-        let current_count = existing_shields
-            .iter()
-            .filter(|s| s.shield_type == new_shield.shield_type && s.is_active())
-            .count();
-        
-        current_count < max_count
-    }
-    
-    /// Resolve shield conflicts
-    pub fn resolve_conflict(
-        &self,
-        existing_shields: &mut Vec<ShieldInfo>,
-        new_shield: ShieldInfo,
-    ) -> ActorCoreResult<Option<ShieldInfo>> {
-        if self.can_add_shield(existing_shields, &new_shield) {
-            return Ok(Some(new_shield));
-        }
-        
-        match self.conflict_resolution {
-            ConflictResolutionStrategy::ReplaceOldest => {
-                self.replace_oldest_shield(existing_shields, new_shield)
-            }
-            ConflictResolutionStrategy::ReplaceWeakest => {
-                self.replace_weakest_shield(existing_shields, new_shield)
-            }
-            ConflictResolutionStrategy::Merge => {
-                self.merge_shields(existing_shields, new_shield)
-            }
-            ConflictResolutionStrategy::Reject => {
-                Ok(None)
-            }
-        }
-    }
-}
-```
+See detailed reference in `09_Shields_and_Protections.md`.
 
 ## 💔 **Resource Damage Application Logic**
 
@@ -546,34 +79,7 @@ impl ShieldRules {
 - **Configuration**: See `configs/true_damage.yaml` and action fields in `configs/action_schemas.yaml`.
 
 ### **Resource Exhaustion System**
-
-- **Concept**: Each resource has one or more exhaustion breakpoints. When a resource falls to or below a breakpoint, the actor suffers deterministic penalties until the resource recovers above the threshold.
-- **Per-Actor Configuration**: Breakpoints and effects are actor-specific (class/build dependent). See `configs/resource_exhaustion.yaml`.
-- **Deterministic Processing**: Exhaustion checks run after resource distribution and before event emission in the same tick.
-
-#### **Exhaustion Effects (Examples)**
-
-- Mage archetype (Mana-centric):
-  - `mana <= 10%`: disable shield/buff activations; -40% damage multipliers for magical types; +25% damage taken from magical types; cast time +30%.
-  - `mana == 0`: cannot cast mana-cost actions; break active mana-based shields; vulnerable flag for targeted counters.
-- Warrior archetype (HP/Stamina-centric):
-  - `stamina <= 15%`: cannot use stamina-cost actions; -30% physical multipliers; -20% move speed; block/parry disabled.
-  - `stamina == 0`: action lockout (physical); heavy stagger susceptibility; taunt effectiveness -50%.
-- Generic (applies to most actors):
-  - `health <= 10%`: emergency penalties or bonuses configurable (e.g., enrage or cripple).
-
-#### **Processing Order**
-
-```
-Shields → Resource Distribution → Apply Protection → Update Resource Values → Check Exhaustion → Emit Exhaustion/Recovery Events → Apply Status Interactions
-```
-
-#### **Events**
-
-- `ResourceExhaustedEvent { actor_id, resource_type, threshold_id, effects_applied, timestamp }`
-- `ResourceRecoveredEvent { actor_id, resource_type, threshold_id, effects_removed, timestamp }`
-
-Effects are idempotent and versioned; repeated transitions within a short window are coalesced.
+Moved to Resource Manager: see `docs/resource-manager/08_Resource_Exhaustion_System.md`. In combat, exhaustion checks occur after resource distribution and before event emission in the same tick.
 
 ### **1. Resource Priority System**
 
@@ -736,7 +242,7 @@ impl ResourceDamageDistributor {
             let category_result = self.distribute_damage_in_category(
                 &category_resources,
                 &impact_map,
-                remaining_damage,
+                remaining_damage, 
                 protection_result,
                 &damage.damage_type
             ).await?;
@@ -838,24 +344,24 @@ impl ResourceDamageDistributor {
                     .copied()
                     .unwrap_or(0.0);
                 let protected_damage = effective_damage * (1.0 - protection_factor);
-                
-                // Apply damage to resource
+            
+            // Apply damage to resource
                 let actual_damage = resource.apply_damage(protected_damage);
-                total_damage_applied += actual_damage;
-                
-                // Check if resource is depleted
-                if resource.current_value <= 0.0 {
-                    resources_depleted.push(resource.resource_id.clone());
-                }
-                
-                // Record resource result
-                resource_results.push(ResourceDamageResult {
-                    resource_id: resource.resource_id.clone(),
-                    resource_type: resource.resource_type.clone(),
-                    damage_applied: actual_damage,
-                    remaining_value: resource.current_value,
-                    is_depleted: resource.current_value <= 0.0,
-                });
+            total_damage_applied += actual_damage;
+            
+            // Check if resource is depleted
+            if resource.current_value <= 0.0 {
+                resources_depleted.push(resource.resource_id.clone());
+            }
+            
+            // Record resource result
+            resource_results.push(ResourceDamageResult {
+                resource_id: resource.resource_id.clone(),
+                resource_type: resource.resource_type.clone(),
+                damage_applied: actual_damage,
+                remaining_value: resource.current_value,
+                is_depleted: resource.current_value <= 0.0,
+            });
             }
         }
         
@@ -3660,20 +3166,4 @@ impl DamageApplicationEngine {
 - Turn-based: lockstep rounds with barriers; phases defined in `turn_based.yaml`.
 
 ### **Initiative & AP**
-- Initiative (per round): `initiative.formula` from `turn_based.yaml` (speed/haste weighted, seeded tiebreaker).
-- Variable AP: `action_points.base_ap_per_round`; AP cost per action computed by `ap_cost_formula` using action `duration_s`/`cooldown_s`.
-- Minor actions: actions with AP < `minor_action_threshold_ap`.
-
-### **Phases**
-- Input window: default 1500 ms; AFK timeout 5000 ms (see `server_timing.yaml` and `turn_based.yaml`).
-- Execution: resolve in descending initiative; each action fully applies before the next.
-- End-of-round: regen, DoT/HoT ticks, exhaustion checks, event flush.
-
-### **Mode Switching**
-- RT→TB: finish current tick, snapshot, enqueue at next turn boundary.
-- TB→RT: finish current turn if acting; release at next tick.
-
-### **Events**
-- TurnStarted, ActorTurnStarted, ActorTurnEnded, TurnEnded (see `turn_based.yaml`).
-
-*Tài liệu này sẽ được cập nhật khi hệ thống phát triển và có thêm yêu cầu mới.*
+- Initiative (per round): `initiative.formula` from `turn_based.yaml`

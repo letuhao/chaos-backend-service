@@ -2,19 +2,36 @@ version: 1
 
 initiative:
   # Deterministic initiative per round; higher is earlier
-  formula: "(speed * 1.0) + (haste * 0.5) + rng_seed_tiebreaker"
+  formula: "(speed * 1.0) + (haste_eff * 0.5) + rng_seed_tiebreaker"
+  speed_weight: 1.0
+  haste_weight: 0.5
   rng_seed_tiebreaker: true
   clamp_min: 0
   clamp_max: null
+  # Haste soft-cap & diminishing returns relative to speed to avoid abuse
+  haste_soft_cap_ratio_of_speed: 1.0   # haste up to 100% of speed has full effect
+  haste_dr_curve: exponential          # beyond soft cap, diminishing returns apply
+  haste_dr_k: 0.5                      # contribution factor beyond soft cap (0..1)
 
 action_points:
   # Variable AP per round; default 1.0 AP; actions consume AP derived from duration/cooldown
   base_ap_per_round: 1.0
-  carry_over_ap: false
-  # Configurable AP cost formula from action attributes
-  # Example: 50% weight to duration (in seconds), 50% to cooldown (in seconds), with floor of 0.25 and ceil 2.0
-  ap_cost_formula: "max(0.25, min(2.0, (duration_s * 0.5) + (cooldown_s * 0.5)))"
-  minor_action_threshold_ap: 0.5  # actions below this cost considered minor
+  carry_over_ap: true
+  carry_over_cap: 0.5            # can carry up to 0.5 AP to next round
+  # Configurable AP cost from action attributes (duration/cooldown in seconds)
+  ap_cost_weights:
+    duration_weight: 0.6
+    cooldown_weight: 0.4
+  ap_cost_clamp_min: 0.25
+  ap_cost_clamp_max: 2.0
+  ap_cost_formula: "max(ap_cost_clamp_min, min(ap_cost_clamp_max, (duration_s * duration_weight) + (cooldown_s * cooldown_weight)))"
+  minor_action_threshold_ap:
+    default: 0.5
+    pvp_override: 0.4
+  oversize_action:
+    allow: true
+    method: channel              # channel across rounds instead of AP debt
+    max_rounds: 2                # cap channel split to 2 rounds
 
 phases:
   input_window_ms: 1500

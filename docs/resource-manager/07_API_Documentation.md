@@ -7,10 +7,12 @@
 3. [Core Components](#core-components)
 4. [Resource Managers](#resource-managers)
 5. [Event System](#event-system)
-6. [Performance Monitoring](#performance-monitoring)
-7. [Integration Examples](#integration-examples)
-8. [Best Practices](#best-practices)
-9. [Troubleshooting](#troubleshooting)
+6. [Resource Exhaustion API](#resource-exhaustion-api)
+6. [Resource Exhaustion API](#resource-exhaustion-api)
+7. [Performance Monitoring](#performance-monitoring)
+8. [Integration Examples](#integration-examples)
+9. [Best Practices](#best-practices)
+10. [Troubleshooting](#troubleshooting)
 
 ## 🎯 **Overview**
 
@@ -306,6 +308,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 ```
+
+## Resource Exhaustion API
+
+See `08_Resource_Exhaustion_System.md` for the model and schema. Minimal runtime contracts:
+
+```rust
+pub trait ExhaustionProvider {
+  fn evaluate(&self, actor_id: &str, snapshot: &Snapshot) -> Vec<ExhaustionTransition>;
+  fn apply(&mut self, actor_id: &str, transitions: &[ExhaustionTransition]) -> Result<(), ExhaustionError>;
+  fn clear(&mut self, actor_id: &str, transitions: &[ExhaustionTransition]) -> Result<(), ExhaustionError>;
+}
+```
+
+Events published: `ResourceExhaustedEvent`, `ResourceRecoveredEvent` (coalesced per config).
 
 ## 📊 **Performance Monitoring**
 

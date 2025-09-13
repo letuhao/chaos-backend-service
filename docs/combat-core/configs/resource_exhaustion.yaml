@@ -1,69 +1,91 @@
 version: 1
+hysteresis_default: 0.02
+events:
+  coalesce_window_ms: 200
 
-# Global defaults can be overridden per class/archetype/actor
-defaults:
-  evaluation_order:
-    - shields
-    - distribution
-    - protections
-    - update_values
-    - exhaustion
-    - events
+# Optional global priorities when simultaneous thresholds fire
+priorities:
+  categories: ["health", "lifeforce", "lifespan", "qi", "spiritual", "mana", "stamina", "other"]
 
 archetypes:
-  mage:
-    mana:
-      thresholds:
-        - id: low_mana
-          when_percent_lte: 0.10
-          effects:
-            - disable_tags: ["shield_activation", "buff_activation"]
-            - damage_multiplier:
-                categories: ["magical", "elemental", "spiritual"]
-                modifier: -0.40
-            - incoming_multiplier:
-                categories: ["magical", "elemental"]
-                modifier: 0.25
-            - cast_time_modifier: 0.30
-        - id: no_mana
-          when_value_eq: 0
-          effects:
-            - disable_cost_type: ["mana"]
-            - break_active_shields: ["MagicShield", "ElementalShield", "SpiritualShield"]
-            - set_flag: { name: "vulnerable_mage", value: true }
   warrior:
     stamina:
       thresholds:
         - id: low_stamina
-          when_percent_lte: 0.15
+          order: 10
+          enter_percent_lte: 0.15
+          exit_percent_gte: 0.17
           effects:
-            - disable_cost_type: ["stamina"]
-            - damage_multiplier:
-                categories: ["physical"]
-                modifier: -0.30
-            - move_speed_modifier: -0.20
-            - disable_mechanics: ["block", "parry"]
+            - type: disable_cost_type
+              values: ["stamina"]
+            - type: damage_multiplier
+              categories: ["physical"]
+              modifier: -0.30
+            - type: move_speed_modifier
+              modifier: -0.20
+            - type: disable_tags
+              values: ["parry", "block"]
+        
         - id: no_stamina
-          when_value_eq: 0
+          order: 20
+          enter_value_eq: 0
           effects:
-            - action_lockout: ["physical"]
-            - stagger_susceptibility: heavy
-            - taunt_effectiveness_modifier: -0.50
+            - type: action_lockout
+              values: ["physical"]
+            - type: stagger_susceptibility
+              level: heavy
+            - type: taunt_effectiveness_modifier
+              modifier: -0.50
 
-generic:
-  health:
-    thresholds:
-      - id: critical_health
-        when_percent_lte: 0.10
-        effects:
-          # Choose one policy per mode: enrage or cripple
-          - mode_overrides:
-              pve: { damage_multiplier: { categories: ["all"], modifier: 0.15 } }
-              pvp: { damage_multiplier: { categories: ["all"], modifier: -0.10 } }
+  mage:
+    mana:
+      thresholds:
+        - id: low_mana
+          order: 10
+          enter_percent_lte: 0.10
+          exit_percent_gte: 0.12
+          effects:
+            - type: disable_tags
+              values: ["shield_activation", "buff_activation"]
+            - type: damage_multiplier
+              categories: ["magical", "elemental"]
+              modifier: -0.40
+            - type: incoming_multiplier
+              categories: ["magical", "elemental"]
+              modifier: 0.25
+            - type: cast_time_modifier
+              modifier: 0.30
+        
+        - id: no_mana
+          order: 20
+          enter_value_eq: 0
+          effects:
+            - type: disable_cost_type
+              values: ["mana"]
+            - type: break_active_shields
+              values: ["MagicShield", "ElementalShield", "SpiritualShield"]
+            - type: set_flag
+              name: vulnerable_mage
+              value: true
 
-events:
-  coalesce_window_ms: 200
-  emit:
-    - ResourceExhaustedEvent
-    - ResourceRecoveredEvent
-
+  # Default archetype for testing
+  default:
+    mana:
+      thresholds:
+        - id: low_mana
+          order: 10
+          enter_percent_lte: 0.10
+          exit_percent_gte: 0.12
+          effects:
+            - type: disable_tags
+              values: ["shield_activation"]
+    
+    stamina:
+      thresholds:
+        - id: low_stamina
+          order: 10
+          enter_percent_lte: 0.15
+          exit_percent_gte: 0.17
+          effects:
+            - type: disable_cost_type
+              values: ["stamina"]

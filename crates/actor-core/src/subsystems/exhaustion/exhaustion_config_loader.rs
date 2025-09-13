@@ -1,0 +1,602 @@
+//! Exhaustion Configuration Loader
+//!
+//! This module provides configuration loading and deep merging capabilities
+//! for the Resource Exhaustion System, supporting global, area, and PvP overrides.
+
+use std::collections::HashMap;
+use std::path::Path;
+// Removed unused imports
+
+#[allow(unused_imports)]
+use super::resource_exhaustion::{
+    ExhaustionConfig, ArchetypeConfig, ResourceConfig, ThresholdConfig, EffectConfig, EventConfig
+};
+
+/// Configuration loader for exhaustion system
+pub struct ExhaustionConfigLoader {
+    /// Global configuration
+    global_config: Option<ExhaustionConfig>,
+    /// Area-specific overrides
+    area_overrides: HashMap<String, ExhaustionConfig>,
+    /// PvP template overrides
+    pvp_overrides: HashMap<String, ExhaustionConfig>,
+}
+
+/// Configuration source for debugging
+#[derive(Debug, Clone, PartialEq)]
+pub enum ConfigSource {
+    Global,
+    Area(String),
+    PvP(String),
+}
+
+/// Configuration merge result with source tracking
+#[derive(Debug, Clone)]
+pub struct MergedConfig {
+    /// Final merged configuration
+    pub config: ExhaustionConfig,
+    /// Source tracking for each configuration key
+    pub sources: HashMap<String, ConfigSource>,
+}
+
+/// Configuration loading error
+#[derive(Debug, thiserror::Error)]
+pub enum ConfigLoaderError {
+    #[error("File not found: {0}")]
+    FileNotFound(String),
+    #[error("Invalid YAML: {0}")]
+    InvalidYaml(String),
+    #[error("Invalid JSON: {0}")]
+    InvalidJson(String),
+    #[error("Validation error: {0}")]
+    ValidationError(String),
+    #[error("Merge error: {0}")]
+    MergeError(String),
+}
+
+impl ExhaustionConfigLoader {
+    /// Create a new configuration loader
+    pub fn new() -> Self {
+        Self {
+            global_config: None,
+            area_overrides: HashMap::new(),
+            pvp_overrides: HashMap::new(),
+        }
+    }
+
+    /// Load global configuration from file
+    pub async fn load_global_config<P: AsRef<Path>>(&mut self, path: P) -> Result<(), ConfigLoaderError> {
+        let path = path.as_ref();
+        let content = tokio::fs::read_to_string(path)
+            .await
+            .map_err(|_| ConfigLoaderError::FileNotFound(path.to_string_lossy().to_string()))?;
+
+        let config: ExhaustionConfig = serde_yaml::from_str(&content)
+            .map_err(|e| ConfigLoaderError::InvalidYaml(e.to_string()))?;
+
+        self.validate_config(&config)?;
+        self.global_config = Some(config);
+        Ok(())
+    }
+
+    /// Load area-specific configuration override
+    pub async fn load_area_override<P: AsRef<Path>>(&mut self, area_id: &str, path: P) -> Result<(), ConfigLoaderError> {
+        let path = path.as_ref();
+        let content = tokio::fs::read_to_string(path)
+            .await
+            .map_err(|_| ConfigLoaderError::FileNotFound(path.to_string_lossy().to_string()))?;
+
+        let config: ExhaustionConfig = serde_yaml::from_str(&content)
+            .map_err(|e| ConfigLoaderError::InvalidYaml(e.to_string()))?;
+
+        self.validate_config(&config)?;
+        self.area_overrides.insert(area_id.to_string(), config);
+        Ok(())
+    }
+
+    /// Load PvP template configuration override
+    pub async fn load_pvp_override<P: AsRef<Path>>(&mut self, template_id: &str, path: P) -> Result<(), ConfigLoaderError> {
+        let path = path.as_ref();
+        let content = tokio::fs::read_to_string(path)
+            .await
+            .map_err(|_| ConfigLoaderError::FileNotFound(path.to_string_lossy().to_string()))?;
+
+        let config: ExhaustionConfig = serde_yaml::from_str(&content)
+            .map_err(|e| ConfigLoaderError::InvalidYaml(e.to_string()))?;
+
+        self.validate_config(&config)?;
+        self.pvp_overrides.insert(template_id.to_string(), config);
+        Ok(())
+    }
+
+    /// Resolve final configuration for an actor
+    pub fn resolve_config(&self, area_id: Option<&str>, pvp_template: Option<&str>) -> Result<MergedConfig, ConfigLoaderError> {
+        let global_config = self.global_config.as_ref()
+            .ok_or_else(|| ConfigLoaderError::ValidationError("No global configuration loaded".to_string()))?;
+
+        let mut merged_config = global_config.clone();
+        let mut sources = HashMap::new();
+
+        // Track global config sources
+        self.track_config_sources(&merged_config, ConfigSource::Global, &mut sources);
+
+        // Apply area overrides
+        if let Some(area_id) = area_id {
+            if let Some(area_config) = self.area_overrides.get(area_id) {
+                merged_config = self.deep_merge_configs(merged_config, area_config.clone())?;
+                self.track_config_sources(area_config, ConfigSource::Area(area_id.to_string()), &mut sources);
+            }
+        }
+
+        // Apply PvP template overrides
+        if let Some(template_id) = pvp_template {
+            if let Some(pvp_config) = self.pvp_overrides.get(template_id) {
+                merged_config = self.deep_merge_configs(merged_config, pvp_config.clone())?;
+                self.track_config_sources(pvp_config, ConfigSource::PvP(template_id.to_string()), &mut sources);
+            }
+        }
+
+        // Validate final merged configuration
+        self.validate_config(&merged_config)?;
+
+        Ok(MergedConfig {
+            config: merged_config,
+            sources,
+        })
+    }
+
+    /// Deep merge two configurations
+    fn deep_merge_configs(&self, mut base: ExhaustionConfig, override_config: ExhaustionConfig) -> Result<ExhaustionConfig, ConfigLoaderError> {
+        // Merge hysteresis_default (override takes precedence)
+        if override_config.hysteresis_default != 0.0 {
+            base.hysteresis_default = override_config.hysteresis_default;
+        }
+
+        // Merge events
+        if override_config.events.coalesce_window_ms != 0 {
+            base.events.coalesce_window_ms = override_config.events.coalesce_window_ms;
+        }
+
+        // Merge priorities
+        if let Some(override_priorities) = override_config.priorities {
+            base.priorities = Some(override_priorities);
+        }
+
+        // Merge archetypes
+        for (archetype_name, override_archetype) in override_config.archetypes {
+            let base_archetype = base.archetypes.entry(archetype_name.clone())
+                .or_insert_with(|| ArchetypeConfig {
+                    resources: HashMap::new(),
+                });
+
+            // Merge resources within archetype
+            for (resource_name, override_resource) in override_archetype.resources {
+                let base_resource = base_archetype.resources.entry(resource_name.clone())
+                    .or_insert_with(|| ResourceConfig {
+                        thresholds: Vec::new(),
+                    });
+
+                // Merge thresholds
+                self.merge_thresholds(&mut base_resource.thresholds, override_resource.thresholds)?;
+            }
+        }
+
+        Ok(base)
+    }
+
+    /// Merge thresholds, handling duplicates by ID
+    fn merge_thresholds(&self, base_thresholds: &mut Vec<ThresholdConfig>, override_thresholds: Vec<ThresholdConfig>) -> Result<(), ConfigLoaderError> {
+        for override_threshold in override_thresholds {
+            // Check if threshold with same ID already exists
+            if let Some(existing_index) = base_thresholds.iter().position(|t| t.id == override_threshold.id) {
+                // Replace existing threshold
+                base_thresholds[existing_index] = override_threshold;
+            } else {
+                // Add new threshold
+                base_thresholds.push(override_threshold);
+            }
+        }
+
+        // Sort thresholds by order
+        base_thresholds.sort_by_key(|t| t.order.unwrap_or(0));
+
+        Ok(())
+    }
+
+    /// Track configuration sources for debugging
+    fn track_config_sources(&self, config: &ExhaustionConfig, source: ConfigSource, sources: &mut HashMap<String, ConfigSource>) {
+        // Track top-level sources
+        sources.insert("version".to_string(), source.clone());
+        sources.insert("hysteresis_default".to_string(), source.clone());
+        sources.insert("events.coalesce_window_ms".to_string(), source.clone());
+
+        if config.priorities.is_some() {
+            sources.insert("priorities".to_string(), source.clone());
+        }
+
+        // Track archetype sources
+        for (archetype_name, archetype_config) in &config.archetypes {
+            for (resource_name, resource_config) in &archetype_config.resources {
+                for threshold in &resource_config.thresholds {
+                    let key = format!("archetypes.{}.{}.thresholds.{}", archetype_name, resource_name, threshold.id);
+                    sources.insert(key, source.clone());
+                }
+            }
+        }
+    }
+
+    /// Validate configuration
+    fn validate_config(&self, config: &ExhaustionConfig) -> Result<(), ConfigLoaderError> {
+        // Validate version
+        if config.version == 0 {
+            return Err(ConfigLoaderError::ValidationError("Version must be >= 1".to_string()));
+        }
+
+        // Validate hysteresis default
+        if config.hysteresis_default < 0.0 || config.hysteresis_default > 1.0 {
+            return Err(ConfigLoaderError::ValidationError(
+                "Hysteresis default must be between 0.0 and 1.0".to_string()
+            ));
+        }
+
+        // Validate archetypes and thresholds
+        for (archetype_name, archetype_config) in &config.archetypes {
+            for (resource_name, resource_config) in &archetype_config.resources {
+                let mut threshold_ids = std::collections::HashSet::new();
+                
+                for threshold in &resource_config.thresholds {
+                    // Validate threshold ID uniqueness
+                    if !threshold_ids.insert(&threshold.id) {
+                        return Err(ConfigLoaderError::ValidationError(
+                            format!("Duplicate threshold ID '{}' in {}.{}", 
+                                threshold.id, archetype_name, resource_name)
+                        ));
+                    }
+
+                    // Validate enter condition
+                    let has_enter_percent = threshold.enter_percent_lte.is_some();
+                    let has_enter_value = threshold.enter_value_eq.is_some();
+                    
+                    if !has_enter_percent && !has_enter_value {
+                        return Err(ConfigLoaderError::ValidationError(
+                            format!("Threshold '{}' must have either enter_percent_lte or enter_value_eq", 
+                                threshold.id)
+                        ));
+                    }
+
+                    if has_enter_percent && has_enter_value {
+                        return Err(ConfigLoaderError::ValidationError(
+                            format!("Threshold '{}' cannot have both enter_percent_lte and enter_value_eq", 
+                                threshold.id)
+                        ));
+                    }
+
+                    // Validate exit condition
+                    if let Some(enter_percent) = threshold.enter_percent_lte {
+                        if let Some(exit_percent) = threshold.exit_percent_gte {
+                            if exit_percent < enter_percent {
+                                return Err(ConfigLoaderError::ValidationError(
+                                    format!("Threshold '{}' exit_percent_gte ({}) must be >= enter_percent_lte ({})", 
+                                        threshold.id, exit_percent, enter_percent)
+                                ));
+                            }
+                        }
+                    }
+
+                    if let Some(enter_value) = threshold.enter_value_eq {
+                        if let Some(exit_value) = threshold.exit_value_ge {
+                            if exit_value < enter_value {
+                                return Err(ConfigLoaderError::ValidationError(
+                                    format!("Threshold '{}' exit_value_ge ({}) must be >= enter_value_eq ({})", 
+                                        threshold.id, exit_value, enter_value)
+                                ));
+                            }
+                        }
+                    }
+
+                    // Validate effects
+                    if threshold.effects.is_empty() {
+                        return Err(ConfigLoaderError::ValidationError(
+                            format!("Threshold '{}' must have at least one effect", threshold.id)
+                        ));
+                    }
+
+                    for effect in &threshold.effects {
+                        self.validate_effect(effect)?;
+                    }
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Validate effect configuration
+    fn validate_effect(&self, effect: &EffectConfig) -> Result<(), ConfigLoaderError> {
+        match effect.effect_type.as_str() {
+            "disable_tags" | "disable_cost_type" | "break_active_shields" | "action_lockout" => {
+                if effect.values.is_none() || effect.values.as_ref().unwrap().is_empty() {
+                    return Err(ConfigLoaderError::ValidationError(
+                        format!("Effect '{}' requires non-empty values", effect.effect_type)
+                    ));
+                }
+            }
+            "damage_multiplier" | "incoming_multiplier" => {
+                if effect.categories.is_none() || effect.categories.as_ref().unwrap().is_empty() {
+                    return Err(ConfigLoaderError::ValidationError(
+                        format!("Effect '{}' requires non-empty categories", effect.effect_type)
+                    ));
+                }
+                if effect.modifier.is_none() {
+                    return Err(ConfigLoaderError::ValidationError(
+                        format!("Effect '{}' requires modifier", effect.effect_type)
+                    ));
+                }
+            }
+            "cast_time_modifier" | "move_speed_modifier" | "taunt_effectiveness_modifier" => {
+                if effect.modifier.is_none() {
+                    return Err(ConfigLoaderError::ValidationError(
+                        format!("Effect '{}' requires modifier", effect.effect_type)
+                    ));
+                }
+            }
+            "set_flag" => {
+                if effect.name.is_none() || effect.value.is_none() {
+                    return Err(ConfigLoaderError::ValidationError(
+                        "Effect 'set_flag' requires name and value".to_string()
+                    ));
+                }
+            }
+            "stagger_susceptibility" => {
+                if effect.level.is_none() {
+                    return Err(ConfigLoaderError::ValidationError(
+                        "Effect 'stagger_susceptibility' requires level".to_string()
+                    ));
+                }
+                let level = effect.level.as_ref().unwrap();
+                if !["light", "medium", "heavy"].contains(&level.as_str()) {
+                    return Err(ConfigLoaderError::ValidationError(
+                        format!("Effect 'stagger_susceptibility' level must be light, medium, or heavy, got: {}", level)
+                    ));
+                }
+            }
+            "regen_modifier" => {
+                if effect.resource.is_none() || effect.modifier.is_none() {
+                    return Err(ConfigLoaderError::ValidationError(
+                        "Effect 'regen_modifier' requires resource and modifier".to_string()
+                    ));
+                }
+            }
+            _ => {
+                return Err(ConfigLoaderError::ValidationError(
+                    format!("Unknown effect type: {}", effect.effect_type)
+                ));
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Get debug information about configuration sources
+    pub fn get_debug_info(&self, merged_config: &MergedConfig) -> String {
+        let mut info = String::new();
+        info.push_str("Configuration Sources:\n");
+        info.push_str("===================\n");
+
+        for (key, source) in &merged_config.sources {
+            let source_str = match source {
+                ConfigSource::Global => "global",
+                ConfigSource::Area(area_id) => &area_id,
+                ConfigSource::PvP(template_id) => &template_id,
+            };
+            info.push_str(&format!("  {}: {}\n", key, source_str));
+        }
+
+        info
+    }
+}
+
+impl Default for ExhaustionConfigLoader {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashMap;
+
+    #[tokio::test]
+    async fn test_config_loader_creation() {
+        let loader = ExhaustionConfigLoader::new();
+        assert!(loader.global_config.is_none());
+        assert!(loader.area_overrides.is_empty());
+        assert!(loader.pvp_overrides.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_config_validation() {
+        let loader = ExhaustionConfigLoader::new();
+        
+        // Test valid config
+        let valid_config = ExhaustionConfig {
+            version: 1,
+            hysteresis_default: 0.02,
+            events: EventConfig { coalesce_window_ms: 200 },
+            priorities: None,
+            archetypes: HashMap::new(),
+        };
+        assert!(loader.validate_config(&valid_config).is_ok());
+
+        // Test invalid version
+        let invalid_config = ExhaustionConfig {
+            version: 0,
+            hysteresis_default: 0.02,
+            events: EventConfig { coalesce_window_ms: 200 },
+            priorities: None,
+            archetypes: HashMap::new(),
+        };
+        assert!(loader.validate_config(&invalid_config).is_err());
+
+        // Test invalid hysteresis
+        let invalid_config = ExhaustionConfig {
+            version: 1,
+            hysteresis_default: 1.5,
+            events: EventConfig { coalesce_window_ms: 200 },
+            priorities: None,
+            archetypes: HashMap::new(),
+        };
+        assert!(loader.validate_config(&invalid_config).is_err());
+    }
+
+    #[tokio::test]
+    async fn test_config_merge() {
+        let loader = ExhaustionConfigLoader::new();
+        
+        // Create base config
+        let base_config = ExhaustionConfig {
+            version: 1,
+            hysteresis_default: 0.02,
+            events: EventConfig { coalesce_window_ms: 200 },
+            priorities: None,
+            archetypes: {
+                let mut archetypes = HashMap::new();
+                let mut mage_resources = HashMap::new();
+                mage_resources.insert("mana".to_string(), ResourceConfig {
+                    thresholds: vec![
+                        ThresholdConfig {
+                            id: "low_mana".to_string(),
+                            order: Some(10),
+                            enter_percent_lte: Some(0.10),
+                            exit_percent_gte: Some(0.12),
+                            enter_value_eq: None,
+                            exit_value_ge: None,
+                            effects: vec![
+                                EffectConfig {
+                                    effect_type: "disable_tags".to_string(),
+                                    values: Some(vec!["shield_activation".to_string()]),
+                                    categories: None,
+                                    modifier: None,
+                                    name: None,
+                                    value: None,
+                                    level: None,
+                                    resource: None,
+                                }
+                            ],
+                        }
+                    ],
+                });
+                archetypes.insert("mage".to_string(), ArchetypeConfig {
+                    resources: mage_resources,
+                });
+                archetypes
+            },
+        };
+
+        // Create override config
+        let override_config = ExhaustionConfig {
+            version: 1,
+            hysteresis_default: 0.05, // Override hysteresis
+            events: EventConfig { coalesce_window_ms: 300 }, // Override coalesce window
+            priorities: None,
+            archetypes: {
+                let mut archetypes = HashMap::new();
+                let mut mage_resources = HashMap::new();
+                mage_resources.insert("mana".to_string(), ResourceConfig {
+                    thresholds: vec![
+                        ThresholdConfig {
+                            id: "low_mana".to_string(), // Same ID - should replace
+                            order: Some(10),
+                            enter_percent_lte: Some(0.15), // Different threshold
+                            exit_percent_gte: Some(0.17),
+                            enter_value_eq: None,
+                            exit_value_ge: None,
+                            effects: vec![
+                                EffectConfig {
+                                    effect_type: "disable_tags".to_string(),
+                                    values: Some(vec!["shield_activation".to_string(), "buff_activation".to_string()]),
+                                    categories: None,
+                                    modifier: None,
+                                    name: None,
+                                    value: None,
+                                    level: None,
+                                    resource: None,
+                                }
+                            ],
+                        },
+                        ThresholdConfig {
+                            id: "new_threshold".to_string(), // New threshold - should be added
+                            order: Some(20),
+                            enter_percent_lte: Some(0.05),
+                            exit_percent_gte: Some(0.07),
+                            enter_value_eq: None,
+                            exit_value_ge: None,
+                            effects: vec![
+                                EffectConfig {
+                                    effect_type: "set_flag".to_string(),
+                                    name: Some("critical_mana".to_string()),
+                                    value: Some(true),
+                                    values: None,
+                                    categories: None,
+                                    modifier: None,
+                                    level: None,
+                                    resource: None,
+                                }
+                            ],
+                        }
+                    ],
+                });
+                archetypes.insert("mage".to_string(), ArchetypeConfig {
+                    resources: mage_resources,
+                });
+                archetypes
+            },
+        };
+
+        // Test merge
+        let merged = loader.deep_merge_configs(base_config, override_config).unwrap();
+        
+        // Check that overrides were applied
+        assert_eq!(merged.hysteresis_default, 0.05);
+        assert_eq!(merged.events.coalesce_window_ms, 300);
+        
+        // Check that thresholds were merged correctly
+        let mage_config = merged.archetypes.get("mage").unwrap();
+        let mana_config = mage_config.resources.get("mana").unwrap();
+        assert_eq!(mana_config.thresholds.len(), 2);
+        
+        // Check that low_mana threshold was replaced
+        let low_mana = mana_config.thresholds.iter().find(|t| t.id == "low_mana").unwrap();
+        assert_eq!(low_mana.enter_percent_lte, Some(0.15));
+        assert_eq!(low_mana.effects[0].values.as_ref().unwrap().len(), 2);
+        
+        // Check that new_threshold was added
+        let new_threshold = mana_config.thresholds.iter().find(|t| t.id == "new_threshold").unwrap();
+        assert_eq!(new_threshold.enter_percent_lte, Some(0.05));
+    }
+
+    #[tokio::test]
+    async fn test_resolve_config() {
+        let mut loader = ExhaustionConfigLoader::new();
+        
+        // Create a simple base config
+        let base_config = ExhaustionConfig {
+            version: 1,
+            hysteresis_default: 0.02,
+            events: EventConfig { coalesce_window_ms: 200 },
+            priorities: None,
+            archetypes: HashMap::new(),
+        };
+        loader.global_config = Some(base_config);
+        
+        // Resolve config without overrides
+        let result = loader.resolve_config(None, None).unwrap();
+        assert_eq!(result.config.version, 1);
+        assert_eq!(result.config.hysteresis_default, 0.02);
+        
+        // Check that sources are tracked
+        assert_eq!(result.sources.get("version"), Some(&ConfigSource::Global));
+        assert_eq!(result.sources.get("hysteresis_default"), Some(&ConfigSource::Global));
+    }
+}

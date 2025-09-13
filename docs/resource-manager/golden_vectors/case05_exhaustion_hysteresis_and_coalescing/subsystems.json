@@ -1,0 +1,38 @@
+{
+  "config": {
+    "version": 1,
+    "hysteresis_default": 0.02,
+    "events": { "coalesce_window_ms": 200 },
+    "archetypes": {
+      "mage": {
+        "mana": {
+          "thresholds": [
+            {
+              "id": "low_mana",
+              "order": 10,
+              "enter_percent_lte": 0.10,
+              "exit_percent_gte": 0.12,
+              "effects": [
+                { "type": "disable_tags", "values": ["shield_activation"] }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  },
+  "actor": {
+    "id": "actor_mage_001",
+    "archetype": "mage",
+    "resources": { "mana_current": 1000, "mana_max": 1000 }
+  },
+  "timeline_ms": [
+    { "t": 0,   "delta_mana": -900 },   
+    { "t": 100, "delta_mana":  +5 },   
+    { "t": 150, "delta_mana":  -5 },   
+    { "t": 180, "delta_mana":  +5 },   
+    { "t": 400, "delta_mana": +120 }   
+  ]
+}
+
+
