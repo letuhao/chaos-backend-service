@@ -54,8 +54,8 @@ fuzz/crash-*
 *.sqlite3
 
 # Cache
-.cache/
-cache/
+#.cache/
+#cache/
 
 # Temporary files
 *.tmp
@@ -69,15 +69,15 @@ cache/
 .env.*.local
 
 # Configuration (keep templates)
-config/*.toml
-config/*.yaml
-config/*.yml
-!config/*.example.*
-!config/*.template.*
+#config/*.toml
+#config/*.yaml
+#config/*.yml
+##!config/*.example.*
+#!config/*.template.*
 
 # Documentation
-/book/
-/docs/book/
+#/book/
+#/docs/book/
 
 # Generated files
 **/generated/
