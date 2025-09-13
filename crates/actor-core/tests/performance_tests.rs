@@ -6,7 +6,7 @@
 use actor_core::types::{Actor, Subsystem as SubsystemStruct, Contribution, SubsystemOutput, Caps};
 use actor_core::enums::Bucket;
 use actor_core::interfaces::{Aggregator, PluginRegistry, Cache};
-use actor_core::services::{AggregatorImpl, CapsProviderImpl};
+use actor_core::{AggregatorImpl, CapsProviderImpl};
 use actor_core::registry::{CapLayerRegistryImpl, PluginRegistryImpl, CombinerRegistryImpl};
 use actor_core::InMemoryCache;
 use std::sync::Arc;
@@ -232,7 +232,7 @@ async fn benchmark_aggregation_subsystem_scaling() {
                 i as i64,
                 5, // 5 contributions per subsystem
             );
-            plugin_registry.register(Box::new(subsystem)).unwrap();
+            plugin_registry.register(Arc::new(subsystem)).unwrap();
         }
         
         let combiner_registry = Arc::new(CombinerRegistryImpl::new());

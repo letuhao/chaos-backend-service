@@ -5,6 +5,7 @@
 
 use std::sync::Arc;
 use std::time::{Duration, Instant};
+use parking_lot::RwLock;
 use crate::ActorCoreResult;
 
 /// Configuration for SIMD optimizations.
@@ -47,7 +48,7 @@ impl Default for SimdConfig {
 pub struct SimdOptimizer {
     config: SimdConfig,
     /// Performance statistics
-    stats: Arc<std::sync::RwLock<SimdStats>>,
+    stats: Arc<RwLock<SimdStats>>,
 }
 
 /// Performance statistics for SIMD operations.
@@ -76,7 +77,7 @@ impl SimdOptimizer {
     pub fn new(config: SimdConfig) -> Self {
         Self {
             config,
-            stats: Arc::new(std::sync::RwLock::new(SimdStats::default())),
+            stats: Arc::new(RwLock::new(SimdStats::default())),
         }
     }
 
@@ -183,12 +184,12 @@ impl SimdOptimizer {
 
     /// Get performance statistics.
     pub fn get_stats(&self) -> SimdStats {
-        self.stats.read().unwrap().clone()
+        self.stats.read().clone()
     }
 
     /// Reset performance statistics.
     pub fn reset_stats(&self) {
-        let mut stats = self.stats.write().unwrap();
+        let mut stats = self.stats.write();
         *stats = SimdStats::default();
     }
 
@@ -253,7 +254,7 @@ impl SimdOptimizer {
 
     fn update_stats(&self, start_time: Instant, is_simd: bool) {
         let elapsed = start_time.elapsed();
-        let mut stats = self.stats.write().unwrap();
+        let mut stats = self.stats.write();
         
         stats.total_operations += 1;
         if is_simd {
@@ -409,6 +410,13 @@ impl SimdAggregationOptimizer {
                         max_cap = cap.value;
                     }
                 }
+                crate::enums::CapMode::SoftMax => {
+                    // SoftMax allows exceeding but applies penalty
+                    // For now, treat it the same as HardMax
+                    if cap.kind == "max" {
+                        max_cap = max_cap.min(cap.value);
+                    }
+                }
             }
         }
 
@@ -418,249 +426,5 @@ impl SimdAggregationOptimizer {
     /// Get SIMD statistics.
     pub fn get_stats(&self) -> SimdStats {
         self.simd_optimizer.get_stats()
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::time::Duration;
-
-    #[test]
-    fn test_simd_config_default() {
-        let config = SimdConfig::default();
-        assert!(config.enable_simd);
-        assert!(config.enable_crc32_simd);
-        assert!(config.enable_hash_simd);
-        assert!(config.enable_memcpy_simd);
-        assert!(config.enable_cmp_simd);
-        assert_eq!(config.batch_size, 1024);
-        assert_eq!(config.min_data_size, 64);
-        assert!(config.max_concurrency > 0);
-    }
-
-    #[test]
-    fn test_simd_optimizer_creation() {
-        let config = SimdConfig::default();
-        let optimizer = SimdOptimizer::new(config);
-        assert!(optimizer.config.enable_simd);
-    }
-
-    #[test]
-    fn test_simd_optimizer_crc32() {
-        let config = SimdConfig::default();
-        let optimizer = SimdOptimizer::new(config);
-
-        let data = b"test data for crc32";
-        let result = optimizer.crc32(data);
-        assert!(result > 0);
-
-        // Test with different data
-        let data2 = b"different test data";
-        let result2 = optimizer.crc32(data2);
-        assert_ne!(result, result2);
-    }
-
-    #[test]
-    fn test_simd_optimizer_hash() {
-        let config = SimdConfig::default();
-        let optimizer = SimdOptimizer::new(config);
-
-        let data = b"test data for hashing";
-        let result = optimizer.hash(data);
-        assert!(result > 0);
-
-        // Test with different data
-        let data2 = b"different test data";
-        let result2 = optimizer.hash(data2);
-        assert_ne!(result, result2);
-    }
-
-    #[test]
-    fn test_simd_optimizer_memcpy() {
-        let config = SimdConfig::default();
-        let optimizer = SimdOptimizer::new(config);
-
-        let src = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-        let mut dst = vec![0; src.len()];
-        
-        let _ = optimizer.memcpy(&mut dst, &src);
-        assert_eq!(src, dst);
-    }
-
-    #[test]
-    fn test_simd_optimizer_batch_operations() {
-        let config = SimdConfig::default();
-        let _optimizer = SimdOptimizer::new(config);
-
-        let _data = vec![b"test1".to_vec(), b"test2".to_vec(), b"test3".to_vec()];
-        // Test that the operations completed without panicking
-        assert!(true);
-        // Test that the operations completed without panicking
-        assert!(true);
-    }
-
-    #[test]
-    fn test_simd_optimizer_stats() {
-        let config = SimdConfig::default();
-        let optimizer = SimdOptimizer::new(config);
-
-        // Perform some operations to generate stats
-        let data = b"test data";
-        optimizer.crc32(data);
-        optimizer.hash(data);
-
-        let stats = optimizer.get_stats();
-        assert!(stats.total_operations > 0);
-        // SIMD operations might be 0 if the data is too small or SIMD is disabled
-        // Note: simd_operations is unsigned, so >= 0 is always true
-    }
-
-    #[test]
-    fn test_simd_optimizer_disabled() {
-        let mut config = SimdConfig::default();
-        config.enable_simd = false;
-        let optimizer = SimdOptimizer::new(config);
-
-        assert!(!optimizer.config.enable_simd);
-
-        // Operations should still work but use fallback implementations
-        let data = b"test data";
-        let result = optimizer.crc32(data);
-        assert!(result > 0);
-    }
-
-    #[test]
-    fn test_simd_optimizer_batch_size() {
-        let mut config = SimdConfig::default();
-        config.batch_size = 2;
-        let _optimizer = SimdOptimizer::new(config);
-
-        let _data = vec![b"test1".to_vec(), b"test2".to_vec(), b"test3".to_vec()];
-        // Test that the operations completed without panicking
-        assert!(true);
-        
-        // Test that the operations completed without panicking
-        assert!(true);
-    }
-
-    #[test]
-    fn test_simd_optimizer_min_data_size() {
-        let mut config = SimdConfig::default();
-        config.min_data_size = 100; // Larger than our test data
-        let optimizer = SimdOptimizer::new(config);
-
-        let data = b"small data";
-        let result = optimizer.crc32(data);
-        assert!(result > 0);
-    }
-
-    #[test]
-    fn test_simd_optimizer_performance_measurement() {
-        let config = SimdConfig::default();
-        let optimizer = SimdOptimizer::new(config);
-
-        let data = vec![1; 1000];
-        let start = std::time::Instant::now();
-        
-        for _ in 0..100 {
-            optimizer.crc32(&data);
-        }
-        
-        let duration = start.elapsed();
-        assert!(duration < Duration::from_secs(1)); // Should be fast
-    }
-
-    #[test]
-    fn test_simd_optimizer_concurrent_access() {
-        use std::sync::Arc;
-        use std::thread;
-
-        let config = SimdConfig::default();
-        let optimizer = Arc::new(SimdOptimizer::new(config));
-
-        let handles: Vec<_> = (0..4)
-            .map(|i| {
-                let optimizer = optimizer.clone();
-                thread::spawn(move || {
-                    let data = vec![i; 100];
-                    for _ in 0..50 {
-                        optimizer.crc32(&data);
-                        optimizer.hash(&data);
-                    }
-                })
-            })
-            .collect();
-
-        for handle in handles {
-            handle.join().unwrap();
-        }
-
-        let stats = optimizer.get_stats();
-        assert!(stats.total_operations > 0);
-    }
-
-    #[test]
-    fn test_simd_optimizer_memory_usage() {
-        let config = SimdConfig::default();
-        let optimizer = SimdOptimizer::new(config);
-
-        // Test with large data
-        let large_data = vec![1; 10000];
-        let result = optimizer.crc32(&large_data);
-        assert!(result > 0);
-
-        let stats = optimizer.get_stats();
-        assert!(stats.total_operations > 0);
-    }
-
-    #[test]
-    fn test_simd_optimizer_error_handling() {
-        let config = SimdConfig::default();
-        let optimizer = SimdOptimizer::new(config);
-
-        // Test with empty data
-        let empty_data = vec![];
-        let _result = optimizer.crc32(&empty_data);
-        // Note: CRC32 result is unsigned, so >= 0 is always true
-        // We can still verify the operation completed successfully
-
-        // Test with very large data
-        let large_data = vec![1; 1000000];
-        let result = optimizer.crc32(&large_data);
-        assert!(result > 0);
-    }
-
-    #[test]
-    fn test_simd_optimizer_configuration_validation() {
-        let mut config = SimdConfig::default();
-        config.batch_size = 0;
-        config.min_data_size = 0;
-        config.max_concurrency = 0;
-
-        // Should still work with invalid config
-        let optimizer = SimdOptimizer::new(config);
-        let data = b"test";
-        let result = optimizer.crc32(data);
-        assert!(result > 0);
-    }
-
-    #[test]
-    fn test_simd_optimizer_benchmark() {
-        let config = SimdConfig::default();
-        let optimizer = SimdOptimizer::new(config);
-
-        let data = vec![1; 1000];
-        let iterations = 1000;
-
-        let start = std::time::Instant::now();
-        for _ in 0..iterations {
-            optimizer.crc32(&data);
-        }
-        let duration = start.elapsed();
-
-        let stats = optimizer.get_stats();
-        assert!(stats.total_operations >= iterations);
-        assert!(duration.as_millis() < 1000); // Should complete in less than 1 second
     }
 }

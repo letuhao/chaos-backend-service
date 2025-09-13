@@ -1,0 +1,198 @@
+name: Configuration Validation
+
+on:
+  push:
+    paths:
+      - 'crates/actor-core/configs/**'
+      - 'crates/actor-core/src/registry/loader.rs'
+      - 'crates/actor-core/scripts/**'
+  pull_request:
+    paths:
+      - 'crates/actor-core/configs/**'
+      - 'crates/actor-core/src/registry/loader.rs'
+      - 'crates/actor-core/scripts/**'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # Validate configuration files
+  validate-configs:
+    name: Validate Configuration Files
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyyaml jsonschema
+    
+    - name: Validate YAML configurations
+      run: |
+        cd crates/actor-core
+        python scripts/validate_configs.py
+    
+    - name: Check configuration syntax
+      run: |
+        cd crates/actor-core/configs
+        for file in *.yaml; do
+          echo "Validating $file..."
+          python -c "import yaml; yaml.safe_load(open('$file'))"
+        done
+    
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+    
+    - name: Cache dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-config-${{ hashFiles('**/Cargo.lock') }}
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y pkg-config libssl-dev
+    
+    - name: Test configuration loading
+      run: |
+        cargo test -p actor-core --lib test_config_loading --all-features
+        cargo test -p actor-core --lib test_yaml_parsing --all-features
+    
+    - name: Run configuration examples
+      run: |
+        cargo run -p actor-core --example configuration_example --all-features
+
+  # Test configuration changes
+  test-config-changes:
+    name: Test Configuration Changes
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+    
+    - name: Cache dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-config-test-${{ hashFiles('**/Cargo.lock') }}
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y pkg-config libssl-dev
+    
+    - name: Get changed configuration files
+      id: changed-configs
+      run: |
+        CHANGED_CONFIGS=$(git diff --name-only HEAD~1 HEAD | grep "crates/actor-core/configs/" || echo "")
+        echo "changed_configs=$CHANGED_CONFIGS" >> $GITHUB_OUTPUT
+        echo "Changed configs: $CHANGED_CONFIGS"
+    
+    - name: Test with old configurations
+      if: steps.changed-configs.outputs.changed_configs != ''
+      run: |
+        git stash
+        git checkout HEAD~1 -- crates/actor-core/configs/
+        cargo test -p actor-core --lib --all-features
+        git checkout - -- crates/actor-core/configs/
+    
+    - name: Test with new configurations
+      if: steps.changed-configs.outputs.changed_configs != ''
+      run: |
+        cargo test -p actor-core --lib --all-features
+    
+    - name: Run regression tests
+      if: steps.changed-configs.outputs.changed_configs != ''
+      run: |
+        cargo test -p actor-core --test golden_vector_harness --all-features
+        cargo test -p actor-core --test operator_mode_tests --all-features
+
+  # Performance impact of configuration changes
+  config-performance:
+    name: Configuration Performance Impact
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+    
+    - name: Cache dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-config-perf-${{ hashFiles('**/Cargo.lock') }}
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y pkg-config libssl-dev
+    
+    - name: Check if configs changed
+      id: config-changed
+      run: |
+        if git diff --name-only HEAD~1 HEAD | grep -q "crates/actor-core/configs/"; then
+          echo "configs_changed=true" >> $GITHUB_OUTPUT
+        else
+          echo "configs_changed=false" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Benchmark with old configs
+      if: steps.config-changed.outputs.configs_changed == 'true'
+      run: |
+        git stash
+        git checkout HEAD~1 -- crates/actor-core/configs/
+        cargo bench -p actor-core --bench registry_loader_benchmarks --all-features > old_bench.txt
+        git checkout - -- crates/actor-core/configs/
+    
+    - name: Benchmark with new configs
+      if: steps.config-changed.outputs.configs_changed == 'true'
+      run: |
+        cargo bench -p actor-core --bench registry_loader_benchmarks --all-features > new_bench.txt
+    
+    - name: Compare performance
+      if: steps.config-changed.outputs.configs_changed == 'true'
+      run: |
+        echo "## Performance Comparison" > performance_report.md
+        echo "" >> performance_report.md
+        echo "### Old Configuration Performance" >> performance_report.md
+        echo "\`\`\`" >> performance_report.md
+        cat old_bench.txt >> performance_report.md
+        echo "\`\`\`" >> performance_report.md
+        echo "" >> performance_report.md
+        echo "### New Configuration Performance" >> performance_report.md
+        echo "\`\`\`" >> performance_report.md
+        cat new_bench.txt >> performance_report.md
+        echo "\`\`\`" >> performance_report.md
+    
+    - name: Upload performance report
+      if: steps.config-changed.outputs.configs_changed == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: configuration-performance-report
+        path: performance_report.md

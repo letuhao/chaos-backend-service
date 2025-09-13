@@ -67,7 +67,7 @@ async fn operator_max_is_applied() {
 
     // Register a subsystem producing three values for dimension "stat"
     let subsystem = FixedSubsystem { id: "fixed".to_string(), prio: 10, dim: "stat".to_string(), values: vec![5.0, 9.0, 7.0] };
-    plugin_registry.register(Box::new(subsystem)).unwrap();
+    plugin_registry.register(Arc::new(subsystem)).unwrap();
 
     // Operator-mode: MAX with no clamp default
     let combiner: Arc<dyn CombinerRegistry> = Arc::new(MockCombinerRegistry{
@@ -97,7 +97,7 @@ async fn operator_clamp_default_is_applied_when_no_effective_caps() {
 
     // Contribute a value that exceeds clamp default
     let subsystem = FixedSubsystem { id: "fixed".to_string(), prio: 10, dim: "stat".to_string(), values: vec![150.0] };
-    plugin_registry.register(Box::new(subsystem)).unwrap();
+    plugin_registry.register(Arc::new(subsystem)).unwrap();
 
     let combiner: Arc<dyn CombinerRegistry> = Arc::new(MockCombinerRegistry{
         rule: MergeRule { use_pipeline: false, operator: Operator::Sum, clamp_default: Some(Caps::new(0.0, 100.0)) },
@@ -126,7 +126,7 @@ async fn constants_clamp_fallback_applies_without_rule_or_caps() {
 
     // Contribute a value that exceeds constants clamp for derived ATTACK_POWER (0..100000)
     let subsystem = FixedSubsystem { id: "fixed".to_string(), prio: 10, dim: "attack_power".to_string(), values: vec![250_000.0] };
-    plugin_registry.register(Box::new(subsystem)).unwrap();
+    plugin_registry.register(Arc::new(subsystem)).unwrap();
 
     // Combiner returns no rule for attack_power (set rule only for unrelated dimension)
     let combiner: Arc<dyn CombinerRegistry> = Arc::new(MockCombinerRegistry{

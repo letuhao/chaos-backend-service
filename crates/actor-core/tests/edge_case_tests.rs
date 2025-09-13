@@ -5,6 +5,7 @@
 
 use actor_core::types::*;
 use actor_core::bucket_processor::*;
+use actor_core::Bucket;
 use actor_core::registry::loader::*;
 use std::collections::HashMap;
 

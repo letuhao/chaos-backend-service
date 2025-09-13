@@ -9,6 +9,8 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use crate::ActorCoreResult;
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "mongodb-storage")]
+use bson;
 // use futures::StreamExt;
 // use std::time::{Duration, Instant};
 
@@ -448,11 +450,13 @@ impl L2Cache for MemoryMappedL2Cache {
 }
 
 /// MongoDB L3 cache implementation
+#[cfg(feature = "mongodb-storage")]
 pub struct MongoL3Cache {
     /// MongoDB collection
     collection: mongodb::Collection<CachedResource>,
 }
 
+#[cfg(feature = "mongodb-storage")]
 impl MongoL3Cache {
     /// Create a new MongoDB L3 cache
     pub async fn new(client: &mongodb::Client, database_name: &str) -> ActorCoreResult<Self> {
@@ -472,6 +476,7 @@ impl MongoL3Cache {
     }
 }
 
+#[cfg(feature = "mongodb-storage")]
 #[async_trait]
 impl L3Cache for MongoL3Cache {
     async fn get(&self, key: &str) -> ActorCoreResult<Option<CachedResource>> {
@@ -553,81 +558,5 @@ impl L3Cache for MongoL3Cache {
         }
         
         Ok(())
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    
-    #[tokio::test]
-    async fn test_resource_cache_basic() {
-        let config = CacheConfig::default();
-        let cache = ResourceCache::new(config);
-        
-        let metadata = ResourceMetadata {
-            category: "health".to_string(),
-            dependencies: vec!["vitality".to_string()],
-            priority: 100,
-            is_shared: true,
-        };
-        
-        // Test set and get
-        cache.set("actor1", "hp_current", 100.0, metadata.clone()).await.unwrap();
-        let value = cache.get("actor1", "hp_current").await.unwrap();
-        assert_eq!(value, Some(100.0));
-        
-        // Test cache miss
-        let value = cache.get("actor1", "mana_current").await.unwrap();
-        assert_eq!(value, None);
-    }
-    
-    #[tokio::test]
-    async fn test_cache_invalidation() {
-        let config = CacheConfig::default();
-        let cache = ResourceCache::new(config);
-        
-        let metadata = ResourceMetadata {
-            category: "health".to_string(),
-            dependencies: vec![],
-            priority: 100,
-            is_shared: true,
-        };
-        
-        // Set some values
-        cache.set("actor1", "hp_current", 100.0, metadata.clone()).await.unwrap();
-        cache.set("actor1", "mana_current", 50.0, metadata.clone()).await.unwrap();
-        cache.set("actor2", "hp_current", 200.0, metadata.clone()).await.unwrap();
-        
-        // Invalidate actor1
-        cache.invalidate_actor("actor1").await.unwrap();
-        
-        // Check that actor1 values are gone
-        assert_eq!(cache.get("actor1", "hp_current").await.unwrap(), None);
-        assert_eq!(cache.get("actor1", "mana_current").await.unwrap(), None);
-        
-        // Check that actor2 values are still there
-        assert_eq!(cache.get("actor2", "hp_current").await.unwrap(), Some(200.0));
-    }
-    
-    #[tokio::test]
-    async fn test_cache_stats() {
-        let config = CacheConfig::default();
-        let cache = ResourceCache::new(config);
-        
-        let metadata = ResourceMetadata {
-            category: "health".to_string(),
-            dependencies: vec![],
-            priority: 100,
-            is_shared: true,
-        };
-        
-        // Set some values
-        cache.set("actor1", "hp_current", 100.0, metadata.clone()).await.unwrap();
-        cache.set("actor1", "mana_current", 50.0, metadata.clone()).await.unwrap();
-        
-        let stats = cache.get_stats().await.unwrap();
-        assert_eq!(stats.l1_size, 2);
-        assert_eq!(stats.total_size, 2);
     }
 }

@@ -6,34 +6,52 @@
 //! # Quick Start
 //!
 //! ```rust
-//! use actor_core::*;
-//! use std::collections::HashMap;
+//! use actor_core::prelude::*;
 //!
-//! // Create an actor
-//! let mut actor = Actor::new("Player1".to_string(), "Human".to_string());
+//! #[tokio::main]
+//! async fn main() -> ActorCoreResult<()> {
+//!     // Quick setup with default configurations
+//!     let (aggregator, _cache) = quick_setup().await?;
+//!     
+//!     // Create a simple actor
+//!     let actor = create_simple_actor("player1", "human", 10);
+//!     
+//!     // Resolve actor stats
+//!     let snapshot = aggregator.resolve(&actor).await?;
+//!     
+//!     println!("Actor stats: {:?}", snapshot);
+//!     Ok(())
+//! }
+//! ```
 //!
-//! // Add some data
-//! let mut data = HashMap::new();
-//! data.insert("level".to_string(), serde_json::Value::Number(serde_json::Number::from(10)));
-//! actor.set_data(data);
+//! # Alternative: Manual Setup
 //!
-//! // Add a buff
-//! actor.add_buff("strength_boost".to_string());
+//! For more control over the configuration:
 //!
-//! // Create contributions
-//! let contribution = Contribution::new(
-//!     "strength".to_string(),
-//!     Bucket::Flat,
-//!     10.0,
-//!     "equipment".to_string()
-//! );
+//! ```rust
+//! use actor_core::prelude::*;
 //!
-//! // Process contributions
-//! let result = bucket_processor::process_contributions_in_order(
-//!     vec![contribution],
-//!     0.0,
-//!     None
-//! );
+//! #[tokio::main]
+//! async fn main() -> ActorCoreResult<()> {
+//!     // Create services manually
+//!     let cache = ServiceFactory::create_cache()?;
+//!     let plugin_registry = ServiceFactory::create_plugin_registry();
+//!     let combiner_registry = ServiceFactory::create_combiner_registry();
+//!     let caps_provider = ServiceFactory::create_caps_provider();
+//!     
+//!     let aggregator = ServiceFactory::create_aggregator(
+//!         plugin_registry,
+//!         combiner_registry,
+//!         caps_provider,
+//!         cache,
+//!     )?;
+//!     
+//!     // Create actor and process
+//!     let actor = Actor::new("player1".to_string(), "human".to_string());
+//!     let snapshot = aggregator.resolve(&actor).await?;
+//!     
+//!     Ok(())
+//! }
 //! ```
 //!
 //! # Features
@@ -153,30 +171,44 @@
 //! - Join our Discord community
 //! - Check the documentation
 
+// Core modules - essential functionality
 pub mod types;
 pub mod enums;
 pub mod interfaces;
-pub mod services;
-pub mod registry;
-pub mod cache;
-pub mod constants;
 pub mod error;
+pub mod service_factory;
+pub mod validation;
+pub mod deprecation;
+
+// Prelude module - clean API surface
+pub mod prelude;
+
+// Internal modules - advanced functionality
+#[doc(hidden)]
+pub mod metrics;
+#[doc(hidden)]
+pub mod aggregator;
+#[doc(hidden)]
+pub mod caps_provider;
+#[doc(hidden)]
+pub mod registry;
+#[doc(hidden)]
+pub mod cache;
+#[doc(hidden)]
+pub mod constants;
+#[doc(hidden)]
 pub mod pools;
+#[doc(hidden)]
 pub mod performance;
+#[doc(hidden)]
 pub mod bucket_processor;
+#[doc(hidden)]
 pub mod production;
+#[doc(hidden)]
 pub mod subsystems;
+#[doc(hidden)]
+pub mod observability;
 
-// Integration tests are now part of the subsystems module
 
-// Re-export commonly used types
-pub use enums::*;
-pub use services::*;
-pub use registry::*;
-pub use cache::*;
-pub use error::*;
-pub use subsystems::*;
-
-// Re-export specific types to avoid conflicts
-pub use types::{Actor, Contribution, CapContribution, Subsystem as SubsystemStruct, SubsystemOutput, Snapshot, Caps, ModifierPack, EffectiveCaps};
-pub use interfaces::{Subsystem as SubsystemTrait, Aggregator, CapsProvider, PluginRegistry, CombinerRegistry, CapLayerRegistry, Cache};
+// Re-export prelude as the main API
+pub use prelude::*;

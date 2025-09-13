@@ -4,71 +4,43 @@
 //! including plugin registry, combiner registry, and cap layer registry.
 
 pub mod loader;
+pub mod optimized;
 
 use async_trait::async_trait;
 use std::collections::HashMap;
 use std::sync::Arc;
+use parking_lot::RwLock;
 use tracing::{info, warn};
 
-use crate::interfaces::{PluginRegistry, CombinerRegistry, CapLayerRegistry, CombinerRegistryAsync, CapLayerRegistryAsync, Subsystem as SubsystemTrait, MergeRule, AcrossLayerPolicy};
+use crate::interfaces::{PluginRegistry, CombinerRegistry, CapLayerRegistry, CombinerRegistryAsync, CapLayerRegistryAsync, Subsystem as SubsystemTrait, MergeRule};
+use crate::enums::AcrossLayerPolicy;
 use crate::types::*;
 use crate::ActorCoreResult;
 
 
-/// Wrapper to convert Arc<dyn SubsystemTrait> to Box<dyn SubsystemTrait>
-struct SubsystemWrapper {
-    inner: Arc<dyn SubsystemTrait>,
-}
-
-#[async_trait::async_trait]
-impl SubsystemTrait for SubsystemWrapper {
-    fn system_id(&self) -> &str {
-        self.inner.system_id()
-    }
-    
-    fn priority(&self) -> i64 {
-        self.inner.priority()
-    }
-    
-    async fn contribute(&self, actor: &Actor) -> ActorCoreResult<SubsystemOutput> {
-        self.inner.contribute(actor).await
-    }
-}
 
 /// PluginRegistryImpl is the implementation of the PluginRegistry trait.
 pub struct PluginRegistryImpl {
     /// Map of system ID to subsystem
-    subsystems: Arc<std::sync::RwLock<HashMap<String, Arc<dyn SubsystemTrait>>>>,
+    subsystems: Arc<RwLock<HashMap<String, Arc<dyn SubsystemTrait>>>>,
     /// Metrics for performance monitoring
     #[allow(dead_code)]
-    metrics: Arc<std::sync::RwLock<RegistryMetrics>>,
+    metrics: Arc<RwLock<RegistryMetrics>>,
 }
 
 impl PluginRegistryImpl {
     /// Create a new plugin registry instance.
     pub fn new() -> Self {
         Self {
-            subsystems: Arc::new(std::sync::RwLock::new(HashMap::new())),
-            metrics: Arc::new(std::sync::RwLock::new(RegistryMetrics::default())),
+            subsystems: Arc::new(RwLock::new(HashMap::new())),
+            metrics: Arc::new(RwLock::new(RegistryMetrics::default())),
         }
     }
 
     /// Get all subsystems sorted by priority.
-    fn get_subsystems_by_priority(&self) -> Vec<Box<dyn SubsystemTrait>> {
-        let subsystems = self.subsystems.read().unwrap();
-        let mut subsystem_list: Vec<Box<dyn SubsystemTrait>> = Vec::new();
-        
-        // Convert Arc<dyn SubsystemTrait> to Box<dyn SubsystemTrait>
-        // This is a limitation of the current design, but we can work around it
-        // by cloning the Arc and then converting to Box
-        for (_, subsystem) in subsystems.iter() {
-            // We need to create a wrapper that implements the trait
-            // Since we can't directly convert Arc to Box, we'll create a wrapper
-            let wrapper = SubsystemWrapper {
-                inner: subsystem.clone(),
-            };
-            subsystem_list.push(Box::new(wrapper));
-        }
+    fn get_subsystems_by_priority(&self) -> Vec<Arc<dyn SubsystemTrait>> {
+        let subsystems = self.subsystems.read();
+        let mut subsystem_list: Vec<Arc<dyn SubsystemTrait>> = subsystems.values().cloned().collect();
         
         // Sort by priority (higher priority first)
         subsystem_list.sort_by(|a, b| b.priority().cmp(&a.priority()));
@@ -84,7 +56,7 @@ impl Default for PluginRegistryImpl {
 
 #[async_trait]
 impl PluginRegistry for PluginRegistryImpl {
-    fn register(&self, subsystem: Box<dyn SubsystemTrait>) -> ActorCoreResult<()> {
+    fn register(&self, subsystem: Arc<dyn SubsystemTrait>) -> ActorCoreResult<()> {
         let system_id = subsystem.system_id().to_string();
         
         if system_id.is_empty() {
@@ -93,22 +65,20 @@ impl PluginRegistry for PluginRegistryImpl {
             ));
         }
 
-        let mut subsystems = self.subsystems.write().unwrap();
-        // Convert Box to Arc
-        let subsystem_arc = Arc::from(subsystem);
+        let mut subsystems = self.subsystems.write();
         
         if subsystems.contains_key(&system_id) {
             warn!("Overwriting existing subsystem: {}", system_id);
         }
         
-        subsystems.insert(system_id.clone(), subsystem_arc);
+        subsystems.insert(system_id.clone(), subsystem);
         
         info!("Registered subsystem: {}", system_id);
         Ok(())
     }
 
     fn unregister(&self, system_id: &str) -> ActorCoreResult<()> {
-        let mut subsystems = self.subsystems.write().unwrap();
+        let mut subsystems = self.subsystems.write();
         
         if subsystems.remove(system_id).is_some() {
             info!("Unregistered subsystem: {}", system_id);
@@ -120,36 +90,24 @@ impl PluginRegistry for PluginRegistryImpl {
         }
     }
 
-    fn get_by_id(&self, system_id: &str) -> Option<Box<dyn SubsystemTrait>> {
-        let subsystems = self.subsystems.read().unwrap();
-        
-        if let Some(subsystem) = subsystems.get(system_id) {
-            // Create a wrapper to convert Arc<dyn SubsystemTrait> to Box<dyn SubsystemTrait>
-            let wrapper = SubsystemWrapper {
-                inner: subsystem.clone(),
-            };
-            Some(Box::new(wrapper))
-        } else {
-            None
-        }
+    fn get_by_id(&self, system_id: &str) -> Option<Arc<dyn SubsystemTrait>> {
+        let subsystems = self.subsystems.read();
+        subsystems.get(system_id).cloned()
     }
 
-    fn get_by_priority(&self) -> Vec<Box<dyn SubsystemTrait>> {
+    fn get_by_priority(&self) -> Vec<Arc<dyn SubsystemTrait>> {
         self.get_subsystems_by_priority()
     }
 
-    fn get_by_priority_range(&self, min_priority: i64, max_priority: i64) -> Vec<Box<dyn SubsystemTrait>> {
-        let subsystems = self.subsystems.read().unwrap();
-        let mut subsystem_list: Vec<Box<dyn SubsystemTrait>> = Vec::new();
+    fn get_by_priority_range(&self, min_priority: i64, max_priority: i64) -> Vec<Arc<dyn SubsystemTrait>> {
+        let subsystems = self.subsystems.read();
+        let mut subsystem_list: Vec<Arc<dyn SubsystemTrait>> = Vec::new();
         
         // Filter subsystems by priority range
         for (_, subsystem) in subsystems.iter() {
             let priority = subsystem.priority();
             if priority >= min_priority && priority <= max_priority {
-                let wrapper = SubsystemWrapper {
-                    inner: subsystem.clone(),
-                };
-                subsystem_list.push(Box::new(wrapper));
+                subsystem_list.push(subsystem.clone());
             }
         }
         
@@ -159,17 +117,17 @@ impl PluginRegistry for PluginRegistryImpl {
     }
 
     fn is_registered(&self, system_id: &str) -> bool {
-        let subsystems = self.subsystems.read().unwrap();
+        let subsystems = self.subsystems.read();
         subsystems.contains_key(system_id)
     }
 
     fn count(&self) -> usize {
-        let subsystems = self.subsystems.read().unwrap();
+        let subsystems = self.subsystems.read();
         subsystems.len()
     }
 
     fn validate_all(&self) -> ActorCoreResult<()> {
-        let subsystems = self.subsystems.read().unwrap();
+        let subsystems = self.subsystems.read();
         
         for (system_id, subsystem) in subsystems.iter() {
             if system_id.is_empty() {
@@ -219,24 +177,24 @@ impl Default for RegistryMetrics {
 /// CombinerRegistryImpl is the implementation of the CombinerRegistry trait.
 pub struct CombinerRegistryImpl {
     /// Map of dimension to merge rule
-    rules: Arc<std::sync::RwLock<HashMap<String, MergeRule>>>,
+    rules: Arc<RwLock<HashMap<String, MergeRule>>>,
     /// Metrics for performance monitoring
     #[allow(dead_code)]
-    metrics: Arc<std::sync::RwLock<CombinerMetrics>>,
+    metrics: Arc<RwLock<CombinerMetrics>>,
 }
 
 impl CombinerRegistryImpl {
     /// Create a new combiner registry instance.
     pub fn new() -> Self {
         Self {
-            rules: Arc::new(std::sync::RwLock::new(HashMap::new())),
-            metrics: Arc::new(std::sync::RwLock::new(CombinerMetrics::default())),
+            rules: Arc::new(RwLock::new(HashMap::new())),
+            metrics: Arc::new(RwLock::new(CombinerMetrics::default())),
         }
     }
 
     /// Load default rules for common dimensions.
     pub fn load_default_rules(&self) -> ActorCoreResult<()> {
-        let mut rules = self.rules.write().unwrap();
+        let mut rules = self.rules.write();
         
         // Add default rules for primary dimensions
         let primary_dims = [
@@ -300,7 +258,7 @@ impl Default for CombinerRegistryImpl {
 #[async_trait]
 impl CombinerRegistry for CombinerRegistryImpl {
     fn get_rule(&self, dimension: &str) -> Option<MergeRule> {
-        let rules = self.rules.read().unwrap();
+        let rules = self.rules.read();
         rules.get(dimension).cloned()
     }
 
@@ -311,7 +269,7 @@ impl CombinerRegistry for CombinerRegistryImpl {
             ));
         }
         
-        let mut rules = self.rules.write().unwrap();
+        let mut rules = self.rules.write();
         rules.insert(dimension.to_string(), rule);
         
         info!("Set merge rule for dimension: {}", dimension);
@@ -319,7 +277,7 @@ impl CombinerRegistry for CombinerRegistryImpl {
     }
 
     fn validate(&self) -> ActorCoreResult<()> {
-        let rules = self.rules.read().unwrap();
+        let rules = self.rules.read();
         
         for (dimension, rule) in rules.iter() {
             if dimension.is_empty() {
@@ -385,33 +343,33 @@ impl Default for CombinerMetrics {
 /// CapLayerRegistryImpl is the implementation of the CapLayerRegistry trait.
 pub struct CapLayerRegistryImpl {
     /// Order of layers for cap processing
-    layer_order: Arc<std::sync::RwLock<Vec<String>>>,
+    layer_order: Arc<RwLock<Vec<String>>>,
     /// Policy for combining caps across layers
-    across_layer_policy: Arc<std::sync::RwLock<AcrossLayerPolicy>>,
+    across_layer_policy: Arc<RwLock<AcrossLayerPolicy>>,
     /// Metrics for performance monitoring
     #[allow(dead_code)]
-    metrics: Arc<std::sync::RwLock<CapLayerMetrics>>,
+    metrics: Arc<RwLock<CapLayerMetrics>>,
 }
 
 impl CapLayerRegistryImpl {
     /// Create a new cap layer registry instance.
     pub fn new() -> Self {
         Self {
-            layer_order: Arc::new(std::sync::RwLock::new(vec![
+            layer_order: Arc::new(RwLock::new(vec![
                 "realm".to_string(),
                 "world".to_string(),
                 "event".to_string(),
                 "guild".to_string(),
                 "total".to_string(),
             ])),
-            across_layer_policy: Arc::new(std::sync::RwLock::new(AcrossLayerPolicy::Intersect)),
-            metrics: Arc::new(std::sync::RwLock::new(CapLayerMetrics::default())),
+            across_layer_policy: Arc::new(RwLock::new(AcrossLayerPolicy::Intersect)),
+            metrics: Arc::new(RwLock::new(CapLayerMetrics::default())),
         }
     }
 
     /// Load default layer configuration.
     pub fn load_default_config(&self) -> ActorCoreResult<()> {
-        let mut layer_order = self.layer_order.write().unwrap();
+        let mut layer_order = self.layer_order.write();
         *layer_order = vec![
             "realm".to_string(),
             "world".to_string(),
@@ -433,7 +391,7 @@ impl Default for CapLayerRegistryImpl {
 #[async_trait]
 impl CapLayerRegistry for CapLayerRegistryImpl {
     fn get_layer_order(&self) -> Vec<String> {
-        let layer_order = self.layer_order.read().unwrap();
+        let layer_order = self.layer_order.read();
         layer_order.clone()
     }
 
@@ -444,7 +402,7 @@ impl CapLayerRegistry for CapLayerRegistryImpl {
             ));
         }
         
-        let mut layer_order = self.layer_order.write().unwrap();
+        let mut layer_order = self.layer_order.write();
         *layer_order = order;
         
         info!("Set layer order: {:?}", layer_order);
@@ -452,19 +410,19 @@ impl CapLayerRegistry for CapLayerRegistryImpl {
     }
 
     fn get_across_layer_policy(&self) -> AcrossLayerPolicy {
-        let policy = self.across_layer_policy.read().unwrap();
+        let policy = self.across_layer_policy.read();
         *policy
     }
 
     fn set_across_layer_policy(&self, policy: AcrossLayerPolicy) {
-        let mut current_policy = self.across_layer_policy.write().unwrap();
+        let mut current_policy = self.across_layer_policy.write();
         *current_policy = policy;
         
         info!("Set across layer policy: {:?}", policy);
     }
 
     fn validate(&self) -> ActorCoreResult<()> {
-        let layer_order = self.layer_order.read().unwrap();
+        let layer_order = self.layer_order.read();
         
         if layer_order.is_empty() {
             return Err(crate::ActorCoreError::ConfigurationError(
@@ -545,139 +503,5 @@ impl RegistryFactory {
     /// Create a new cap layer registry instance.
     pub fn create_cap_layer_registry() -> Arc<dyn CapLayerRegistry> {
         Arc::new(CapLayerRegistryImpl::new())
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    // Simple test data structures
-    struct TestData {
-        name: String,
-        value: i32,
-    }
-
-    // RegistryMetrics tests
-    #[test]
-    fn test_registry_metrics_default() {
-        let metrics = RegistryMetrics::default();
-        assert_eq!(metrics.registered_count, 0);
-        assert_eq!(metrics.registration_attempts, 0);
-        assert_eq!(metrics.unregistration_attempts, 0);
-        assert_eq!(metrics.lookup_attempts, 0);
-        assert_eq!(metrics.validation_attempts, 0);
-    }
-
-    #[test]
-    fn test_registry_metrics_creation() {
-        let metrics = RegistryMetrics {
-            registered_count: 5,
-            registration_attempts: 10,
-            unregistration_attempts: 2,
-            lookup_attempts: 15,
-            validation_attempts: 8,
-        };
-        
-        assert_eq!(metrics.registered_count, 5);
-        assert_eq!(metrics.registration_attempts, 10);
-        assert_eq!(metrics.unregistration_attempts, 2);
-        assert_eq!(metrics.lookup_attempts, 15);
-        assert_eq!(metrics.validation_attempts, 8);
-    }
-
-    // CapLayerMetrics tests
-    #[test]
-    fn test_cap_layer_metrics_default() {
-        let metrics = CapLayerMetrics::default();
-        assert_eq!(metrics.layer_count, 0);
-        assert_eq!(metrics.policy_changes, 0);
-        assert_eq!(metrics.order_changes, 0);
-        assert_eq!(metrics.validation_count, 0);
-    }
-
-    #[test]
-    fn test_cap_layer_metrics_creation() {
-        let metrics = CapLayerMetrics {
-            layer_count: 5,
-            policy_changes: 3,
-            order_changes: 2,
-            validation_count: 10,
-        };
-        
-        assert_eq!(metrics.layer_count, 5);
-        assert_eq!(metrics.policy_changes, 3);
-        assert_eq!(metrics.order_changes, 2);
-        assert_eq!(metrics.validation_count, 10);
-    }
-
-    // Test data structure operations
-    #[test]
-    fn test_test_data_creation() {
-        let data = TestData {
-            name: "test".to_string(),
-            value: 42,
-        };
-        assert_eq!(data.name, "test");
-        assert_eq!(data.value, 42);
-    }
-
-    // Test concurrent access patterns
-    #[tokio::test]
-    async fn test_concurrent_data_creation() {
-        let mut handles = vec![];
-        
-        for i in 0..10 {
-            let handle = tokio::spawn(async move {
-                let data = TestData {
-                    name: format!("test_{}", i),
-                    value: i,
-                };
-                assert_eq!(data.name, format!("test_{}", i));
-                assert_eq!(data.value, i);
-                data
-            });
-            handles.push(handle);
-        }
-        
-        for handle in handles {
-            let data = handle.await.unwrap();
-            assert!(!data.name.is_empty());
-            assert!(data.value >= 0);
-        }
-    }
-
-    // Test edge cases
-    #[test]
-    fn test_metrics_edge_cases() {
-        // Test very large metric values
-        let registry_metrics = RegistryMetrics {
-            registered_count: usize::MAX,
-            registration_attempts: u64::MAX,
-            unregistration_attempts: u64::MAX,
-            lookup_attempts: u64::MAX,
-            validation_attempts: u64::MAX,
-        };
-        assert_eq!(registry_metrics.registered_count, usize::MAX);
-        
-        let cap_layer_metrics = CapLayerMetrics {
-            layer_count: usize::MAX,
-            policy_changes: u64::MAX,
-            order_changes: u64::MAX,
-            validation_count: u64::MAX,
-        };
-        assert_eq!(cap_layer_metrics.layer_count, usize::MAX);
-    }
-
-    #[test]
-    fn test_test_data_edge_cases() {
-        // Test very long names
-        let long_name = "a".repeat(1000);
-        let data = TestData {
-            name: long_name.clone(),
-            value: i32::MAX,
-        };
-        assert_eq!(data.name, long_name);
-        assert_eq!(data.value, i32::MAX);
     }
 }

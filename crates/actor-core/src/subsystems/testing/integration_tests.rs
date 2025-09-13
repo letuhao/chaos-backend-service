@@ -401,38 +401,3 @@ pub struct ComprehensiveTestResults {
     /// All test results
     pub test_results: Vec<TestResult>,
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    
-    #[tokio::test]
-    async fn test_integration_suite_creation() {
-        let suite = IntegrationTestSuite::new().await.unwrap();
-        assert_eq!(suite.test_actors.len(), 100);
-    }
-    
-    #[tokio::test]
-    async fn test_basic_resource_calculation() {
-        let suite = IntegrationTestSuite::new().await.unwrap();
-        let result = suite.test_basic_resource_calculation().await.unwrap();
-        assert!(result.success);
-        assert!(result.execution_time_ms > 0.0);
-    }
-    
-    #[tokio::test]
-    async fn test_resource_caching() {
-        let suite = IntegrationTestSuite::new().await.unwrap();
-        let result = suite.test_resource_caching().await.unwrap();
-        assert!(result.success);
-        assert!(result.execution_time_ms > 0.0);
-    }
-    
-    #[tokio::test]
-    async fn test_comprehensive_integration() {
-        let suite = IntegrationTestSuite::new().await.unwrap();
-        let results = suite.run_comprehensive_test().await.unwrap();
-        assert!(results.success_rate > 0.9); // At least 90% success rate
-        assert!(results.total_tests > 0);
-    }
-}

@@ -275,6 +275,7 @@ fn create_test_actor(archetype: &str, mana_current: f64, mana_max: f64, stamina_
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Initialize logging
+    #[cfg(feature = "cli-tools")]
     tracing_subscriber::fmt::init();
     
     println!("Resource Exhaustion System Example");

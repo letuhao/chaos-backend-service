@@ -5,8 +5,9 @@
 
 use actor_core::types::{Actor, Contribution, SubsystemOutput};
 use actor_core::enums::Bucket;
-use actor_core::interfaces::{Aggregator, CapsProvider, PluginRegistry, AcrossLayerPolicy};
-use actor_core::services::{AggregatorImpl, CapsProviderImpl};
+use actor_core::interfaces::{Aggregator, CapsProvider, PluginRegistry};
+use actor_core::AcrossLayerPolicy;
+use actor_core::{AggregatorImpl, CapsProviderImpl};
 use actor_core::registry::{CapLayerRegistryImpl, PluginRegistryImpl, CombinerRegistryImpl};
 use actor_core::InMemoryCache;
 use std::collections::HashMap;
@@ -76,8 +77,8 @@ async fn test_aggregator_impl_basic() {
     
     // Create registries
     let plugin_registry = Arc::new(PluginRegistryImpl::new());
-    plugin_registry.register(Box::new(combat_subsystem)).unwrap();
-    plugin_registry.register(Box::new(magic_subsystem)).unwrap();
+    plugin_registry.register(Arc::new(combat_subsystem)).unwrap();
+    plugin_registry.register(Arc::new(magic_subsystem)).unwrap();
     
     // Verify subsystems are registered
     assert!(plugin_registry.is_registered("combat"));
@@ -323,7 +324,7 @@ async fn test_service_performance_many_subsystems() {
             i as f64,
             format!("system_{}", i),
         ));
-        plugin_registry.register(Box::new(subsystem)).unwrap();
+        plugin_registry.register(Arc::new(subsystem)).unwrap();
     }
     
     let cap_layer_registry = Arc::new(CapLayerRegistryImpl::new());

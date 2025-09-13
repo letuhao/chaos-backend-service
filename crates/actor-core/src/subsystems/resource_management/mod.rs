@@ -15,7 +15,9 @@ pub mod resource_cache;
 // Re-export commonly used resource management subsystems
 pub use resource_manager::ResourceManagerSubsystem;
 pub use enhanced_hybrid_resource_manager::EnhancedHybridResourceManager;
-pub use resource_database::{MongoResourceDatabase, InMemoryResourceDatabase};
+pub use resource_database::InMemoryResourceDatabase;
+#[cfg(feature = "mongodb-storage")]
+pub use resource_database::MongoResourceDatabase;
 pub use system_resource_manager::{
     SystemResourceCalculator, JindanSystemResourceCalculator, 
     RpgSystemResourceCalculator, MagicSystemResourceCalculator

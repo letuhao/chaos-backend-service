@@ -1,0 +1,243 @@
+name: Nightly Builds
+
+on:
+  schedule:
+    # Run nightly at 3 AM UTC
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    inputs:
+      run_experimental:
+        description: 'Run experimental tests'
+        required: false
+        default: 'false'
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  # Nightly Rust Testing
+  nightly-rust:
+    name: Nightly Rust
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Nightly Rust
+      uses: dtolnay/rust-toolchain@nightly
+      with:
+        components: rustfmt, clippy, miri
+    
+    - name: Cache dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-nightly-${{ hashFiles('**/Cargo.lock') }}
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y pkg-config libssl-dev
+    
+    - name: Check with nightly Rust
+      run: cargo +nightly check -p actor-core --all-features
+    
+    - name: Run tests with nightly Rust
+      run: cargo +nightly test -p actor-core --lib --all-features
+    
+    - name: Run Clippy with nightly Rust
+      run: cargo +nightly clippy -p actor-core --all-features -- -W clippy::all
+    
+    - name: Run Miri (unsafe code detection)
+      run: |
+        cargo +nightly miri setup
+        cargo +nightly miri test -p actor-core --lib --all-features
+
+  # Experimental Features Testing
+  experimental:
+    name: Experimental Features
+    runs-on: ubuntu-latest
+    if: github.event.inputs.run_experimental == 'true' || github.event_name == 'schedule'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+    
+    - name: Cache dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-experimental-${{ hashFiles('**/Cargo.lock') }}
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y pkg-config libssl-dev
+    
+    # Test with extra_buckets feature
+    - name: Test extra buckets feature
+      run: cargo test -p actor-core --features="extra_buckets,heavy-deps"
+    
+    # Stress testing with high load
+    - name: Run stress tests
+      run: |
+        cargo test -p actor-core --release --test stress_tests --all-features
+        cargo test -p actor-core --release --test load_tests --all-features
+    
+    # Memory leak detection
+    - name: Install Valgrind
+      run: sudo apt-get install -y valgrind
+    
+    - name: Run memory leak tests
+      run: |
+        cargo build -p actor-core --release --all-features
+        valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all \
+          --track-origins=yes --verbose --log-file=valgrind.log \
+          cargo test -p actor-core --release --all-features
+        cat valgrind.log
+
+  # Performance Regression Detection
+  performance-regression:
+    name: Performance Regression
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch full history for comparison
+    
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+    
+    - name: Cache dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-perf-regression-${{ hashFiles('**/Cargo.lock') }}
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y pkg-config libssl-dev
+    
+    - name: Install criterion
+      run: cargo install cargo-criterion
+    
+    - name: Checkout previous commit
+      run: git checkout HEAD~1
+    
+    - name: Run baseline benchmarks
+      run: cargo criterion -p actor-core --all-features --output-format json > baseline.json
+    
+    - name: Checkout current commit
+      run: git checkout -
+    
+    - name: Run current benchmarks
+      run: cargo criterion -p actor-core --all-features --output-format json > current.json
+    
+    - name: Compare performance
+      run: |
+        # Install performance comparison tool
+        cargo install cargo-criterion-cmp
+        cargo criterion-cmp baseline.json current.json
+
+  # Documentation and Examples
+  docs-and-examples:
+    name: Documentation & Examples
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+    
+    - name: Cache dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-docs-${{ hashFiles('**/Cargo.lock') }}
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y pkg-config libssl-dev
+    
+    - name: Build documentation
+      run: |
+        cargo doc -p actor-core --all-features --no-deps
+        cargo doc -p actor-core --no-deps  # Test with minimal features
+      env:
+        RUSTDOCFLAGS: "-D warnings"
+    
+    - name: Test documentation examples
+      run: cargo test -p actor-core --doc --all-features
+    
+    - name: Run all examples
+      run: |
+        cargo run -p actor-core --example basic_usage --features=cli-tools
+        cargo run -p actor-core --example configuration_example --all-features
+        cargo run -p actor-core --example resource_manager_example --all-features
+        cargo run -p actor-core --example subsystem_example --features=cli-tools
+        cargo run -p actor-core --example performance_workflow_example --all-features
+
+  # Notify on failure
+  notify-failure:
+    name: Notify on Failure
+    runs-on: ubuntu-latest
+    needs: [nightly-rust, experimental, performance-regression, docs-and-examples]
+    if: failure()
+    
+    steps:
+    - name: Create GitHub Issue on Failure
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const title = `Nightly Build Failed - ${new Date().toISOString().split('T')[0]}`;
+          const body = `
+          ## Nightly Build Failure Report
+          
+          **Date**: ${new Date().toISOString()}
+          **Workflow**: ${context.workflow}
+          **Run ID**: ${context.runId}
+          
+          One or more nightly jobs have failed. Please investigate:
+          
+          - Check the [workflow run](${context.payload.repository.html_url}/actions/runs/${context.runId})
+          - Review any performance regressions
+          - Verify experimental features are working correctly
+          
+          ### Failed Jobs
+          ${{ needs.*.result }}
+          
+          ### Next Steps
+          1. Review the failed job logs
+          2. Fix any issues found
+          3. Consider if this affects the main branch
+          4. Update this issue with findings
+          
+          /label bug,ci,nightly
+          `;
+          
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: title,
+            body: body,
+            labels: ['bug', 'ci', 'nightly']
+          });

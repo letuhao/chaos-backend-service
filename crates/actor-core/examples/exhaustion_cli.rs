@@ -2,6 +2,7 @@
 //!
 //! This CLI tool provides commands for testing and debugging the Resource Exhaustion System.
 
+#[cfg(feature = "cli-tools")]
 use clap::{Parser, Subcommand};
 use actor_core::subsystems::{
     ResourceExhaustionSubsystem, ExhaustionConfigLoader,
@@ -11,6 +12,7 @@ use actor_core::types::{Actor, Snapshot};
 use std::collections::HashMap;
 use std::sync::Arc;
 
+#[cfg(feature = "cli-tools")]
 #[derive(Parser)]
 #[command(name = "exhaustion-cli")]
 #[command(about = "CLI tool for testing the Resource Exhaustion System")]
@@ -19,6 +21,7 @@ struct Cli {
     command: Commands,
 }
 
+#[cfg(feature = "cli-tools")]
 #[derive(Subcommand)]
 enum Commands {
     /// Validate a configuration file
@@ -66,8 +69,10 @@ enum Commands {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Initialize logging
+    #[cfg(feature = "cli-tools")]
     tracing_subscriber::fmt::init();
 
+    #[cfg(feature = "cli-tools")]
     let cli = Cli::parse();
 
     match cli.command {

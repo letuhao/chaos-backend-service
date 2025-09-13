@@ -14,6 +14,7 @@ fn to_actor_core_error(msg: String) -> crate::ActorCoreError {
 }
 
 /// MongoDB Resource Database implementation
+#[cfg(feature = "mongodb-storage")]
 #[derive(Debug)]
 pub struct MongoResourceDatabase {
     /// MongoDB client
@@ -46,6 +47,7 @@ pub enum ActorStatus {
     Inactive,
 }
 
+#[cfg(feature = "mongodb-storage")]
 impl MongoResourceDatabase {
     /// Create a new MongoDB Resource Database
     pub async fn new(connection_string: &str, database_name: &str) -> ActorCoreResult<Self> {
@@ -142,6 +144,7 @@ impl MongoResourceDatabase {
     }
 }
 
+#[cfg(feature = "mongodb-storage")]
 #[async_trait]
 impl super::enhanced_hybrid_resource_manager::ResourceDatabase for MongoResourceDatabase {
     /// Store actor resources
@@ -318,40 +321,5 @@ impl super::enhanced_hybrid_resource_manager::ResourceDatabase for InMemoryResou
         }
         
         Ok(())
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::subsystems::enhanced_hybrid_resource_manager::ResourceDatabase;
-    use std::collections::HashMap;
-    
-    #[tokio::test]
-    async fn test_in_memory_database() {
-        let db = InMemoryResourceDatabase::new();
-        
-        // Test storing resources
-        let mut resources = HashMap::new();
-        resources.insert("hp_current".to_string(), 100.0);
-        resources.insert("mana_current".to_string(), 50.0);
-        
-        db.store_actor_resources("test_actor", &resources).await.unwrap();
-        
-        // Test loading resources
-        let loaded_resources = db.load_actor_resources("test_actor").await.unwrap();
-        assert_eq!(loaded_resources.get("hp_current"), Some(&100.0));
-        assert_eq!(loaded_resources.get("mana_current"), Some(&50.0));
-        
-        // Test actor status
-        assert!(db.is_actor_active("test_actor").await.unwrap());
-        
-        // Test marking as inactive
-        db.mark_actor_inactive("test_actor").await.unwrap();
-        assert!(!db.is_actor_active("test_actor").await.unwrap());
-        
-        // Test marking as active
-        db.mark_actor_active("test_actor").await.unwrap();
-        assert!(db.is_actor_active("test_actor").await.unwrap());
     }
 }

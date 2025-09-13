@@ -133,7 +133,7 @@ fn run_case(dir: &str) {
 
     // Register inline subsystem
     let inline = InlineSubsystem{ id: "inline_res".into(), prio: 100, contribs, caps: caps_vec };
-    plugin.register(Box::new(inline)).expect("register subsystem");
+    plugin.register(Arc::new(inline)).expect("register subsystem");
 
     // Build dummy actor
     let actor = actor_core::types::Actor::new("TestActor".into(), "Human".into());

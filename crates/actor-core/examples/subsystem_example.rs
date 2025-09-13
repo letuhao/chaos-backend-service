@@ -1,13 +1,8 @@
 //! Subsystem Example
 //! 
-//! This example demonstrates how to create and use custom subsystems.
+//! This example demonstrates how to create and use custom subsystems with the new prelude-based API.
 
-use actor_core::*;
-use actor_core::interfaces::Subsystem;
-use actor_core::types::{SubsystemMeta, CapContribution, CapMode};
-use async_trait::async_trait;
-use std::collections::HashMap;
-use std::sync::Arc;
+use actor_core::prelude::*;
 
 // Custom Combat Subsystem
 struct CombatSubsystem {
@@ -259,9 +254,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let registry = Arc::new(PluginRegistryImpl::new());
 
     // Register subsystems
-    registry.register(Box::new(combat_subsystem))?;
-    registry.register(Box::new(magic_subsystem))?;
-    registry.register(Box::new(social_subsystem))?;
+    registry.register(Arc::new(combat_subsystem))?;
+    registry.register(Arc::new(magic_subsystem))?;
+    registry.register(Arc::new(social_subsystem))?;
 
     println!("✅ Registered {} subsystems", registry.count());
 
