@@ -547,3 +547,137 @@ impl RegistryFactory {
         Arc::new(CapLayerRegistryImpl::new())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // Simple test data structures
+    struct TestData {
+        name: String,
+        value: i32,
+    }
+
+    // RegistryMetrics tests
+    #[test]
+    fn test_registry_metrics_default() {
+        let metrics = RegistryMetrics::default();
+        assert_eq!(metrics.registered_count, 0);
+        assert_eq!(metrics.registration_attempts, 0);
+        assert_eq!(metrics.unregistration_attempts, 0);
+        assert_eq!(metrics.lookup_attempts, 0);
+        assert_eq!(metrics.validation_attempts, 0);
+    }
+
+    #[test]
+    fn test_registry_metrics_creation() {
+        let metrics = RegistryMetrics {
+            registered_count: 5,
+            registration_attempts: 10,
+            unregistration_attempts: 2,
+            lookup_attempts: 15,
+            validation_attempts: 8,
+        };
+        
+        assert_eq!(metrics.registered_count, 5);
+        assert_eq!(metrics.registration_attempts, 10);
+        assert_eq!(metrics.unregistration_attempts, 2);
+        assert_eq!(metrics.lookup_attempts, 15);
+        assert_eq!(metrics.validation_attempts, 8);
+    }
+
+    // CapLayerMetrics tests
+    #[test]
+    fn test_cap_layer_metrics_default() {
+        let metrics = CapLayerMetrics::default();
+        assert_eq!(metrics.layer_count, 0);
+        assert_eq!(metrics.policy_changes, 0);
+        assert_eq!(metrics.order_changes, 0);
+        assert_eq!(metrics.validation_count, 0);
+    }
+
+    #[test]
+    fn test_cap_layer_metrics_creation() {
+        let metrics = CapLayerMetrics {
+            layer_count: 5,
+            policy_changes: 3,
+            order_changes: 2,
+            validation_count: 10,
+        };
+        
+        assert_eq!(metrics.layer_count, 5);
+        assert_eq!(metrics.policy_changes, 3);
+        assert_eq!(metrics.order_changes, 2);
+        assert_eq!(metrics.validation_count, 10);
+    }
+
+    // Test data structure operations
+    #[test]
+    fn test_test_data_creation() {
+        let data = TestData {
+            name: "test".to_string(),
+            value: 42,
+        };
+        assert_eq!(data.name, "test");
+        assert_eq!(data.value, 42);
+    }
+
+    // Test concurrent access patterns
+    #[tokio::test]
+    async fn test_concurrent_data_creation() {
+        let mut handles = vec![];
+        
+        for i in 0..10 {
+            let handle = tokio::spawn(async move {
+                let data = TestData {
+                    name: format!("test_{}", i),
+                    value: i,
+                };
+                assert_eq!(data.name, format!("test_{}", i));
+                assert_eq!(data.value, i);
+                data
+            });
+            handles.push(handle);
+        }
+        
+        for handle in handles {
+            let data = handle.await.unwrap();
+            assert!(!data.name.is_empty());
+            assert!(data.value >= 0);
+        }
+    }
+
+    // Test edge cases
+    #[test]
+    fn test_metrics_edge_cases() {
+        // Test very large metric values
+        let registry_metrics = RegistryMetrics {
+            registered_count: usize::MAX,
+            registration_attempts: u64::MAX,
+            unregistration_attempts: u64::MAX,
+            lookup_attempts: u64::MAX,
+            validation_attempts: u64::MAX,
+        };
+        assert_eq!(registry_metrics.registered_count, usize::MAX);
+        
+        let cap_layer_metrics = CapLayerMetrics {
+            layer_count: usize::MAX,
+            policy_changes: u64::MAX,
+            order_changes: u64::MAX,
+            validation_count: u64::MAX,
+        };
+        assert_eq!(cap_layer_metrics.layer_count, usize::MAX);
+    }
+
+    #[test]
+    fn test_test_data_edge_cases() {
+        // Test very long names
+        let long_name = "a".repeat(1000);
+        let data = TestData {
+            name: long_name.clone(),
+            value: i32::MAX,
+        };
+        assert_eq!(data.name, long_name);
+        assert_eq!(data.value, i32::MAX);
+    }
+}

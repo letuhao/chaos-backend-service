@@ -607,3 +607,163 @@ impl ServiceFactory {
         Arc::new(CapsProviderImpl::new(cap_layer_registry))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // Simple tests for basic functionality
+    #[test]
+    fn test_aggregator_metrics_default() {
+        let metrics = AggregatorMetrics::default();
+        assert_eq!(metrics.cache_hits, 0);
+        assert_eq!(metrics.cache_misses, 0);
+    }
+
+    #[test]
+    fn test_aggregator_metrics_creation() {
+        let metrics = AggregatorMetrics {
+            total_resolutions: 10,
+            cache_hits: 8,
+            cache_misses: 2,
+            avg_resolution_time: 100,
+            max_resolution_time: 200,
+            error_count: 0,
+            active_subsystems: 5,
+        };
+        assert_eq!(metrics.cache_hits, 8);
+        assert_eq!(metrics.cache_misses, 2);
+    }
+
+    #[test]
+    fn test_actor_creation() {
+        let actor = Actor::new("test_actor".to_string(), "human".to_string());
+        assert_eq!(actor.name, "test_actor");
+        assert_eq!(actor.race, "human");
+        assert!(actor.is_valid());
+    }
+
+    #[test]
+    fn test_actor_validation() {
+        let mut actor = Actor::new("".to_string(), "human".to_string()); // Empty name
+        assert!(!actor.is_valid());
+        
+        actor.name = "valid_name".to_string();
+        actor.race = "".to_string(); // Empty race
+        assert!(!actor.is_valid());
+        
+        actor.race = "valid_race".to_string();
+        assert!(actor.is_valid());
+    }
+
+    #[test]
+    fn test_actor_operations() {
+        let mut actor = Actor::new("test_actor".to_string(), "human".to_string());
+        
+        // Test basic actor operations
+        assert!(actor.is_valid());
+        assert!(!actor.is_in_combat());
+        assert!(!actor.has_buffs());
+        
+        // Test touch operation
+        let original_version = actor.version;
+        actor.touch();
+        assert!(actor.version > original_version);
+    }
+
+    #[test]
+    fn test_caps_creation() {
+        let caps = Caps::new(100.0, 200.0);
+        assert_eq!(caps.min, 100.0);
+        assert_eq!(caps.max, 200.0);
+    }
+
+    #[test]
+    fn test_caps_operations() {
+        let caps = Caps::new(100.0, 200.0);
+        
+        // Test individual cap values
+        assert_eq!(caps.min, 100.0);
+        assert_eq!(caps.max, 200.0);
+        
+        // Test range calculation
+        let range = caps.max - caps.min;
+        assert_eq!(range, 100.0);
+    }
+
+    #[test]
+    fn test_caps_validation() {
+        let caps = Caps::new(-100.0, 200.0); // Negative min
+        // Caps should allow negative values for testing purposes
+        assert_eq!(caps.min, -100.0);
+        assert_eq!(caps.max, 200.0);
+    }
+
+    #[test]
+    fn test_zero_caps() {
+        let caps = Caps::new(0.0, 0.0);
+        assert_eq!(caps.min, 0.0);
+        assert_eq!(caps.max, 0.0);
+    }
+
+    #[test]
+    fn test_large_caps() {
+        let caps = Caps::new(1000000.0, 2000000.0);
+        assert_eq!(caps.min, 1000000.0);
+        assert_eq!(caps.max, 2000000.0);
+    }
+
+    // Test concurrent access patterns
+    #[tokio::test]
+    async fn test_concurrent_actor_creation() {
+        let mut handles = vec![];
+        
+        for i in 0..10 {
+            let handle = tokio::spawn(async move {
+                let actor = Actor::new(format!("actor_{}", i), "human".to_string());
+                assert_eq!(actor.name, format!("actor_{}", i));
+                actor
+            });
+            handles.push(handle);
+        }
+        
+        for handle in handles {
+            let actor = handle.await.unwrap();
+            assert!(actor.is_valid());
+        }
+    }
+
+    // Test edge cases
+    #[test]
+    fn test_actor_edge_cases() {
+        // Test very long names
+        let long_name = "a".repeat(1000);
+        let actor = Actor::new(long_name.clone(), "human".to_string());
+        assert_eq!(actor.name, long_name);
+        assert!(actor.is_valid());
+    }
+
+    #[test]
+    fn test_caps_edge_cases() {
+        // Test very large values
+        let caps = Caps::new(f64::MAX, f64::MAX);
+        assert_eq!(caps.min, f64::MAX);
+        assert_eq!(caps.max, f64::MAX);
+    }
+
+    #[test]
+    fn test_metrics_edge_cases() {
+        // Test very large metric values
+        let metrics = AggregatorMetrics {
+            total_resolutions: u64::MAX,
+            cache_hits: u64::MAX,
+            cache_misses: u64::MAX,
+            avg_resolution_time: u64::MAX,
+            max_resolution_time: u64::MAX,
+            error_count: u64::MAX,
+            active_subsystems: usize::MAX,
+        };
+        assert_eq!(metrics.cache_hits, u64::MAX);
+        assert_eq!(metrics.cache_misses, u64::MAX);
+    }
+}
