@@ -1,0 +1,63 @@
+# Canonical Enums for Resource Exhaustion System
+# This file defines the canonical values for various enums used in the system
+
+# Action tags that can be disabled by exhaustion effects
+action_tags:
+  - shield_activation
+  - buff_activation
+  - parry
+  - block
+  - cast
+  - sprint
+  - dodge
+  - counter_attack
+  - special_ability
+  - ultimate_ability
+
+# Cost types for resource calculations
+cost_types:
+  - mana
+  - stamina
+  - qi
+  - spiritual_energy
+  - lifeforce
+  - health
+  - energy
+  - focus
+  - willpower
+  - essence
+
+# Resource categories for precedence ordering
+categories:
+  - physical
+  - magical
+  - elemental
+  - spiritual
+  - qi
+  - all
+  - combat
+  - movement
+  - casting
+  - defense
+
+# Effect types that can be applied by exhaustion
+effect_types:
+  - disable_tags
+  - damage_multiplier
+  - set_flag
+  - resource_multiplier
+  - cooldown_multiplier
+  - movement_speed_multiplier
+  - cast_time_multiplier
+
+# Threshold condition types
+threshold_conditions:
+  - enter_percent_lte
+  - exit_percent_gte
+  - enter_value_eq
+  - exit_value_ge
+
+# Event types
+event_types:
+  - ResourceExhausted
+  - ResourceRecovered

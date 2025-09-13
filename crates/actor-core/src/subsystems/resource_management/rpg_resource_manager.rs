@@ -148,38 +148,81 @@ impl RpgResourceManager {
     
     /// Evaluate a mathematical formula
     async fn evaluate_formula(&self, actor: &Actor, formula: &str) -> ActorCoreResult<f64> {
-        // Simple formula evaluator - in practice, you'd use a proper expression parser
-        let mut result = 0.0;
-        #[allow(unused_assignments)]
-        let mut current_value = 0.0;
-        let mut current_operator = '+';
+        // Simple formula evaluator with proper operator precedence
+        // First, tokenize the formula
+        let mut tokens = Vec::new();
+        let mut current_token = String::new();
         
-        let tokens: Vec<&str> = formula.split_whitespace().collect();
-        
-        for token in tokens {
-            match token {
-                "+" => current_operator = '+',
-                "-" => current_operator = '-',
-                "*" => current_operator = '*',
-                "/" => current_operator = '/',
-                _ => {
-                    // Try to parse as number or variable
-                    if let Ok(num) = token.parse::<f64>() {
-                        current_value = num;
-                    } else {
-                        // It's a variable - get from actor stats
-                        current_value = self.get_actor_stat_value(actor, token).await?;
+        for ch in formula.chars() {
+            match ch {
+                '+' | '-' | '*' | '/' => {
+                    if !current_token.is_empty() {
+                        tokens.push(current_token.clone());
+                        current_token.clear();
                     }
-                    
-                    // Apply the operator
-                    match current_operator {
-                        '+' => result += current_value,
-                        '-' => result -= current_value,
-                        '*' => result *= current_value,
-                        '/' => if current_value != 0.0 { result /= current_value; },
-                        _ => {}
+                    tokens.push(ch.to_string());
+                }
+                ' ' => {
+                    if !current_token.is_empty() {
+                        tokens.push(current_token.clone());
+                        current_token.clear();
                     }
                 }
+                _ => current_token.push(ch),
+            }
+        }
+        if !current_token.is_empty() {
+            tokens.push(current_token);
+        }
+        
+        // Convert tokens to values and operators
+        let mut values = Vec::new();
+        let mut operators = Vec::new();
+        
+        for token in tokens {
+            match token.as_str() {
+                "+" | "-" | "*" | "/" => operators.push(token),
+                _ => {
+                    // Try to parse as number or variable
+                    let value = if let Ok(num) = token.parse::<f64>() {
+                        num
+                    } else {
+                        self.get_actor_stat_value(actor, &token).await?
+                    };
+                    values.push(value);
+                }
+            }
+        }
+        
+        // Handle multiplication and division first (higher precedence)
+        let mut i = 0;
+        while i < operators.len() {
+            match operators[i].as_str() {
+                "*" => {
+                    let result = values[i] * values[i + 1];
+                    values[i] = result;
+                    values.remove(i + 1);
+                    operators.remove(i);
+                }
+                "/" => {
+                    if values[i + 1] != 0.0 {
+                        let result = values[i] / values[i + 1];
+                        values[i] = result;
+                    }
+                    values.remove(i + 1);
+                    operators.remove(i);
+                }
+                _ => i += 1,
+            }
+        }
+        
+        // Handle addition and subtraction (lower precedence)
+        let mut result = values[0];
+        for (i, op) in operators.iter().enumerate() {
+            match op.as_str() {
+                "+" => result += values[i + 1],
+                "-" => result -= values[i + 1],
+                _ => {}
             }
         }
         
@@ -408,6 +451,7 @@ mod tests {
         data.insert("intelligence".to_string(), json!(10));
         data.insert("constitution".to_string(), json!(10));
         data.insert("charisma".to_string(), json!(10));
+        data.insert("equipment_bonus".to_string(), json!(10)); // Add equipment bonus to create room for regen
         actor.set_data(data);
         
         // Test HP regeneration over 10 seconds

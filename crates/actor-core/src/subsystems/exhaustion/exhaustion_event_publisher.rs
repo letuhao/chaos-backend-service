@@ -17,6 +17,10 @@ pub struct InMemoryEventPublisher {
     events: Arc<RwLock<Vec<ExhaustionEvent>>>,
     /// Event statistics
     stats: Arc<RwLock<EventStats>>,
+    /// Last emit times for coalescing (keyed by idempotency key)
+    last_emit: Arc<RwLock<HashMap<String, u64>>>,
+    /// Coalescing window in milliseconds
+    coalesce_window_ms: u64,
 }
 
 /// Event statistics
@@ -38,6 +42,18 @@ impl InMemoryEventPublisher {
         Self {
             events: Arc::new(RwLock::new(Vec::new())),
             stats: Arc::new(RwLock::new(EventStats::default())),
+            last_emit: Arc::new(RwLock::new(HashMap::new())),
+            coalesce_window_ms: 100, // Default 100ms coalescing window
+        }
+    }
+
+    /// Create a new in-memory event publisher with custom coalescing window
+    pub fn with_coalesce_window(coalesce_window_ms: u64) -> Self {
+        Self {
+            events: Arc::new(RwLock::new(Vec::new())),
+            stats: Arc::new(RwLock::new(EventStats::default())),
+            last_emit: Arc::new(RwLock::new(HashMap::new())),
+            coalesce_window_ms,
         }
     }
 
@@ -60,7 +76,35 @@ impl InMemoryEventPublisher {
 
 #[async_trait]
 impl ExhaustionEventPublisher for InMemoryEventPublisher {
-    async fn publish_event(&self, event: ExhaustionEvent) -> ActorCoreResult<()> {
+    async fn publish_event(&self, mut event: ExhaustionEvent) -> ActorCoreResult<()> {
+        let now = chrono::Utc::now().timestamp_millis() as u64;
+        let idempotency_key = &event.idempotency_key;
+        
+        // Check for coalescing
+        let should_coalesce = {
+            let last_emit = self.last_emit.read().await;
+            if let Some(last_time) = last_emit.get(idempotency_key) {
+                now - last_time < self.coalesce_window_ms
+            } else {
+                false
+            }
+        };
+
+        if should_coalesce {
+            // Mark as coalesced and update last emit time
+            event.coalesced = true;
+            {
+                let mut last_emit = self.last_emit.write().await;
+                last_emit.insert(idempotency_key.clone(), now);
+            }
+        } else {
+            // Update last emit time for new event
+            {
+                let mut last_emit = self.last_emit.write().await;
+                last_emit.insert(idempotency_key.clone(), now);
+            }
+        }
+
         // Store event
         {
             let mut events = self.events.write().await;
@@ -84,16 +128,29 @@ impl ExhaustionEventPublisher for InMemoryEventPublisher {
             }
         }
 
-        info!(
-            "Published exhaustion event: {} for actor {} resource {} threshold {}",
-            match event.event_type {
-                super::resource_exhaustion::ExhaustionEventType::ResourceExhausted => "ResourceExhausted",
-                super::resource_exhaustion::ExhaustionEventType::ResourceRecovered => "ResourceRecovered",
-            },
-            event.actor_id,
-            event.resource_type,
-            event.threshold_id
-        );
+        if !event.coalesced {
+            info!(
+                "Published exhaustion event: {} for actor {} resource {} threshold {}",
+                match event.event_type {
+                    super::resource_exhaustion::ExhaustionEventType::ResourceExhausted => "ResourceExhausted",
+                    super::resource_exhaustion::ExhaustionEventType::ResourceRecovered => "ResourceRecovered",
+                },
+                event.actor_id,
+                event.resource_type,
+                event.threshold_id
+            );
+        } else {
+            info!(
+                "Coalesced exhaustion event: {} for actor {} resource {} threshold {}",
+                match event.event_type {
+                    super::resource_exhaustion::ExhaustionEventType::ResourceExhausted => "ResourceExhausted",
+                    super::resource_exhaustion::ExhaustionEventType::ResourceRecovered => "ResourceRecovered",
+                },
+                event.actor_id,
+                event.resource_type,
+                event.threshold_id
+            );
+        }
 
         Ok(())
     }
@@ -204,6 +261,52 @@ mod tests {
 
         // Should not panic
         publisher.publish_event(event).await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_event_coalescing() {
+        let publisher = InMemoryEventPublisher::with_coalesce_window(100); // 100ms window
+        
+        let event1 = ExhaustionEvent {
+            event_type: crate::ExhaustionEventType::ResourceExhausted,
+            actor_id: "actor1".to_string(),
+            resource_type: "mana".to_string(),
+            threshold_id: "low_mana".to_string(),
+            effects: vec![],
+            timestamp: chrono::Utc::now(),
+            idempotency_key: "actor1:mana:low_mana:exhausted".to_string(),
+            coalesced: false,
+        };
+
+        let event2 = ExhaustionEvent {
+            event_type: crate::ExhaustionEventType::ResourceExhausted,
+            actor_id: "actor1".to_string(),
+            resource_type: "mana".to_string(),
+            threshold_id: "low_mana".to_string(),
+            effects: vec![],
+            timestamp: chrono::Utc::now(),
+            idempotency_key: "actor1:mana:low_mana:exhausted".to_string(), // Same key
+            coalesced: false,
+        };
+
+        // Publish first event
+        publisher.publish_event(event1).await.unwrap();
+        
+        // Publish second event immediately (should be coalesced)
+        publisher.publish_event(event2).await.unwrap();
+
+        let events = publisher.get_events().await;
+        assert_eq!(events.len(), 2);
+        
+        // First event should not be coalesced
+        assert!(!events[0].coalesced);
+        
+        // Second event should be coalesced
+        assert!(events[1].coalesced);
+
+        let stats = publisher.get_stats().await;
+        assert_eq!(stats.total_events, 2);
+        assert_eq!(stats.coalesced_events, 1);
     }
 
     #[tokio::test]

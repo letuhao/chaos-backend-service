@@ -476,3 +476,337 @@ pub mod dimension_ranges {
     pub const MIN_PARRY_CHANCE: f64 = 0.0;
     pub const MAX_PARRY_CHANCE: f64 = 0.95;
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_system_ids_constants() {
+        assert_eq!(system_ids::LUYEN_THE, "luyen_the");
+        assert_eq!(system_ids::KIM_DAN, "kim_dan");
+        assert_eq!(system_ids::COMBAT, "combat");
+        assert_eq!(system_ids::EQUIPMENT, "equipment");
+        assert_eq!(system_ids::BUFF, "buff");
+        assert_eq!(system_ids::GUILD, "guild");
+        assert_eq!(system_ids::EVENT, "event");
+        assert_eq!(system_ids::WORLD, "world");
+        assert_eq!(system_ids::MAGIC, "magic");
+        assert_eq!(system_ids::CULTIVATION, "cultivation");
+        assert_eq!(system_ids::EXPERIENCE, "experience");
+        assert_eq!(system_ids::REPUTATION, "reputation");
+        assert_eq!(system_ids::TRADING, "trading");
+        assert_eq!(system_ids::WEATHER, "weather");
+        assert_eq!(system_ids::LOCATION, "location");
+        assert_eq!(system_ids::TIME, "time");
+        assert_eq!(system_ids::STEALTH, "stealth");
+        assert_eq!(system_ids::PERCEPTION, "perception");
+    }
+
+    #[test]
+    fn test_primary_dimensions_constants() {
+        assert_eq!(primary_dimensions::STRENGTH, "strength");
+        assert_eq!(primary_dimensions::AGILITY, "agility");
+        assert_eq!(primary_dimensions::INTELLIGENCE, "intelligence");
+        assert_eq!(primary_dimensions::VITALITY, "vitality");
+        assert_eq!(primary_dimensions::SPIRIT, "spirit");
+        assert_eq!(primary_dimensions::LUCK, "luck");
+        assert_eq!(primary_dimensions::HEALTH, "health");
+        assert_eq!(primary_dimensions::MANA, "mana");
+        assert_eq!(primary_dimensions::STAMINA, "stamina");
+        assert_eq!(primary_dimensions::EXPERIENCE, "experience");
+        assert_eq!(primary_dimensions::LEVEL, "level");
+    }
+
+    #[test]
+    fn test_derived_dimensions_constants() {
+        assert_eq!(derived_dimensions::ATTACK_POWER, "attack_power");
+        assert_eq!(derived_dimensions::DEFENSE_POWER, "defense_power");
+        assert_eq!(derived_dimensions::CRITICAL_HIT_CHANCE, "critical_hit_chance");
+        assert_eq!(derived_dimensions::CRITICAL_HIT_DAMAGE, "critical_hit_damage");
+        assert_eq!(derived_dimensions::ATTACK_SPEED, "attack_speed");
+        assert_eq!(derived_dimensions::MOVEMENT_SPEED, "movement_speed");
+        assert_eq!(derived_dimensions::CASTING_SPEED, "casting_speed");
+        assert_eq!(derived_dimensions::COOLDOWN_REDUCTION, "cooldown_reduction");
+        assert_eq!(derived_dimensions::LIFE_STEAL, "life_steal");
+        assert_eq!(derived_dimensions::MANA_STEAL, "mana_steal");
+        assert_eq!(derived_dimensions::DAMAGE_REDUCTION, "damage_reduction");
+        assert_eq!(derived_dimensions::ELEMENTAL_RESISTANCE, "elemental_resistance");
+    }
+
+    #[test]
+    fn test_meta_dimensions_constants() {
+        assert_eq!(meta_dimensions::REALM_ID, "realm_id");
+        assert_eq!(meta_dimensions::WORLD_ID, "world_id");
+        assert_eq!(meta_dimensions::ZONE_ID, "zone_id");
+        assert_eq!(meta_dimensions::GUILD_ID, "guild_id");
+        assert_eq!(meta_dimensions::PARTY_ID, "party_id");
+        assert_eq!(meta_dimensions::EVENT_ID, "event_id");
+    }
+
+    #[test]
+    fn test_context_types_constants() {
+        assert_eq!(context_types::DAMAGE, "damage");
+        assert_eq!(context_types::HEALING, "healing");
+        assert_eq!(context_types::EXPERIENCE_GAIN, "experience_gain");
+        assert_eq!(context_types::ITEM_DROP, "item_drop");
+        assert_eq!(context_types::COMBAT, "combat");
+        assert_eq!(context_types::MOVEMENT, "movement");
+        assert_eq!(context_types::CASTING, "casting");
+    }
+
+    #[test]
+    fn test_error_codes_constants() {
+        assert_eq!(error_codes::INVALID_ACTOR, "INVALID_ACTOR");
+        assert_eq!(error_codes::INVALID_CONTRIBUTION, "INVALID_CONTRIBUTION");
+        assert_eq!(error_codes::INVALID_CAP, "INVALID_CAP");
+        assert_eq!(error_codes::SUBSYSTEM_ERROR, "SUBSYSTEM_ERROR");
+        assert_eq!(error_codes::CACHE_ERROR, "CACHE_ERROR");
+        assert_eq!(error_codes::REGISTRY_ERROR, "REGISTRY_ERROR");
+        assert_eq!(error_codes::AGGREGATION_ERROR, "AGGREGATION_ERROR");
+        assert_eq!(error_codes::CONFIGURATION_ERROR, "CONFIGURATION_ERROR");
+    }
+
+    #[test]
+    fn test_error_types_constants() {
+        assert_eq!(error_types::VALIDATION, "VALIDATION");
+        assert_eq!(error_types::SYSTEM, "SYSTEM");
+        assert_eq!(error_types::NETWORK, "NETWORK");
+        assert_eq!(error_types::DATABASE, "DATABASE");
+        assert_eq!(error_types::CACHE, "CACHE");
+        assert_eq!(error_types::CONFIGURATION, "CONFIGURATION");
+    }
+
+    #[test]
+    fn test_defaults_constants() {
+        assert_eq!(defaults::ACTOR_LIFESPAN, 365 * 24 * 60 * 60);
+        assert_eq!(defaults::ACTOR_AGE, 0);
+        assert_eq!(defaults::SUBSYSTEM_PRIORITY, 100);
+        assert_eq!(defaults::CONTRIBUTION_PRIORITY, 100);
+        assert_eq!(defaults::CAP_PRIORITY, 100);
+        assert_eq!(defaults::CACHE_TTL, 3600);
+        assert_eq!(defaults::BATCH_SIZE, 100);
+        assert_eq!(defaults::MAX_RETRIES, 3);
+    }
+
+    #[test]
+    fn test_clamp_ranges_primary_dimension_range() {
+        assert_eq!(clamp_ranges::primary_dimension_range("strength"), Some((0.0, 10000.0)));
+        assert_eq!(clamp_ranges::primary_dimension_range("agility"), Some((0.0, 10000.0)));
+        assert_eq!(clamp_ranges::primary_dimension_range("intelligence"), Some((0.0, 10000.0)));
+        assert_eq!(clamp_ranges::primary_dimension_range("vitality"), Some((0.0, 10000.0)));
+        assert_eq!(clamp_ranges::primary_dimension_range("spirit"), Some((0.0, 10000.0)));
+        assert_eq!(clamp_ranges::primary_dimension_range("luck"), Some((0.0, 10000.0)));
+        assert_eq!(clamp_ranges::primary_dimension_range("health"), Some((0.0, 1000000.0)));
+        assert_eq!(clamp_ranges::primary_dimension_range("mana"), Some((0.0, 1000000.0)));
+        assert_eq!(clamp_ranges::primary_dimension_range("stamina"), Some((0.0, 1000000.0)));
+        assert_eq!(clamp_ranges::primary_dimension_range("experience"), Some((0.0, f64::MAX)));
+        assert_eq!(clamp_ranges::primary_dimension_range("level"), Some((1.0, 1000.0)));
+        assert_eq!(clamp_ranges::primary_dimension_range("unknown"), None);
+    }
+
+    #[test]
+    fn test_clamp_ranges_derived_dimension_range() {
+        assert_eq!(clamp_ranges::derived_dimension_range("attack_power"), Some((0.0, 100000.0)));
+        assert_eq!(clamp_ranges::derived_dimension_range("defense_power"), Some((0.0, 100000.0)));
+        assert_eq!(clamp_ranges::derived_dimension_range("critical_hit_chance"), Some((0.0, 100.0)));
+        assert_eq!(clamp_ranges::derived_dimension_range("critical_hit_damage"), Some((0.0, 1000.0)));
+        assert_eq!(clamp_ranges::derived_dimension_range("attack_speed"), Some((0.1, 10.0)));
+        assert_eq!(clamp_ranges::derived_dimension_range("movement_speed"), Some((0.1, 50.0)));
+        assert_eq!(clamp_ranges::derived_dimension_range("casting_speed"), Some((0.1, 10.0)));
+        assert_eq!(clamp_ranges::derived_dimension_range("cooldown_reduction"), Some((0.0, 90.0)));
+        assert_eq!(clamp_ranges::derived_dimension_range("life_steal"), Some((0.0, 100.0)));
+        assert_eq!(clamp_ranges::derived_dimension_range("mana_steal"), Some((0.0, 100.0)));
+        assert_eq!(clamp_ranges::derived_dimension_range("damage_reduction"), Some((0.0, 95.0)));
+        assert_eq!(clamp_ranges::derived_dimension_range("elemental_resistance"), Some((0.0, 100.0)));
+        assert_eq!(clamp_ranges::derived_dimension_range("unknown"), None);
+    }
+
+    #[test]
+    fn test_clamp_ranges_get_range() {
+        assert_eq!(clamp_ranges::get_range("strength"), Some((0.0, 10000.0)));
+        assert_eq!(clamp_ranges::get_range("attack_power"), Some((0.0, 100000.0)));
+        assert_eq!(clamp_ranges::get_range("unknown"), None);
+    }
+
+    #[test]
+    fn test_timeouts_constants() {
+        assert_eq!(timeouts::AGGREGATION_TIMEOUT, 5000);
+        assert_eq!(timeouts::CACHE_TIMEOUT, 1000);
+        assert_eq!(timeouts::DATABASE_TIMEOUT, 10000);
+        assert_eq!(timeouts::NETWORK_TIMEOUT, 30000);
+        assert_eq!(timeouts::SUBSYSTEM_TIMEOUT, 2000);
+        assert_eq!(timeouts::BATCH_INTERVAL, 100);
+        assert_eq!(timeouts::CACHE_CLEANUP_INTERVAL, 3600);
+    }
+
+    #[test]
+    fn test_cache_keys_constants() {
+        assert_eq!(cache_keys::ACTOR_SNAPSHOT_PREFIX, "actor_snapshot:");
+        assert_eq!(cache_keys::SUBSYSTEM_OUTPUT_PREFIX, "subsystem_output:");
+        assert_eq!(cache_keys::EFFECTIVE_CAPS_PREFIX, "effective_caps:");
+        assert_eq!(cache_keys::REGISTRY_PREFIX, "registry:");
+        assert_eq!(cache_keys::CONFIG_PREFIX, "config:");
+    }
+
+    #[test]
+    fn test_log_levels_constants() {
+        assert_eq!(log_levels::TRACE, "trace");
+        assert_eq!(log_levels::DEBUG, "debug");
+        assert_eq!(log_levels::INFO, "info");
+        assert_eq!(log_levels::WARN, "warn");
+        assert_eq!(log_levels::ERROR, "error");
+    }
+
+    #[test]
+    fn test_cache_policies_constants() {
+        assert_eq!(cache_policies::LRU, "lru");
+        assert_eq!(cache_policies::LFU, "lfu");
+        assert_eq!(cache_policies::TTL, "ttl");
+        assert_eq!(cache_policies::FIFO, "fifo");
+    }
+
+    #[test]
+    fn test_performance_thresholds_constants() {
+        assert_eq!(performance_thresholds::MAX_AGGREGATION_TIME, 1_000_000);
+        assert_eq!(performance_thresholds::MAX_CACHE_TIME, 1_000);
+        assert_eq!(performance_thresholds::MAX_SUBSYSTEM_TIME, 100_000);
+        assert_eq!(performance_thresholds::MAX_MEMORY_PER_ACTOR, 1_048_576);
+        assert_eq!(performance_thresholds::MAX_CACHE_SIZE, 100_048_576);
+    }
+
+    #[test]
+    fn test_validation_rules_constants() {
+        assert_eq!(validation_rules::MIN_ACTOR_NAME_LENGTH, 3);
+        assert_eq!(validation_rules::MAX_ACTOR_NAME_LENGTH, 32);
+        assert_eq!(validation_rules::MIN_DIMENSION_NAME_LENGTH, 1);
+        assert_eq!(validation_rules::MAX_DIMENSION_NAME_LENGTH, 64);
+        assert_eq!(validation_rules::MIN_SYSTEM_ID_LENGTH, 1);
+        assert_eq!(validation_rules::MAX_SYSTEM_ID_LENGTH, 32);
+        assert_eq!(validation_rules::MAX_SUBSYSTEMS_PER_ACTOR, 100);
+        assert_eq!(validation_rules::MAX_CONTRIBUTIONS_PER_SUBSYSTEM, 1000);
+    }
+
+    #[test]
+    fn test_all_dimensions_function() {
+        let dimensions = all_dimensions();
+        assert!(dimensions.contains(&"strength"));
+        assert!(dimensions.contains(&"agility"));
+        assert!(dimensions.contains(&"intelligence"));
+        assert!(dimensions.contains(&"vitality"));
+        assert!(dimensions.contains(&"spirit"));
+        assert!(dimensions.contains(&"luck"));
+        assert!(dimensions.contains(&"health"));
+        assert!(dimensions.contains(&"mana"));
+        assert!(dimensions.contains(&"stamina"));
+        assert!(dimensions.contains(&"experience"));
+        assert!(dimensions.contains(&"level"));
+        assert!(dimensions.contains(&"attack_power"));
+        assert!(dimensions.contains(&"defense_power"));
+        assert!(dimensions.contains(&"realm_id"));
+        assert!(dimensions.contains(&"world_id"));
+        assert!(dimensions.contains(&"zone_id"));
+        assert!(dimensions.contains(&"guild_id"));
+        assert!(dimensions.contains(&"party_id"));
+        assert!(dimensions.contains(&"event_id"));
+    }
+
+    #[test]
+    fn test_all_context_types_function() {
+        let context_types = all_context_types();
+        assert!(context_types.contains(&"damage"));
+        assert!(context_types.contains(&"healing"));
+        assert!(context_types.contains(&"experience_gain"));
+        assert!(context_types.contains(&"item_drop"));
+        assert!(context_types.contains(&"combat"));
+        assert!(context_types.contains(&"movement"));
+        assert!(context_types.contains(&"casting"));
+    }
+
+    #[test]
+    fn test_all_system_ids_function() {
+        let system_ids = all_system_ids();
+        assert!(system_ids.contains(&"luyen_the"));
+        assert!(system_ids.contains(&"kim_dan"));
+        assert!(system_ids.contains(&"combat"));
+        assert!(system_ids.contains(&"equipment"));
+        assert!(system_ids.contains(&"buff"));
+        assert!(system_ids.contains(&"guild"));
+        assert!(system_ids.contains(&"event"));
+        assert!(system_ids.contains(&"world"));
+        assert!(system_ids.contains(&"magic"));
+        assert!(system_ids.contains(&"cultivation"));
+        assert!(system_ids.contains(&"experience"));
+        assert!(system_ids.contains(&"reputation"));
+        assert!(system_ids.contains(&"trading"));
+        assert!(system_ids.contains(&"weather"));
+        assert!(system_ids.contains(&"location"));
+        assert!(system_ids.contains(&"time"));
+        assert!(system_ids.contains(&"stealth"));
+        assert!(system_ids.contains(&"perception"));
+    }
+
+    #[test]
+    fn test_dimension_ranges_constants() {
+        assert_eq!(dimension_ranges::MIN_STRENGTH, 1.0);
+        assert_eq!(dimension_ranges::MAX_STRENGTH, 1000.0);
+        assert_eq!(dimension_ranges::MIN_AGILITY, 1.0);
+        assert_eq!(dimension_ranges::MAX_AGILITY, 1000.0);
+        assert_eq!(dimension_ranges::MIN_INTELLIGENCE, 1.0);
+        assert_eq!(dimension_ranges::MAX_INTELLIGENCE, 1000.0);
+        assert_eq!(dimension_ranges::MIN_VITALITY, 1.0);
+        assert_eq!(dimension_ranges::MAX_VITALITY, 1000.0);
+        assert_eq!(dimension_ranges::MIN_SPIRIT, 1.0);
+        assert_eq!(dimension_ranges::MAX_SPIRIT, 1000.0);
+        assert_eq!(dimension_ranges::MIN_LUCK, 1.0);
+        assert_eq!(dimension_ranges::MAX_LUCK, 1000.0);
+        assert_eq!(dimension_ranges::MIN_HEALTH, 1.0);
+        assert_eq!(dimension_ranges::MAX_HEALTH, 10000.0);
+        assert_eq!(dimension_ranges::MIN_MANA, 0.0);
+        assert_eq!(dimension_ranges::MAX_MANA, 10000.0);
+        assert_eq!(dimension_ranges::MIN_STAMINA, 0.0);
+        assert_eq!(dimension_ranges::MAX_STAMINA, 10000.0);
+        assert_eq!(dimension_ranges::MIN_ATTACK_POWER, 0.0);
+        assert_eq!(dimension_ranges::MAX_ATTACK_POWER, 5000.0);
+        assert_eq!(dimension_ranges::MIN_DEFENSE_POWER, 0.0);
+        assert_eq!(dimension_ranges::MAX_DEFENSE_POWER, 5000.0);
+        assert_eq!(dimension_ranges::MIN_CRITICAL_HIT_CHANCE, 0.0);
+        assert_eq!(dimension_ranges::MAX_CRITICAL_HIT_CHANCE, 1.0);
+        assert_eq!(dimension_ranges::MIN_CRITICAL_HIT_DAMAGE, 1.0);
+        assert_eq!(dimension_ranges::MAX_CRITICAL_HIT_DAMAGE, 5.0);
+        assert_eq!(dimension_ranges::MIN_ATTACK_SPEED, 0.1);
+        assert_eq!(dimension_ranges::MAX_ATTACK_SPEED, 10.0);
+        assert_eq!(dimension_ranges::MIN_MOVEMENT_SPEED, 0.1);
+        assert_eq!(dimension_ranges::MAX_MOVEMENT_SPEED, 20.0);
+        assert_eq!(dimension_ranges::MIN_CASTING_SPEED, 0.1);
+        assert_eq!(dimension_ranges::MAX_CASTING_SPEED, 10.0);
+        assert_eq!(dimension_ranges::MIN_COOLDOWN_REDUCTION, 0.0);
+        assert_eq!(dimension_ranges::MAX_COOLDOWN_REDUCTION, 0.8);
+        assert_eq!(dimension_ranges::MIN_EXPERIENCE, 0.0);
+        assert_eq!(dimension_ranges::MAX_EXPERIENCE, 999999999.0);
+        assert_eq!(dimension_ranges::MIN_LEVEL, 1.0);
+        assert_eq!(dimension_ranges::MAX_LEVEL, 1000.0);
+        assert_eq!(dimension_ranges::MIN_FIRE_RESISTANCE, 0.0);
+        assert_eq!(dimension_ranges::MAX_FIRE_RESISTANCE, 1.0);
+        assert_eq!(dimension_ranges::MIN_WATER_RESISTANCE, 0.0);
+        assert_eq!(dimension_ranges::MAX_WATER_RESISTANCE, 1.0);
+        assert_eq!(dimension_ranges::MIN_EARTH_RESISTANCE, 0.0);
+        assert_eq!(dimension_ranges::MAX_EARTH_RESISTANCE, 1.0);
+        assert_eq!(dimension_ranges::MIN_AIR_RESISTANCE, 0.0);
+        assert_eq!(dimension_ranges::MAX_AIR_RESISTANCE, 1.0);
+        assert_eq!(dimension_ranges::MIN_LIGHT_RESISTANCE, 0.0);
+        assert_eq!(dimension_ranges::MAX_LIGHT_RESISTANCE, 1.0);
+        assert_eq!(dimension_ranges::MIN_DARK_RESISTANCE, 0.0);
+        assert_eq!(dimension_ranges::MAX_DARK_RESISTANCE, 1.0);
+        assert_eq!(dimension_ranges::MIN_LUCK_FACTOR, 0.0);
+        assert_eq!(dimension_ranges::MAX_LUCK_FACTOR, 2.0);
+        assert_eq!(dimension_ranges::MIN_CRITICAL_RESISTANCE, 0.0);
+        assert_eq!(dimension_ranges::MAX_CRITICAL_RESISTANCE, 1.0);
+        assert_eq!(dimension_ranges::MIN_DODGE_CHANCE, 0.0);
+        assert_eq!(dimension_ranges::MAX_DODGE_CHANCE, 0.95);
+        assert_eq!(dimension_ranges::MIN_BLOCK_CHANCE, 0.0);
+        assert_eq!(dimension_ranges::MAX_BLOCK_CHANCE, 0.95);
+        assert_eq!(dimension_ranges::MIN_PARRY_CHANCE, 0.0);
+        assert_eq!(dimension_ranges::MAX_PARRY_CHANCE, 0.95);
+    }
+}

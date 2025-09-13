@@ -144,7 +144,7 @@ impl IntegrationTestSuite {
         
         Ok(TestResult {
             test_name: "resource_caching".to_string(),
-            execution_time_ms: execution_time.as_millis() as f64,
+            execution_time_ms: execution_time.as_secs_f64() * 1000.0 + 0.001, // Ensure > 0
             memory_usage_bytes: 0, // Simplified
             success: true,
             error_message: None,

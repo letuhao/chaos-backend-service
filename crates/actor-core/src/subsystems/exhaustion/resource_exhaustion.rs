@@ -687,6 +687,64 @@ impl ExhaustionEngine {
     }
 }
 
+/// Public API trait for exhaustion system
+#[async_trait]
+pub trait ExhaustionProvider {
+    /// Evaluate exhaustion transitions for an actor
+    fn evaluate(&self, actor_id: &str, snapshot: &Snapshot) -> Vec<ExhaustionTransition>;
+    
+    /// Apply exhaustion effects to an actor
+    async fn apply(&mut self, actor_id: &str, transitions: &[ExhaustionTransition]) -> Result<(), ExhaustionError>;
+    
+    /// Clear exhaustion effects from an actor
+    async fn clear(&mut self, actor_id: &str, transitions: &[ExhaustionTransition]) -> Result<(), ExhaustionError>;
+}
+
+#[async_trait]
+impl ExhaustionProvider for ResourceExhaustionSubsystem {
+    fn evaluate(&self, actor_id: &str, snapshot: &Snapshot) -> Vec<ExhaustionTransition> {
+        // Create a dummy actor for evaluation
+        let actor = Actor::new(actor_id.to_string(), "default".to_string());
+        
+        // Use the engine to evaluate transitions (blocking call)
+        tokio::task::block_in_place(|| {
+            tokio::runtime::Handle::current().block_on(async {
+                match self.engine.evaluate(&actor, snapshot).await {
+                    Ok(transitions) => transitions,
+                    Err(_) => Vec::new(), // Return empty on error
+                }
+            })
+        })
+    }
+
+    async fn apply(&mut self, actor_id: &str, transitions: &[ExhaustionTransition]) -> Result<(), ExhaustionError> {
+        // Apply effects for entering transitions
+        let entering_transitions: Vec<ExhaustionTransition> = transitions.iter()
+            .filter(|t| t.entering)
+            .cloned()
+            .collect();
+        
+        if !entering_transitions.is_empty() {
+            self.apply_effects(actor_id, &entering_transitions).await
+                .map_err(|e| ExhaustionError::EvaluationError(format!("Failed to apply effects: {}", e)))?;
+        }
+        Ok(())
+    }
+
+    async fn clear(&mut self, actor_id: &str, transitions: &[ExhaustionTransition]) -> Result<(), ExhaustionError> {
+        // Clear effects for exiting transitions
+        for transition in transitions {
+            if !transition.entering {
+                for effect in &transition.effects {
+                    self.clear_effect(actor_id, &transition.resource, &transition.threshold_id, effect).await
+                        .map_err(|e| ExhaustionError::EvaluationError(format!("Failed to clear effect: {}", e)))?;
+                }
+            }
+        }
+        Ok(())
+    }
+}
+
 #[async_trait]
 impl Subsystem for ResourceExhaustionSubsystem {
     fn system_id(&self) -> &str {

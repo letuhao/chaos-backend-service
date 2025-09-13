@@ -176,12 +176,15 @@ impl ExhaustionConfigLoader {
                         thresholds: Vec::new(),
                     });
 
-                // Merge thresholds
-                self.merge_thresholds(&mut base_resource.thresholds, override_resource.thresholds)?;
-            }
-        }
+        // Merge thresholds
+        self.merge_thresholds(&mut base_resource.thresholds, override_resource.thresholds)?;
+    }
+}
 
-        Ok(base)
+// Fill hysteresis defaults before validation
+self.fill_hysteresis_defaults(&mut base)?;
+
+Ok(base)
     }
 
     /// Merge thresholds, handling duplicates by ID
@@ -199,6 +202,80 @@ impl ExhaustionConfigLoader {
 
         // Sort thresholds by order
         base_thresholds.sort_by_key(|t| t.order.unwrap_or(0));
+
+        Ok(())
+    }
+
+    /// Fill hysteresis defaults for thresholds that don't have exit conditions
+    fn fill_hysteresis_defaults(&self, config: &mut ExhaustionConfig) -> Result<(), ConfigLoaderError> {
+        let h = config.hysteresis_default;
+        
+        for (_, arch) in &mut config.archetypes {
+            for (_, res) in &mut arch.resources {
+                for th in &mut res.thresholds {
+                    // Fill percentage-based hysteresis
+                    if let Some(enter_p) = th.enter_percent_lte {
+                        if th.exit_percent_gte.is_none() {
+                            th.exit_percent_gte = Some((enter_p + h).min(1.0));
+                        }
+                    }
+                    
+                    // Fill value-based hysteresis
+                    if let Some(enter_v) = th.enter_value_eq {
+                        if th.exit_value_ge.is_none() {
+                            th.exit_value_ge = Some(enter_v + 1.0);
+                        }
+                    }
+                }
+            }
+        }
+        
+        Ok(())
+    }
+
+    /// Validate canonical enum values
+    fn validate_canonical_enums(&self, config: &ExhaustionConfig) -> Result<(), ConfigLoaderError> {
+        // Canonical action tags
+        let valid_action_tags = [
+            "shield_activation", "buff_activation", "parry", "block", "cast", "sprint",
+            "dodge", "counter_attack", "special_ability", "ultimate_ability"
+        ];
+        
+        // Canonical effect types
+        let valid_effect_types = [
+            "disable_tags", "damage_multiplier", "set_flag", "resource_multiplier",
+            "cooldown_multiplier", "movement_speed_multiplier", "cast_time_multiplier"
+        ];
+
+        for (archetype_name, archetype_config) in &config.archetypes {
+            for (resource_name, resource_config) in &archetype_config.resources {
+                for threshold in &resource_config.thresholds {
+                    for effect in &threshold.effects {
+                        // Validate effect type
+                        if !valid_effect_types.contains(&effect.effect_type.as_str()) {
+                            return Err(ConfigLoaderError::ValidationError(
+                                format!("Invalid effect type '{}' in {}.{}.{}", 
+                                    effect.effect_type, archetype_name, resource_name, threshold.id)
+                            ));
+                        }
+
+                        // Validate action tags if effect type is disable_tags
+                        if effect.effect_type == "disable_tags" {
+                            if let Some(values) = &effect.values {
+                                for tag in values {
+                                    if !valid_action_tags.contains(&tag.as_str()) {
+                                        return Err(ConfigLoaderError::ValidationError(
+                                            format!("Invalid action tag '{}' in {}.{}.{}", 
+                                                tag, archetype_name, resource_name, threshold.id)
+                                        ));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         Ok(())
     }
@@ -227,6 +304,8 @@ impl ExhaustionConfigLoader {
 
     /// Validate configuration
     fn validate_config(&self, config: &ExhaustionConfig) -> Result<(), ConfigLoaderError> {
+        // Validate canonical enums
+        self.validate_canonical_enums(config)?;
         // Validate version
         if config.version == 0 {
             return Err(ConfigLoaderError::ValidationError("Version must be >= 1".to_string()));
@@ -394,6 +473,70 @@ impl ExhaustionConfigLoader {
 
         info
     }
+
+    /// Pretty print merged configuration with source information
+    pub fn pretty_print_merged(&self, merged: &MergedConfig) -> String {
+        let mut output = String::new();
+        output.push_str("=== Merged Exhaustion Configuration ===\n");
+        output.push_str(&format!("Version: {} (source: {})\n", 
+            merged.config.version, 
+            self.get_source_name(&merged.sources.get("version"))
+        ));
+        output.push_str(&format!("Hysteresis Default: {} (source: {})\n", 
+            merged.config.hysteresis_default,
+            self.get_source_name(&merged.sources.get("hysteresis_default"))
+        ));
+        output.push_str(&format!("Coalesce Window: {}ms (source: {})\n", 
+            merged.config.events.coalesce_window_ms,
+            self.get_source_name(&merged.sources.get("events.coalesce_window_ms"))
+        ));
+
+        if let Some(priorities) = &merged.config.priorities {
+            output.push_str(&format!("Priorities: {:?} (source: {})\n", 
+                priorities.categories,
+                self.get_source_name(&merged.sources.get("priorities"))
+            ));
+        }
+
+        output.push_str("\n=== Archetypes ===\n");
+        for (archetype_name, archetype_config) in &merged.config.archetypes {
+            output.push_str(&format!("\n[{}]\n", archetype_name));
+            for (resource_name, resource_config) in &archetype_config.resources {
+                output.push_str(&format!("  {}:\n", resource_name));
+                for threshold in &resource_config.thresholds {
+                    let key = format!("archetypes.{}.{}.thresholds.{}", archetype_name, resource_name, threshold.id);
+                    let source = self.get_source_name(&merged.sources.get(&key));
+                    output.push_str(&format!("    {} (source: {})\n", threshold.id, source));
+                    output.push_str(&format!("      Order: {:?}\n", threshold.order));
+                    if let Some(enter_p) = threshold.enter_percent_lte {
+                        output.push_str(&format!("      Enter: {}% (percentage)\n", enter_p * 100.0));
+                    }
+                    if let Some(exit_p) = threshold.exit_percent_gte {
+                        output.push_str(&format!("      Exit: {}% (percentage)\n", exit_p * 100.0));
+                    }
+                    if let Some(enter_v) = threshold.enter_value_eq {
+                        output.push_str(&format!("      Enter: {} (value)\n", enter_v));
+                    }
+                    if let Some(exit_v) = threshold.exit_value_ge {
+                        output.push_str(&format!("      Exit: {} (value)\n", exit_v));
+                    }
+                    output.push_str(&format!("      Effects: {} items\n", threshold.effects.len()));
+                }
+            }
+        }
+
+        output
+    }
+
+    /// Get source name for display
+    fn get_source_name<'a>(&self, source: &Option<&'a ConfigSource>) -> &'a str {
+        match source {
+            Some(ConfigSource::Global) => "global",
+            Some(ConfigSource::Area(area_id)) => area_id,
+            Some(ConfigSource::PvP(template_id)) => template_id,
+            None => "unknown",
+        }
+    }
 }
 
 impl Default for ExhaustionConfigLoader {
@@ -448,6 +591,58 @@ mod tests {
             archetypes: HashMap::new(),
         };
         assert!(loader.validate_config(&invalid_config).is_err());
+    }
+
+    #[tokio::test]
+    async fn test_hysteresis_defaults() {
+        let mut config = ExhaustionConfig {
+            version: 1,
+            hysteresis_default: 0.05,
+            events: EventConfig {
+                coalesce_window_ms: 200,
+            },
+            priorities: None,
+            archetypes: {
+                let mut archetypes = HashMap::new();
+                let mut resources = HashMap::new();
+                resources.insert("mana".to_string(), ResourceConfig {
+                    thresholds: vec![
+                        ThresholdConfig {
+                            id: "low_mana".to_string(),
+                            order: Some(1),
+                            enter_percent_lte: Some(0.1),
+                            exit_percent_gte: None, // Should be filled with hysteresis
+                            enter_value_eq: None,
+                            exit_value_ge: None,
+                            effects: vec![],
+                        },
+                        ThresholdConfig {
+                            id: "critical_mana".to_string(),
+                            order: Some(2),
+                            enter_value_eq: Some(5.0),
+                            exit_value_ge: None, // Should be filled with hysteresis
+                            enter_percent_lte: None,
+                            exit_percent_gte: None,
+                            effects: vec![],
+                        },
+                    ],
+                });
+                archetypes.insert("mage".to_string(), ArchetypeConfig { resources });
+                archetypes
+            },
+        };
+
+        let loader = ExhaustionConfigLoader::new();
+        loader.fill_hysteresis_defaults(&mut config).unwrap();
+
+        // Check percentage-based hysteresis
+        let mana_threshold = &config.archetypes["mage"].resources["mana"].thresholds[0];
+        assert!(mana_threshold.exit_percent_gte.is_some());
+        assert!((mana_threshold.exit_percent_gte.unwrap() - 0.15).abs() < f64::EPSILON);
+
+        // Check value-based hysteresis
+        let critical_threshold = &config.archetypes["mage"].resources["mana"].thresholds[1];
+        assert_eq!(critical_threshold.exit_value_ge, Some(6.0)); // 5.0 + 1.0
     }
 
     #[tokio::test]
