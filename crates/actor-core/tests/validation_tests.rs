@@ -124,5 +124,6 @@ fn test_validate_contributions_multiple() {
     let result = validators::validate_contributions(&contributions);
     assert!(!result.is_valid);
     assert!(result.has_errors());
-    assert!(result.first_error().unwrap().contains("contributions[1]"));
+    let first_error = &result.errors[0];
+    assert!(first_error.field.as_ref().unwrap().contains("contributions[1]"));
 }

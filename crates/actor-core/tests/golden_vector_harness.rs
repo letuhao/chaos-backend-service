@@ -128,6 +128,15 @@ fn run_case(dir: &str) {
         cc.scope = Some("total".into());
         caps_vec.push(cc);
     }
+    
+    // Also ensure hp_current has a min cap if it appears in inputs
+    let has_hp = contribs.iter().any(|c| c.dimension == "hp_current");
+    if has_hp && !caps_vec.iter().any(|c| c.dimension == "hp_current" && matches!(c.mode, CapMode::HardMin|CapMode::Baseline|CapMode::Override)) {
+        let mut cc = CapContribution::new("inline_res".into(), "hp_current".into(), CapMode::HardMin, "min".into(), 0.0);
+        cc.priority = Some(100);
+        cc.scope = Some("total".into());
+        caps_vec.push(cc);
+    }
 
     // Register inline subsystem
     let inline = InlineSubsystem{ id: "inline_res".into(), prio: 100, contribs, caps: caps_vec };

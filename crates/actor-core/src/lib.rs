@@ -37,14 +37,15 @@
 //!     let cache = ServiceFactory::create_cache()?;
 //!     let plugin_registry = ServiceFactory::create_plugin_registry();
 //!     let combiner_registry = ServiceFactory::create_combiner_registry();
-//!     let caps_provider = ServiceFactory::create_caps_provider();
+//!     let cap_layer_registry = ServiceFactory::create_cap_layer_registry();
+//!     let caps_provider = ServiceFactory::create_caps_provider(cap_layer_registry);
 //!     
 //!     let aggregator = ServiceFactory::create_aggregator(
 //!         plugin_registry,
 //!         combiner_registry,
 //!         caps_provider,
 //!         cache,
-//!     )?;
+//!     );
 //!     
 //!     // Create actor and process
 //!     let actor = Actor::new("player1".to_string(), "human".to_string());

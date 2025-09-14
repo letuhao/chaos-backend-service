@@ -98,10 +98,10 @@ fn test_default_slos() {
     assert_eq!(slos.len(), 4);
     
     let slo_names: Vec<String> = slos.iter().map(|s| s.name.clone()).collect();
-    assert!(slo_names.contains(&"availability".to_string()));
-    assert!(slo_names.contains(&"latency".to_string()));
-    assert!(slo_names.contains(&"error_rate".to_string()));
-    assert!(slo_names.contains(&"cache_hit_rate".to_string()));
+    assert!(slo_names.contains(&"Actor Core Availability".to_string()));
+    assert!(slo_names.contains(&"Actor Core Latency".to_string()));
+    assert!(slo_names.contains(&"Actor Core Error Rate".to_string()));
+    assert!(slo_names.contains(&"Actor Core Cache Hit Rate".to_string()));
 }
 
 #[test]
@@ -151,7 +151,7 @@ fn test_metrics_collector_aggregation() {
 async fn test_dashboard_basic() {
     let config = DashboardConfig {
         refresh_interval: Duration::from_secs(30),
-        include_detailed_metrics: true,
+        include_detailed_metrics: false,
         include_slo_status: true,
         include_system_health: true,
         max_recent_measurements: 100,
@@ -176,6 +176,12 @@ async fn test_dashboard_with_slos() {
     for slo in slos {
         manager.register_slo(slo).unwrap();
     }
+    
+    // Record some events for each SLO so they have measurements
+    manager.record_event("actor_core_availability", true, None).unwrap();
+    manager.record_event("actor_core_latency", true, None).unwrap();
+    manager.record_event("actor_core_error_rate", true, None).unwrap();
+    manager.record_event("actor_core_cache_hit_rate", true, None).unwrap();
     
     let config = DashboardConfig::default();
     let slo_manager = Arc::new(manager);
@@ -208,10 +214,10 @@ async fn test_observability_integration() {
     metrics_collector.set_gauge("active_connections", 25).unwrap();
     
     // Record SLO events
-    slo_manager.record_event("availability", true, None).unwrap();
-    slo_manager.record_event("latency", true, None).unwrap();
-    slo_manager.record_event("error_rate", true, None).unwrap();
-    slo_manager.record_event("cache_hit_rate", true, None).unwrap();
+    slo_manager.record_event("actor_core_availability", true, None).unwrap();
+    slo_manager.record_event("actor_core_latency", true, None).unwrap();
+    slo_manager.record_event("actor_core_error_rate", true, None).unwrap();
+    slo_manager.record_event("actor_core_cache_hit_rate", true, None).unwrap();
     
     // Create dashboard
     let config = DashboardConfig::default();

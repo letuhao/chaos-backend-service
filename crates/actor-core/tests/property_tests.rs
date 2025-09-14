@@ -237,8 +237,8 @@ fn test_bucket_processing_order_consistent() {
 #[test]
 fn test_contribution_validation_works() {
     let valid_contributions = vec![
-        Contribution::new("test".to_string(), Bucket::Flat, 10.0, "test".to_string()),
-        Contribution::new("test".to_string(), Bucket::Mult, 2.0, "test".to_string()),
+        Contribution::new("strength".to_string(), Bucket::Flat, 10.0, "equipment".to_string()),
+        Contribution::new("agility".to_string(), Bucket::Mult, 2.0, "equipment".to_string()),
     ];
     
     // Valid contributions should pass validation
@@ -250,8 +250,8 @@ fn test_contribution_validation_works() {
 #[test]
 fn test_contribution_validation_rejects_invalid() {
     let invalid_contributions = vec![
-        Contribution::new("test".to_string(), Bucket::Flat, 10.0, "test".to_string()),
-        Contribution::new("test".to_string(), Bucket::Flat, f64::NAN, "test".to_string()),
+        Contribution::new("strength".to_string(), Bucket::Flat, 10.0, "equipment".to_string()),
+        Contribution::new("agility".to_string(), Bucket::Flat, f64::NAN, "equipment".to_string()),
     ];
     
     // Invalid contributions should fail validation

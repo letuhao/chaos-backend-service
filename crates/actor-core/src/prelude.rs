@@ -343,8 +343,8 @@ pub fn create_basic_contribution(dimension: &str, value: f64, system: &str) -> C
 /// use actor_core::prelude::*;
 ///
 /// let caps = create_basic_caps(0.0, 100.0);
-/// assert_eq!(caps.min, Some(0.0));
-/// assert_eq!(caps.max, Some(100.0));
+/// assert_eq!(caps.min, 0.0);
+/// assert_eq!(caps.max, 100.0);
 /// ```
 pub fn create_basic_caps(min: f64, max: f64) -> Caps {
     Caps {
@@ -411,7 +411,7 @@ pub fn validate_actor(actor: &Actor) -> ValidationResult {
 /// ```rust
 /// use actor_core::prelude::*;
 ///
-/// let snapshot = Snapshot::new("player1".parse().unwrap(), 1);
+/// let snapshot = Snapshot::new("550e8400-e29b-41d4-a716-446655440000".parse().unwrap(), 1);
 /// let result = validate_snapshot(&snapshot);
 /// assert!(result.is_valid);
 /// ```
