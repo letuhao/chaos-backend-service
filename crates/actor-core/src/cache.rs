@@ -20,7 +20,7 @@ pub struct LockFreeInMemoryCache {
     storage: Arc<dashmap::DashMap<String, CacheEntry>>,
     default_ttl: u64,
     max_entries: usize,
-    metrics: Arc<std::sync::RwLock<CacheStats>>,
+    metrics: Arc<parking_lot::RwLock<CacheStats>>,
 }
 
 impl LockFreeInMemoryCache {
@@ -29,7 +29,7 @@ impl LockFreeInMemoryCache {
             storage: Arc::new(dashmap::DashMap::new()),
             default_ttl,
             max_entries,
-            metrics: Arc::new(std::sync::RwLock::new(CacheStats::default())),
+            metrics: Arc::new(parking_lot::RwLock::new(CacheStats::default())),
         }
     }
 
@@ -61,11 +61,11 @@ impl Cache for LockFreeInMemoryCache {
     fn get(&self, key: &str) -> Option<serde_json::Value> {
         if let Some(entry) = self.storage.get(key) {
             if self.is_expired(&entry) { return None; }
-            let mut metrics = self.metrics.write().unwrap();
+            let mut metrics = self.metrics.write();
             metrics.hits += 1;
             return Some(entry.value.clone());
         }
-        let mut metrics = self.metrics.write().unwrap();
+        let mut metrics = self.metrics.write();
         metrics.misses += 1;
         None
     }
@@ -75,27 +75,27 @@ impl Cache for LockFreeInMemoryCache {
         let entry = CacheEntry { value, created_at: std::time::Instant::now(), ttl };
         self.storage.insert(key, entry);
         self.evict_if_needed();
-        let mut metrics = self.metrics.write().unwrap();
+        let mut metrics = self.metrics.write();
         metrics.sets += 1;
         Ok(())
     }
 
     fn delete(&self, key: &str) -> ActorCoreResult<()> {
         self.storage.remove(key);
-        let mut metrics = self.metrics.write().unwrap();
+        let mut metrics = self.metrics.write();
         metrics.deletes += 1;
         Ok(())
     }
 
     fn clear(&self) -> ActorCoreResult<()> {
         self.storage.clear();
-        let mut metrics = self.metrics.write().unwrap();
+        let mut metrics = self.metrics.write();
         metrics.sets = 0; metrics.hits = 0; metrics.misses = 0; metrics.deletes = 0;
         Ok(())
     }
 
     fn get_stats(&self) -> CacheStats {
-        let mut metrics = self.metrics.write().unwrap();
+        let mut metrics = self.metrics.write();
         metrics.memory_usage = (self.storage.len() * 1024) as u64; // rough estimate
         metrics.clone()
     }
@@ -104,14 +104,14 @@ impl Cache for LockFreeInMemoryCache {
 /// InMemoryCache is a simple in-memory cache implementation.
 pub struct InMemoryCache {
     /// The actual cache storage
-    storage: Arc<std::sync::RwLock<HashMap<String, CacheEntry>>>,
+    storage: Arc<parking_lot::RwLock<HashMap<String, CacheEntry>>>,
     /// Maximum number of entries
     #[allow(dead_code)]
     max_entries: usize,
     /// Default TTL in seconds
     default_ttl: u64,
     /// Metrics for performance monitoring
-    metrics: Arc<std::sync::RwLock<CacheStats>>,
+    metrics: Arc<parking_lot::RwLock<CacheStats>>,
 }
 
 /// CacheEntry represents a single cache entry.
@@ -129,10 +129,10 @@ impl InMemoryCache {
     /// Create a new in-memory cache instance.
     pub fn new(max_entries: usize, default_ttl: u64) -> Self {
         Self {
-            storage: Arc::new(std::sync::RwLock::new(HashMap::new())),
+            storage: Arc::new(parking_lot::RwLock::new(HashMap::new())),
             max_entries,
             default_ttl,
-            metrics: Arc::new(std::sync::RwLock::new(CacheStats::default())),
+            metrics: Arc::new(parking_lot::RwLock::new(CacheStats::default())),
         }
     }
 
@@ -146,7 +146,7 @@ impl InMemoryCache {
     /// Clean up expired entries.
     #[allow(dead_code)]
     fn cleanup_expired(&self) {
-        let mut storage = self.storage.write().unwrap();
+        let mut storage = self.storage.write();
         let mut expired_keys = Vec::new();
         
         for (key, entry) in storage.iter() {
@@ -163,7 +163,7 @@ impl InMemoryCache {
     /// Evict entries if we exceed the maximum count.
     #[allow(dead_code)]
     fn evict_if_needed(&self) {
-        let mut storage = self.storage.write().unwrap();
+        let mut storage = self.storage.write();
         
         if storage.len() >= self.max_entries {
             // Simple LRU eviction - remove the oldest entry
@@ -181,7 +181,7 @@ impl InMemoryCache {
 #[async_trait]
 impl Cache for InMemoryCache {
     fn get(&self, key: &str) -> Option<serde_json::Value> {
-        let storage = self.storage.read().unwrap();
+        let storage = self.storage.read();
         
         if let Some(entry) = storage.get(key) {
             if self.is_expired(entry) {
@@ -191,14 +191,14 @@ impl Cache for InMemoryCache {
             }
             
             // Update metrics
-            let mut metrics = self.metrics.write().unwrap();
+            let mut metrics = self.metrics.write();
             metrics.hits += 1;
             
             return Some(entry.value.clone());
         }
         
         // Update metrics
-        let mut metrics = self.metrics.write().unwrap();
+        let mut metrics = self.metrics.write();
         metrics.misses += 1;
         
         None
@@ -212,22 +212,22 @@ impl Cache for InMemoryCache {
             ttl,
         };
         
-        let mut storage = self.storage.write().unwrap();
+        let mut storage = self.storage.write();
         storage.insert(key, entry);
         
         // Update metrics
-        let mut metrics = self.metrics.write().unwrap();
+        let mut metrics = self.metrics.write();
         metrics.sets += 1;
         
         Ok(())
     }
 
     fn delete(&self, key: &str) -> ActorCoreResult<()> {
-        let mut storage = self.storage.write().unwrap();
+        let mut storage = self.storage.write();
         
         if storage.remove(key).is_some() {
             // Update metrics
-            let mut metrics = self.metrics.write().unwrap();
+            let mut metrics = self.metrics.write();
             metrics.deletes += 1;
             
             Ok(())
@@ -239,11 +239,11 @@ impl Cache for InMemoryCache {
     }
 
     fn clear(&self) -> ActorCoreResult<()> {
-        let mut storage = self.storage.write().unwrap();
+        let mut storage = self.storage.write();
         storage.clear();
         
         // Update metrics
-        let mut metrics = self.metrics.write().unwrap();
+        let mut metrics = self.metrics.write();
         metrics.sets = 0;
         metrics.hits = 0;
         metrics.misses = 0;
@@ -253,8 +253,8 @@ impl Cache for InMemoryCache {
     }
 
     fn get_stats(&self) -> CacheStats {
-        let storage = self.storage.read().unwrap();
-        let mut metrics = self.metrics.write().unwrap();
+        let storage = self.storage.read();
+        let mut metrics = self.metrics.write();
         
         // Update memory usage
         metrics.memory_usage = (storage.len() * 1024) as u64; // Rough estimate
@@ -274,7 +274,7 @@ pub struct DistributedCache {
     default_ttl: u64,
     /// Metrics for performance monitoring
     #[allow(dead_code)]
-    metrics: Arc<std::sync::RwLock<CacheStats>>,
+    metrics: Arc<parking_lot::RwLock<CacheStats>>,
 }
 
 #[cfg(feature = "redis-cache")]
@@ -289,7 +289,7 @@ impl DistributedCache {
         Ok(Self {
             redis_client: Arc::new(client),
             default_ttl,
-            metrics: Arc::new(std::sync::RwLock::new(CacheStats::default())),
+            metrics: Arc::new(parking_lot::RwLock::new(CacheStats::default())),
         })
     }
 
@@ -322,25 +322,25 @@ impl Cache for DistributedCache {
                         Ok(Some(value)) => {
                             match serde_json::from_str(&value) {
                                 Ok(json_value) => {
-                                    let mut metrics = self.metrics.write().unwrap();
+                                    let mut metrics = self.metrics.write();
                                     metrics.hits += 1;
                                     Some(json_value)
                                 }
                                 Err(_) => {
-                                    let mut metrics = self.metrics.write().unwrap();
+                                    let mut metrics = self.metrics.write();
                                     metrics.misses += 1;
                                     None
                                 }
                             }
                         }
                         Ok(None) => {
-                            let mut metrics = self.metrics.write().unwrap();
+                            let mut metrics = self.metrics.write();
                             metrics.misses += 1;
                             None
                         }
                         Err(e) => {
                             warn!("Redis GET error: {}", e);
-                            let mut metrics = self.metrics.write().unwrap();
+                            let mut metrics = self.metrics.write();
                             metrics.misses += 1;
                             None
                         }
@@ -348,7 +348,7 @@ impl Cache for DistributedCache {
                 }
                 Err(e) => {
                     warn!("Failed to get Redis connection: {}", e);
-                    let mut metrics = self.metrics.write().unwrap();
+                    let mut metrics = self.metrics.write();
                     metrics.misses += 1;
                     None
                 }
@@ -384,7 +384,7 @@ impl Cache for DistributedCache {
                     
                     match result {
                         Ok(()) => {
-                            let mut metrics = self.metrics.write().unwrap();
+                            let mut metrics = self.metrics.write();
                             metrics.sets += 1;
                             Ok(())
                         }
@@ -418,7 +418,7 @@ impl Cache for DistributedCache {
                     
                     match result {
                         Ok(_) => {
-                            let mut metrics = self.metrics.write().unwrap();
+                            let mut metrics = self.metrics.write();
                             metrics.deletes += 1;
                             Ok(())
                         }
@@ -451,7 +451,7 @@ impl Cache for DistributedCache {
                     
                     match result {
                         Ok(()) => {
-                    let mut metrics = self.metrics.write().unwrap();
+                    let mut metrics = self.metrics.write();
                     metrics.sets += 1; // Using sets as a proxy for clears
                             Ok(())
                         }
@@ -488,7 +488,7 @@ pub struct MultiLayerCache {
     /// L3 cache (slowest, largest)
     l3_cache: Arc<dyn Cache>,
     /// Metrics for performance monitoring
-    metrics: Arc<std::sync::RwLock<CacheStats>>,
+    metrics: Arc<parking_lot::RwLock<CacheStats>>,
 }
 
 impl MultiLayerCache {
@@ -502,7 +502,7 @@ impl MultiLayerCache {
             l1_cache,
             l2_cache,
             l3_cache,
-            metrics: Arc::new(std::sync::RwLock::new(CacheStats::default())),
+            metrics: Arc::new(parking_lot::RwLock::new(CacheStats::default())),
         }
     }
 }
@@ -512,7 +512,7 @@ impl Cache for MultiLayerCache {
     fn get(&self, key: &str) -> Option<serde_json::Value> {
         // Try L1 cache first
         if let Some(value) = self.l1_cache.get(key) {
-            let mut metrics = self.metrics.write().unwrap();
+            let mut metrics = self.metrics.write();
             metrics.hits += 1;
             return Some(value);
         }
@@ -524,7 +524,7 @@ impl Cache for MultiLayerCache {
                 warn!("Failed to store in L1 cache: {}", e);
             }
             
-            let mut metrics = self.metrics.write().unwrap();
+            let mut metrics = self.metrics.write();
             metrics.hits += 1;
             return Some(value);
         }
@@ -539,13 +539,13 @@ impl Cache for MultiLayerCache {
                 warn!("Failed to store in L1 cache: {}", e);
             }
             
-            let mut metrics = self.metrics.write().unwrap();
+            let mut metrics = self.metrics.write();
             metrics.hits += 1;
             return Some(value);
         }
         
         // Cache miss
-        let mut metrics = self.metrics.write().unwrap();
+        let mut metrics = self.metrics.write();
         metrics.misses += 1;
         None
     }
@@ -562,7 +562,7 @@ impl Cache for MultiLayerCache {
             warn!("Failed to store in L3 cache: {}", e);
         }
         
-        let mut metrics = self.metrics.write().unwrap();
+        let mut metrics = self.metrics.write();
         metrics.sets += 1;
         
         Ok(())
@@ -580,7 +580,7 @@ impl Cache for MultiLayerCache {
             warn!("Failed to delete from L3 cache: {}", e);
         }
         
-        let mut metrics = self.metrics.write().unwrap();
+        let mut metrics = self.metrics.write();
         metrics.deletes += 1;
         
         Ok(())
@@ -598,7 +598,7 @@ impl Cache for MultiLayerCache {
             warn!("Failed to clear L3 cache: {}", e);
         }
         
-        let mut metrics = self.metrics.write().unwrap();
+        let mut metrics = self.metrics.write();
         metrics.sets = 0;
         metrics.hits = 0;
         metrics.misses = 0;

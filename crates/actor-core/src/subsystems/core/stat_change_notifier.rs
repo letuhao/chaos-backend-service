@@ -10,6 +10,7 @@ use tokio::sync::RwLock;
 use crate::types::Actor;
 use crate::ActorCoreResult;
 use serde::{Deserialize, Serialize};
+use tracing::error;
 
 /// Stat Change Notifier for smart resource recalculation
 pub struct StatChangeNotifier {
@@ -252,7 +253,7 @@ impl StatChangeNotifier {
                 for listener in stat_listeners {
                     if let Err(e) = listener.on_stat_change(event).await {
                         // Log error but continue with other listeners
-                        eprintln!("Error notifying listener {}: {}", listener.listener_id(), e);
+                        error!(listener_id = listener.listener_id(), error = %e, "Error notifying stat change listener");
                     }
                 }
             }

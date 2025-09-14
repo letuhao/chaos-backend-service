@@ -11,11 +11,11 @@ use serde::{Deserialize, Serialize};
 /// Real-time analytics collector.
 pub struct AnalyticsCollector {
     /// Metrics storage
-    metrics: Arc<std::sync::RwLock<HashMap<String, MetricValue>>>,
+    metrics: Arc<parking_lot::RwLock<HashMap<String, MetricValue>>>,
     /// Performance counters
-    counters: Arc<std::sync::RwLock<HashMap<String, u64>>>,
+    counters: Arc<parking_lot::RwLock<HashMap<String, u64>>>,
     /// Time series data
-    time_series: Arc<std::sync::RwLock<Vec<TimeSeriesPoint>>>,
+    time_series: Arc<parking_lot::RwLock<Vec<TimeSeriesPoint>>>,
     /// Configuration
     config: AnalyticsConfig,
 }
@@ -178,9 +178,9 @@ impl AnalyticsCollector {
     /// Create a new analytics collector.
     pub fn new(config: AnalyticsConfig) -> Self {
         Self {
-            metrics: Arc::new(std::sync::RwLock::new(HashMap::new())),
-            counters: Arc::new(std::sync::RwLock::new(HashMap::new())),
-            time_series: Arc::new(std::sync::RwLock::new(Vec::new())),
+            metrics: Arc::new(parking_lot::RwLock::new(HashMap::new())),
+            counters: Arc::new(parking_lot::RwLock::new(HashMap::new())),
+            time_series: Arc::new(parking_lot::RwLock::new(Vec::new())),
             config,
         }
     }
@@ -196,7 +196,7 @@ impl AnalyticsCollector {
             return;
         }
 
-        let mut metrics = self.metrics.write().unwrap();
+        let mut metrics = self.metrics.write();
         metrics.insert(name.to_string(), value);
     }
 
@@ -206,7 +206,7 @@ impl AnalyticsCollector {
             return;
         }
 
-        let mut counters = self.counters.write().unwrap();
+        let mut counters = self.counters.write();
         *counters.entry(name.to_string()).or_insert(0) += value;
     }
 
@@ -228,7 +228,7 @@ impl AnalyticsCollector {
             tags,
         };
 
-        let mut time_series = self.time_series.write().unwrap();
+        let mut time_series = self.time_series.write();
         time_series.push(point);
 
         // Keep only the most recent points
@@ -272,8 +272,8 @@ impl AnalyticsCollector {
 
     /// Get current performance metrics.
     pub fn get_performance_metrics(&self) -> PerformanceMetrics {
-        let metrics = self.metrics.read().unwrap();
-        let counters = self.counters.read().unwrap();
+        let metrics = self.metrics.read();
+        let counters = self.counters.read();
 
         PerformanceMetrics {
             system: SystemMetrics {
@@ -322,7 +322,7 @@ impl AnalyticsCollector {
 
     /// Get time series data for a specific metric.
     pub fn get_time_series(&self, metric: &str, start_time: Option<u64>, end_time: Option<u64>) -> Vec<TimeSeriesPoint> {
-        let time_series = self.time_series.read().unwrap();
+        let time_series = self.time_series.read();
         
         time_series
             .iter()
@@ -337,19 +337,19 @@ impl AnalyticsCollector {
 
     /// Get counter value.
     pub fn get_counter(&self, name: &str) -> u64 {
-        let counters = self.counters.read().unwrap();
+        let counters = self.counters.read();
         counters.get(name).copied().unwrap_or(0)
     }
 
     /// Reset all metrics.
     pub fn reset_metrics(&self) {
-        let mut metrics = self.metrics.write().unwrap();
+        let mut metrics = self.metrics.write();
         metrics.clear();
         
-        let mut counters = self.counters.write().unwrap();
+        let mut counters = self.counters.write();
         counters.clear();
         
-        let mut time_series = self.time_series.write().unwrap();
+        let mut time_series = self.time_series.write();
         time_series.clear();
     }
 

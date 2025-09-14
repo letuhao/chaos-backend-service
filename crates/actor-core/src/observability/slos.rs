@@ -505,12 +505,12 @@ pub struct ConsoleSLOViolationHandler;
 
 impl SLOViolationHandler for ConsoleSLOViolationHandler {
     fn handle_violation(&self, violation: &SLOViolation) -> ActorCoreResult<()> {
-        println!(
-            "🚨 SLO VIOLATION: {} - Current: {:.2}%, Target: {:.2}%, Error Budget: {:.2}%",
-            violation.slo_id,
-            violation.current_success_rate * 100.0,
-            violation.target_success_rate * 100.0,
-            violation.error_budget_remaining * 100.0
+        warn!(
+            slo_id = %violation.slo_id,
+            current_success_rate = violation.current_success_rate,
+            target_success_rate = violation.target_success_rate,
+            error_budget_remaining = violation.error_budget_remaining,
+            "SLO violation"
         );
         Ok(())
     }

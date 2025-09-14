@@ -9,6 +9,7 @@ use std::collections::HashMap;
 use crate::types::Actor;
 use crate::ActorCoreResult;
 use super::system_resource_manager::SystemResourceCalculator;
+use tracing::info;
 
 /// Convert string error to ActorCoreError
 fn to_actor_core_error(msg: String) -> crate::ActorCoreError {
@@ -310,7 +311,7 @@ impl SystemResourceCalculator for RpgResourceManager {
                 if definition.dependencies.contains(stat_id) {
                     // This stat change affects this resource
                     // In a real implementation, you'd trigger recalculation
-                    println!("RPG Resource {} affected by stat change: {}", resource_name, stat_id);
+                    info!(resource = %resource_name, stat = %stat_id, "RPG resource affected by stat change");
                 }
             }
         }

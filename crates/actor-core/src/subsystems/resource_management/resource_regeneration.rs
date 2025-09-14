@@ -11,6 +11,7 @@ use tokio::sync::RwLock;
 use crate::types::Actor;
 use crate::ActorCoreResult;
 use super::system_resource_manager::SystemResourceCalculator;
+use tracing::{info};
 
 /// Convert string error to ActorCoreError
 fn to_actor_core_error(msg: String) -> crate::ActorCoreError {
@@ -424,7 +425,7 @@ impl ResourceRegenerationManager {
     async fn update_actor_resource(&self, actor: &Actor, resource_name: &str, amount: f64) -> ActorCoreResult<()> {
         // This would update the actor's resource value
         // In practice, you'd call the appropriate system to update the resource
-        println!("Updating {} for actor {} by {}", resource_name, actor.id, amount);
+        info!(resource = %resource_name, actor_id = %actor.id, amount = amount, "Updating resource by amount");
         Ok(())
     }
     
@@ -487,7 +488,7 @@ impl SystemResourceCalculator for ResourceRegenerationManager {
                     if let RegenerationModifier::StatBased(stat_name, _) = modifier {
                         if stat_name == stat_id {
                             // This stat change affects regeneration for this resource
-                            println!("Regeneration for {} affected by stat change: {}", resource_name, stat_id);
+                            info!(resource = %resource_name, stat = %stat_id, "Regeneration affected by stat change");
                         }
                     }
                 }

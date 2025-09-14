@@ -12,6 +12,7 @@ use tokio::sync::RwLock;
 use crate::ActorCoreResult;
 use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
+use tracing::{info, warn, error};
 
 /// Resource Event Manager
 pub struct ResourceEventManager {
@@ -460,7 +461,7 @@ impl ResourceEventManager {
             for listener in event_listeners {
                 if let Err(e) = listener.handle_event(event).await {
                     // Log error but continue with other listeners
-                    eprintln!("Error notifying listener {}: {}", listener.listener_id(), e);
+                    error!(listener_id = listener.listener_id(), error = %e, "Error notifying listener");
                 }
             }
         }
@@ -521,7 +522,7 @@ impl DefaultResourceEventListener {
 impl ResourceEventListener for DefaultResourceEventListener {
     async fn handle_event(&self, event: &ResourceEvent) -> ActorCoreResult<()> {
         // Default implementation - just log the event
-        println!("Default listener {} handled event: {:?}", self.listener_id, event.event_type);
+        info!(listener_id = %self.listener_id, event_type = ?event.event_type, "Default listener handled event");
         Ok(())
     }
     
@@ -564,20 +565,19 @@ impl ResourceEventListener for ResourceChangeListener {
             ResourceEventType::ResourceChanged => {
                 // Update cache when resource changes
                 // This would be implemented to update the resource cache
-                println!("Resource {} changed for actor {}: {} -> {}", 
-                    event.resource_name, event.actor_id, event.old_value, event.new_value);
+                info!(resource = %event.resource_name, actor_id = %event.actor_id, old = event.old_value, new = event.new_value, "Resource changed");
             },
             ResourceEventType::ResourceDepleted => {
                 // Handle resource depletion
-                println!("Resource {} depleted for actor {}", event.resource_name, event.actor_id);
+                warn!(resource = %event.resource_name, actor_id = %event.actor_id, "Resource depleted");
             },
             ResourceEventType::ResourceFullyRestored => {
                 // Handle resource full restoration
-                println!("Resource {} fully restored for actor {}", event.resource_name, event.actor_id);
+                info!(resource = %event.resource_name, actor_id = %event.actor_id, "Resource fully restored");
             },
             _ => {
                 // Handle other event types
-                println!("Handling event type: {:?}", event.event_type);
+                info!(event_type = ?event.event_type, "Handling event type");
             }
         }
         

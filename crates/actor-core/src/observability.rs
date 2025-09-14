@@ -244,9 +244,9 @@ impl StandardMetrics {
 /// Centralized observability manager for actor-core components.
 pub struct ObservabilityManager {
     /// Global metrics
-    metrics: Arc<std::sync::RwLock<StandardMetrics>>,
+    metrics: Arc<parking_lot::RwLock<StandardMetrics>>,
     /// Component-specific metrics
-    component_metrics: Arc<std::sync::RwLock<HashMap<String, StandardMetrics>>>,
+    component_metrics: Arc<parking_lot::RwLock<HashMap<String, StandardMetrics>>>,
     /// Configuration
     config: ObservabilityConfig,
 }
@@ -282,20 +282,20 @@ impl ObservabilityManager {
     /// Create a new observability manager.
     pub fn new(config: ObservabilityConfig) -> Self {
         Self {
-            metrics: Arc::new(std::sync::RwLock::new(StandardMetrics::default())),
-            component_metrics: Arc::new(std::sync::RwLock::new(HashMap::new())),
+            metrics: Arc::new(parking_lot::RwLock::new(StandardMetrics::default())),
+            component_metrics: Arc::new(parking_lot::RwLock::new(HashMap::new())),
             config,
         }
     }
 
     /// Get global metrics.
     pub fn get_global_metrics(&self) -> StandardMetrics {
-        self.metrics.read().unwrap().clone()
+        self.metrics.read().clone()
     }
 
     /// Get component metrics.
     pub fn get_component_metrics(&self, component: &str) -> Option<StandardMetrics> {
-        self.component_metrics.read().unwrap().get(component).cloned()
+        self.component_metrics.read().get(component).cloned()
     }
 
     /// Record an operation for a specific component.
@@ -304,12 +304,12 @@ impl ObservabilityManager {
             return;
         }
 
-        let mut component_metrics = self.component_metrics.write().unwrap();
+        let mut component_metrics = self.component_metrics.write();
         let metrics = component_metrics.entry(component.to_string()).or_insert_with(StandardMetrics::default);
         metrics.record_operation(operation, duration_us);
         
         // Also update global metrics
-        let mut global_metrics = self.metrics.write().unwrap();
+        let mut global_metrics = self.metrics.write();
         global_metrics.record_operation(&format!("{}:{}", component, operation), duration_us);
     }
 
@@ -319,12 +319,12 @@ impl ObservabilityManager {
             return;
         }
 
-        let mut component_metrics = self.component_metrics.write().unwrap();
+        let mut component_metrics = self.component_metrics.write();
         let metrics = component_metrics.entry(component.to_string()).or_insert_with(StandardMetrics::default);
         metrics.record_cache_operation(operation, hit, duration_us);
         
         // Also update global metrics
-        let mut global_metrics = self.metrics.write().unwrap();
+        let mut global_metrics = self.metrics.write();
         global_metrics.record_cache_operation(operation, hit, duration_us);
     }
 
@@ -334,12 +334,12 @@ impl ObservabilityManager {
             return;
         }
 
-        let mut component_metrics = self.component_metrics.write().unwrap();
+        let mut component_metrics = self.component_metrics.write();
         let metrics = component_metrics.entry(subsystem_id.to_string()).or_insert_with(StandardMetrics::default);
         metrics.record_subsystem_execution(success, duration_us);
         
         // Also update global metrics
-        let mut global_metrics = self.metrics.write().unwrap();
+        let mut global_metrics = self.metrics.write();
         global_metrics.record_subsystem_execution(success, duration_us);
     }
 
@@ -349,12 +349,12 @@ impl ObservabilityManager {
             return;
         }
 
-        let mut component_metrics = self.component_metrics.write().unwrap();
+        let mut component_metrics = self.component_metrics.write();
         let metrics = component_metrics.entry(component.to_string()).or_insert_with(StandardMetrics::default);
         metrics.record_error(error_type);
         
         // Also update global metrics
-        let mut global_metrics = self.metrics.write().unwrap();
+        let mut global_metrics = self.metrics.write();
         global_metrics.record_error(&format!("{}:{}", component, error_type));
     }
 }
