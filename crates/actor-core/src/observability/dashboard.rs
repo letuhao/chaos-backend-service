@@ -24,7 +24,7 @@ pub struct ObservabilityDashboard {
     /// Dashboard configuration
     config: DashboardConfig,
     /// Last dashboard update time
-    last_update: SystemTime,
+    _last_update: SystemTime,
 }
 
 /// Dashboard configuration.
@@ -156,7 +156,7 @@ impl ObservabilityDashboard {
             slo_manager,
             metrics_collector,
             config,
-            last_update: SystemTime::now(),
+            _last_update: SystemTime::now(),
         }
     }
 

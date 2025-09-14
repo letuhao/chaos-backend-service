@@ -5,7 +5,6 @@
 
 use std::collections::HashMap;
 use serde_json::Value;
-use tracing::{warn, error, debug};
 
 use crate::types::*;
 use crate::enums::*;
@@ -113,6 +112,15 @@ impl ValidationResult {
     /// Add a warning to the validation result.
     pub fn add_warning(&mut self, warning: ValidationWarning) {
         self.warnings.push(warning);
+    }
+
+    /// Merge another validation result into this one.
+    pub fn merge(&mut self, other: ValidationResult) {
+        self.errors.extend(other.errors);
+        self.warnings.extend(other.warnings);
+        if !other.is_valid {
+            self.is_valid = false;
+        }
     }
 
     /// Check if there are any errors.
@@ -367,13 +375,11 @@ impl Validator {
         }
 
         // Validate data
-        if let Some(data) = &actor.data {
-            self.validate_actor_data(data, &mut result);
-        }
+        self.validate_actor_data(&actor.data, &mut result);
 
         // Validate subsystems
         for (i, subsystem) in actor.subsystems.iter().enumerate() {
-            self.validate_subsystem_meta(subsystem, &format!("subsystems[{}]", i), &mut result);
+            self.validate_subsystem(subsystem, &format!("subsystems[{}]", i), &mut result);
         }
 
         result
@@ -393,7 +399,7 @@ impl Validator {
         }
 
         // Validate version
-        if snapshot.version < 0 {
+        if snapshot.version < 1 {
             result.add_error(ValidationError::with_field(
                 "INVALID_VERSION",
                 "Snapshot version must be non-negative",
@@ -416,7 +422,8 @@ impl Validator {
         // Validate caps
         for (dimension, caps) in &snapshot.caps_used {
             self.validate_dimension(dimension, &format!("caps_used.{}", dimension), &mut result);
-            self.validate_caps(caps, &format!("caps_used.{}", dimension), &mut result);
+            let caps_result = self.validate_caps(caps, &format!("caps_used.{}", dimension));
+            result.merge(caps_result);
         }
 
         result
@@ -427,36 +434,30 @@ impl Validator {
         let mut result = ValidationResult::new();
 
         // Validate min cap
-        if let Some(min) = caps.min {
-            if !min.is_finite() {
-                result.add_error(ValidationError::with_field(
-                    "INVALID_MIN_CAP",
-                    "Min cap must be finite",
-                    &format!("{}.min", field_name),
-                ));
-            }
+        if !caps.min.is_finite() {
+            result.add_error(ValidationError::with_field(
+                "INVALID_MIN_CAP",
+                "Min cap must be finite",
+                &format!("{}.min", field_name),
+            ));
         }
 
         // Validate max cap
-        if let Some(max) = caps.max {
-            if !max.is_finite() {
-                result.add_error(ValidationError::with_field(
-                    "INVALID_MAX_CAP",
-                    "Max cap must be finite",
-                    &format!("{}.max", field_name),
-                ));
-            }
+        if !caps.max.is_finite() {
+            result.add_error(ValidationError::with_field(
+                "INVALID_MAX_CAP",
+                "Max cap must be finite",
+                &format!("{}.max", field_name),
+            ));
         }
 
         // Validate min <= max
-        if let (Some(min), Some(max)) = (caps.min, caps.max) {
-            if min > max {
-                result.add_error(ValidationError::with_field(
-                    "INVALID_CAP_RANGE",
-                    "Min cap cannot be greater than max cap",
-                    field_name,
-                ));
-            }
+        if caps.min > caps.max {
+            result.add_error(ValidationError::with_field(
+                "INVALID_CAP_RANGE",
+                "Min cap cannot be greater than max cap",
+                field_name,
+            ));
         }
 
         result
@@ -666,7 +667,7 @@ impl Validator {
         }
     }
 
-    fn validate_bucket(&self, bucket: Bucket, result: &mut ValidationResult) {
+    fn validate_bucket(&self, bucket: Bucket, _result: &mut ValidationResult) {
         // Bucket validation is currently just a placeholder
         // In the future, we might want to validate against allowed buckets
         match bucket {
@@ -690,7 +691,7 @@ impl Validator {
         }
     }
 
-    fn validate_cap_mode(&self, mode: CapMode, result: &mut ValidationResult) {
+    fn validate_cap_mode(&self, mode: CapMode, _result: &mut ValidationResult) {
         // CapMode validation is currently just a placeholder
         // All enum variants are considered valid
         match mode {
@@ -771,12 +772,30 @@ impl Validator {
         }
     }
 
+    fn validate_subsystem(&self, subsystem: &Subsystem, field_name: &str, result: &mut ValidationResult) {
+        self.validate_system(&subsystem.system_id, &format!("{}.system_id", field_name), result);
+        
+        // Validate data if present
+        if !subsystem.data.is_empty() {
+            for (key, _value) in &subsystem.data {
+                if key.is_empty() {
+                    result.add_error(ValidationError::with_field(
+                        "EMPTY_SUBSYSTEM_DATA_KEY",
+                        "Subsystem data key cannot be empty",
+                        &format!("{}.data.{}", field_name, key),
+                    ));
+                }
+            }
+        }
+    }
+
+    #[allow(dead_code)]
     fn validate_subsystem_meta(&self, meta: &SubsystemMeta, field_name: &str, result: &mut ValidationResult) {
         self.validate_system(&meta.system, &format!("{}.system", field_name), result);
         
         // Validate data if present
-        if let Some(data) = &meta.data {
-            for (key, value) in data {
+        if !meta.data.is_empty() {
+            for (key, _value) in &meta.data {
                 if key.is_empty() {
                     result.add_error(ValidationError::with_field(
                         "EMPTY_SUBSYSTEM_DATA_KEY",
@@ -829,7 +848,7 @@ pub mod validators {
         let validator = Validator::new();
 
         for (i, contribution) in contributions.iter().enumerate() {
-            let mut contrib_result = validator.validate_contribution(contribution);
+            let contrib_result = validator.validate_contribution(contribution);
             if !contrib_result.is_valid {
                 for error in contrib_result.errors {
                     result.add_error(ValidationError::with_context(
@@ -852,7 +871,7 @@ pub mod validators {
         let validator = Validator::new();
 
         for (i, cap_contrib) in cap_contribs.iter().enumerate() {
-            let mut contrib_result = validator.validate_cap_contribution(cap_contrib);
+            let contrib_result = validator.validate_cap_contribution(cap_contrib);
             if !contrib_result.is_valid {
                 for error in contrib_result.errors {
                     result.add_error(ValidationError::with_context(

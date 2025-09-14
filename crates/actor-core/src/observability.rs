@@ -15,9 +15,8 @@ pub use dashboard::{ObservabilityDashboard, DashboardConfig, DashboardStatus, Sy
 
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use serde::{Deserialize, Serialize};
-use tracing::{info, warn, error, debug, instrument, Level};
 
 /// Standardized tracing fields for consistent logging across components.
 pub mod tracing_fields {

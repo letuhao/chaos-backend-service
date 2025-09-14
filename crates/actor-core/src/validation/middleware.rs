@@ -60,6 +60,8 @@ impl<T> ValidationMiddleware<T> {
     }
 
     /// Validate and record statistics.
+    #[allow(dead_code)]
+    #[allow(dead_code)]
     async fn validate_with_stats<F>(&self, validate_fn: F) -> ValidationResult
     where
         F: FnOnce(&Validator) -> ValidationResult,
@@ -121,6 +123,7 @@ impl AggregatorValidationMiddleware {
     }
 
     /// Validate and record statistics.
+    #[allow(dead_code)]
     async fn validate_with_stats<F>(&self, validate_fn: F) -> ValidationResult
     where
         F: FnOnce(&Validator) -> ValidationResult,
@@ -320,6 +323,7 @@ impl CacheValidationMiddleware {
     }
 
     /// Validate and record statistics.
+    #[allow(dead_code)]
     async fn validate_with_stats<F>(&self, validate_fn: F) -> ValidationResult
     where
         F: FnOnce(&Validator) -> ValidationResult,
@@ -458,6 +462,7 @@ impl RegistryValidationMiddleware {
     }
 
     /// Validate and record statistics.
+    #[allow(dead_code)]
     async fn validate_with_stats<F>(&self, validate_fn: F) -> ValidationResult
     where
         F: FnOnce(&Validator) -> ValidationResult,

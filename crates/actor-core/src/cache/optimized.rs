@@ -81,6 +81,7 @@ impl OptimizedL1Cache {
     }
     
     /// Evict expired entries with optimized cleanup.
+    #[allow(dead_code)]
     async fn cleanup_expired(&self) {
         let mut storage = self.storage.write().await;
         let mut expired_keys = Vec::new();
@@ -313,14 +314,14 @@ impl CacheWarmer {
 /// High-performance cache key generator with optimized hashing.
 pub struct OptimizedKeyGenerator {
     /// Hash state for incremental hashing
-    hasher: Arc<RwLock<fxhash::FxHasher>>,
+    _hasher: Arc<RwLock<fxhash::FxHasher>>,
 }
 
 impl OptimizedKeyGenerator {
     /// Create a new key generator.
     pub fn new() -> Self {
         Self {
-            hasher: Arc::new(RwLock::new(fxhash::FxHasher::default())),
+            _hasher: Arc::new(RwLock::new(fxhash::FxHasher::default())),
         }
     }
     

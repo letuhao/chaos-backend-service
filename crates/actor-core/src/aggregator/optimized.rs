@@ -24,9 +24,9 @@ pub struct OptimizedAggregator {
     /// Registry for managing subsystems
     subsystem_registry: Arc<dyn PluginRegistry>,
     /// Registry for merge rules and operators
-    combiner_registry: Arc<dyn CombinerRegistry>,
+    _combiner_registry: Arc<dyn CombinerRegistry>,
     /// Provider for cap calculations
-    caps_provider: Arc<dyn crate::interfaces::CapsProvider>,
+    _caps_provider: Arc<dyn crate::interfaces::CapsProvider>,
     /// Cache for storing snapshots
     cache: Arc<dyn Cache>,
     /// Metrics for performance monitoring
@@ -47,8 +47,8 @@ impl OptimizedAggregator {
     ) -> Self {
         Self {
             subsystem_registry,
-            combiner_registry,
-            caps_provider,
+            _combiner_registry: combiner_registry,
+            _caps_provider: caps_provider,
             cache,
             metrics: Arc::new(RwLock::new(AggregatorMetrics::default())),
             atomic_metrics: Arc::new(crate::bucket_processor::optimized::AtomicMetrics::new()),

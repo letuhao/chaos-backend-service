@@ -7,13 +7,11 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use parking_lot::RwLock;
-use tracing::{warn, error, debug};
+use tracing::debug;
 
-use smallvec::{SmallVec, smallvec};
 use fxhash::FxHashMap;
-use ahash::AHashMap;
 
-use crate::interfaces::{PluginRegistry, CombinerRegistry, Subsystem, MergeRule};
+use crate::interfaces::{Subsystem, MergeRule};
 use crate::enums::Operator;
 use crate::types::*;
 use crate::ActorCoreResult;
@@ -22,8 +20,8 @@ use crate::ActorCoreResult;
 pub struct OptimizedPluginRegistry {
     /// Subsystems indexed by system ID using FxHash for faster lookups
     subsystems: Arc<RwLock<FxHashMap<String, Arc<dyn Subsystem>>>>,
-    /// Actor-to-subsystem mappings using SmallVec for small collections
-    actor_subsystems: Arc<RwLock<FxHashMap<String, SmallVec<[String; 8]>>>>,
+    /// Actor-to-subsystem mappings using Vec for collections
+    actor_subsystems: Arc<RwLock<FxHashMap<String, Vec<String>>>>,
     /// Subsystem metadata cache
     metadata_cache: Arc<RwLock<FxHashMap<String, SubsystemMeta>>>,
     /// Statistics with atomic operations
@@ -94,14 +92,14 @@ impl OptimizedPluginRegistry {
         // Store in optimized hash map
         {
             let mut subsystems = self.subsystems.write();
-            subsystems.insert(system_id.clone(), subsystem.clone());
+            subsystems.insert(system_id.to_string(), subsystem.clone());
         }
         
         // Cache metadata
         {
             let mut metadata_cache = self.metadata_cache.write();
-            metadata_cache.insert(system_id.clone(), SubsystemMeta {
-                system: system_id.clone(),
+            metadata_cache.insert(system_id.to_string(), SubsystemMeta {
+                system: system_id.to_string(),
                 data: HashMap::new(),
             });
         }
@@ -117,7 +115,7 @@ impl OptimizedPluginRegistry {
         // Check cache first
         {
             let actor_subsystems = self.actor_subsystems.read();
-            if let Some(subsystem_ids) = actor_subsystems.get(actor_id) {
+            if let Some(subsystem_ids) = actor_subsystems.get(&actor_id.to_string()) {
                 self.stats.record_lookup(true);
                 
                 // Build result vector with pre-allocated capacity
@@ -142,7 +140,7 @@ impl OptimizedPluginRegistry {
         // Cache the result
         {
             let mut actor_subsystems = self.actor_subsystems.write();
-            actor_subsystems.insert(actor_id.clone(), subsystem_ids.clone());
+            actor_subsystems.insert(actor_id.to_string(), subsystem_ids.clone());
         }
         
         // Build and return result
@@ -159,11 +157,11 @@ impl OptimizedPluginRegistry {
     }
     
     /// Determine which subsystems apply to an actor (simplified implementation).
-    async fn determine_subsystems_for_actor(&self, actor: &Actor) -> ActorCoreResult<SmallVec<[String; 8]>> {
+    async fn determine_subsystems_for_actor(&self, _actor: &Actor) -> ActorCoreResult<Vec<String>> {
         // Simplified logic: return all registered subsystems
         // In a real implementation, this would use actor properties to determine relevant subsystems
         let subsystems = self.subsystems.read();
-        let mut result = SmallVec::new();
+        let mut result = Vec::new();
         
         for (system_id, _) in subsystems.iter() {
             result.push(system_id.clone());
@@ -183,17 +181,16 @@ impl OptimizedPluginRegistry {
         let cleanup_interval = Duration::from_secs(300); // 5 minutes
         
         let last_cleanup = self.stats.last_cleanup.load(std::sync::atomic::Ordering::Relaxed);
-        let last_cleanup_time = Instant::from_std(
-            std::time::UNIX_EPOCH + Duration::from_secs(last_cleanup)
-        ).unwrap_or(now);
+        let _last_cleanup_time = std::time::UNIX_EPOCH + Duration::from_secs(last_cleanup);
+        let last_cleanup_instant = now - Duration::from_secs(now.elapsed().as_secs().saturating_sub(last_cleanup));
         
-        if now.duration_since(last_cleanup_time) < cleanup_interval {
+        if now.duration_since(last_cleanup_instant) < cleanup_interval {
             return; // Too soon for cleanup
         }
         
         // Update last cleanup time
         self.stats.last_cleanup.store(
-            now.duration_since(std::time::UNIX_EPOCH).as_secs(),
+            now.elapsed().as_secs(),
             std::sync::atomic::Ordering::Relaxed
         );
         
@@ -241,10 +238,10 @@ impl OptimizedCombinerRegistry {
         let rules = self.merge_rules.read();
         if let Some(rule) = rules.get(key) {
             self.stats.record_lookup(true);
-            *rule
+            rule.clone()
         } else {
             self.stats.record_lookup(false);
-            self.default_rule
+            self.default_rule.clone()
         }
     }
     

@@ -100,6 +100,7 @@ impl LockFreeL1Cache {
     }
 
     /// Update statistics after an operation.
+    #[allow(dead_code)]
     async fn update_stats(&self, hit: bool, response_time: Duration) {
         let mut stats = self.stats.write().await;
         stats.update_operation(hit, response_time);

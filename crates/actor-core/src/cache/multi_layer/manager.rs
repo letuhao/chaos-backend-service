@@ -189,6 +189,7 @@ impl MultiLayerCacheManager {
     }
 
     /// Get a value from the cache hierarchy.
+    #[allow(dead_code)]
     async fn get_hierarchical(&self, key: &str) -> ActorCoreResult<Option<serde_json::Value>> {
         let start_time = Instant::now();
 
@@ -249,6 +250,7 @@ impl MultiLayerCacheManager {
     }
 
     /// Set a value in the cache hierarchy.
+    #[allow(dead_code)]
     async fn set_hierarchical(
         &self,
         key: String,
@@ -280,6 +282,7 @@ impl MultiLayerCacheManager {
     }
 
     /// Delete a value from all cache layers.
+    #[allow(dead_code)]
     async fn delete_hierarchical(&self, key: &str) -> ActorCoreResult<()> {
         let start_time = Instant::now();
 

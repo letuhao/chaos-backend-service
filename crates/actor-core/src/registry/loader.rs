@@ -10,7 +10,7 @@ use thiserror::Error;
 use serde::{Deserialize, Serialize};
 
 use crate::interfaces::{CapLayerRegistry, CombinerRegistry, MergeRule};
-use crate::enums::{AcrossLayerPolicy, Bucket, CapMode};
+use crate::enums::{AcrossLayerPolicy, CapMode};
 use crate::types::Caps;
 use crate::ActorCoreResult;
 

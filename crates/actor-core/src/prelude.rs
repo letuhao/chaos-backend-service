@@ -211,14 +211,15 @@ pub async fn quick_setup() -> ActorCoreResult<(Arc<dyn Aggregator>, Arc<dyn Cach
     let cache = ServiceFactory::create_cache()?;
     let plugin_registry = ServiceFactory::create_plugin_registry();
     let combiner_registry = ServiceFactory::create_combiner_registry();
-    let caps_provider = ServiceFactory::create_caps_provider();
+    let cap_layers = ServiceFactory::create_cap_layer_registry();
+    let caps_provider = ServiceFactory::create_caps_provider(cap_layers);
     
     let aggregator = ServiceFactory::create_aggregator(
         plugin_registry,
         combiner_registry,
         caps_provider,
         cache.clone(),
-    )?;
+    );
     
     Ok((aggregator, cache))
 }
@@ -279,8 +280,8 @@ pub fn create_basic_contribution(dimension: &str, value: f64, system: &str) -> C
 /// ```
 pub fn create_basic_caps(min: f64, max: f64) -> Caps {
     Caps {
-        min: Some(min),
-        max: Some(max),
+        min: min,
+        max: max,
     }
 }
 
@@ -385,7 +386,7 @@ pub fn get_build_info() -> BuildInfo {
     BuildInfo {
         version: VERSION.to_string(),
         msrv: MSRV.to_string(),
-        features: AVAILABLE_FEATURES.to_vec(),
+        features: AVAILABLE_FEATURES.iter().map(|s| s.to_string()).collect(),
         build_target: std::env::consts::ARCH.to_string(),
         build_os: std::env::consts::OS.to_string(),
     }

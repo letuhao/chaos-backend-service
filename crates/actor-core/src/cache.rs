@@ -658,10 +658,10 @@ impl CacheFactory {
     pub fn create_default_multi_layer_cache() -> Arc<dyn Cache> {
         let l1 = Self::create_lock_free_in_memory_cache(50_000, 300);
         let l2 = Self::create_in_memory_cache(200_000, 600);
-        let l3 = if let Ok(url) = std::env::var("ACTOR_CORE_REDIS_URL") {
+        let l3 = if let Ok(_url) = std::env::var("ACTOR_CORE_REDIS_URL") {
             #[cfg(feature = "redis-cache")]
             {
-                if let Ok(redis_cache) = Self::create_distributed_cache(&url, 1800) {
+                if let Ok(redis_cache) = Self::create_distributed_cache(&_url, 1800) {
                     redis_cache
                 } else {
                     Self::create_in_memory_cache(500_000, 1800)

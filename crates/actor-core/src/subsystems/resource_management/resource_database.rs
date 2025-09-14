@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 use crate::ActorCoreResult;
 
 /// Convert string error to ActorCoreError
+#[allow(dead_code)]
 fn to_actor_core_error(msg: String) -> crate::ActorCoreError {
     crate::ActorCoreError::SubsystemError(msg)
 }
