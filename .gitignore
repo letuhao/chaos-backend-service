@@ -117,3 +117,5 @@ k8s/*.secret.*
 *.rar
 *.7z
 coverage*/
+
+.env

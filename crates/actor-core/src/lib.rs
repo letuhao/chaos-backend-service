@@ -195,6 +195,7 @@ pub mod caps_provider;
 pub mod registry;
 #[doc(hidden)]
 pub mod cache;
+pub mod config;
 #[doc(hidden)]
 pub mod constants;
 #[doc(hidden)]

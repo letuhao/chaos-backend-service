@@ -474,7 +474,7 @@ impl Cache for DistributedCache {
     }
 
     fn get_stats(&self) -> CacheStats {
-        let metrics = self.metrics.read().unwrap();
+        let metrics = self.metrics.read();
         metrics.clone()
     }
 }

@@ -142,7 +142,7 @@ mod tests {
     #[cfg(feature = "redis-cache")]
     #[test]
     fn test_distributed_cache_creation_invalid_url() {
-        use crate::cache::DistributedCache;
+        use actor_core::cache::DistributedCache;
         let result = DistributedCache::new("invalid://url", 60);
         assert!(result.is_err());
     }
@@ -150,7 +150,7 @@ mod tests {
     #[cfg(feature = "redis-cache")]
     #[test]
     fn test_distributed_cache_creation_valid_url() {
-        use crate::cache::DistributedCache;
+        use actor_core::cache::DistributedCache;
         // This will fail in test environment but tests the code path
         let result = DistributedCache::new("redis://localhost:6379", 60);
         // We expect this to fail in test environment, but it tests the creation logic

@@ -26,6 +26,7 @@ members = [
     "tools/load-test",
     # "tools/data-gen",
     # "tools/admin-cli",
+    
 ]
 
 [workspace.package]

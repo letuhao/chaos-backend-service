@@ -9,7 +9,7 @@ description = "Character stat aggregation and management system for Chaos World 
 rust-version = "1.89"
 
 [features]
-default = []
+default = ["redis-cache"]
 extra_buckets = []
 
 # Heavy dependency features
@@ -60,6 +60,7 @@ seahash = "4.1"
 num_cpus = "1.16"
 rand = "0.8"
 serde_yaml = "0.9"
+toml = "0.8"
 
 # Micro-optimizations
 smallvec = "1.11"
@@ -69,7 +70,7 @@ rustc-hash = "1.1"
 
 # CLI
 clap = { version = "4", features = ["derive"], optional = true }
-tracing-subscriber = { version = "0.3", optional = true }
+tracing-subscriber = { version = "0.3", features = ["env-filter"], optional = true }
 
 [dev-dependencies]
 tokio = { workspace = true }
