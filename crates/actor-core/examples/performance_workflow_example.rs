@@ -4,20 +4,22 @@
 //! to monitor and optimize Actor Core performance.
 
 use actor_core::performance::*;
-use actor_core::service_factory::*;
 use std::time::Duration;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Initialize logging
+    #[cfg(feature = "cli-tools")]
     tracing_subscriber::fmt::init();
 
     println!("Performance Workflow Example");
     println!("===========================");
 
     // Create performance configuration
-    let config = PerformanceConfig::default();
+    let config = PerfConfig::default();
     println!("✅ Loaded performance configuration");
+    println!("   General config: {:?}", config.general);
+    println!("   Cache config: {:?}", config.cache);
 
     // Create performance workflow
     let workflow = PerformanceWorkflow::new(WorkflowConfig {

@@ -1,8 +1,4 @@
-use actor_core::interfaces::{Aggregator, Cache, CapLayerRegistry, CombinerRegistry, MergeRule, PluginRegistry};
-use actor_core::interfaces::{CombinerRegistryAsync};
-use actor_core::{RegistryFactory, CacheFactory, ServiceFactory};
-use actor_core::types::*;
-use actor_core::enums::Operator;
+use actor_core::prelude::*;
 use async_trait::async_trait;
 use std::sync::Arc;
 

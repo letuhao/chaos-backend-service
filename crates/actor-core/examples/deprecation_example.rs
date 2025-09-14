@@ -5,8 +5,7 @@
 //! rollback procedures.
 
 use actor_core::prelude::*;
-use std::collections::HashMap;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime};
 
 #[tokio::main]
 async fn main() -> ActorCoreResult<()> {

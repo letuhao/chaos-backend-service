@@ -3,8 +3,7 @@
 //! This module contains tests for the core aggregation logic including
 //! actor operations, contribution aggregation, and snapshot generation.
 
-use crate::types::{Actor, Subsystem as SubsystemStruct, Contribution, Caps, Snapshot};
-use crate::enums::{Bucket, CapMode};
+use actor_core::prelude::*;
 
 #[cfg(test)]
 mod tests {

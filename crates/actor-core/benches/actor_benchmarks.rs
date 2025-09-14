@@ -4,11 +4,11 @@
 //! measuring performance of core operations, aggregation, and scaling.
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId, Throughput};
-use actor_core::types::*;
-use actor_core::services::{AggregatorImpl, CapsProviderImpl};
+use actor_core::prelude::*;
+use actor_core::aggregator::AggregatorImpl;
+use actor_core::caps_provider::CapsProviderImpl;
 use actor_core::registry::{PluginRegistryImpl, CapLayerRegistryImpl, CombinerRegistryImpl};
-use actor_core::interfaces::{PluginRegistry, Cache};
-use actor_core::{InMemoryCache, ActorCoreResult};
+use actor_core::cache::InMemoryCache;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
@@ -218,7 +218,7 @@ pub fn bench_aggregation_performance(c: &mut Criterion) {
                         format!("subsystem_{}", i),
                         Duration::from_millis(1) // 1ms processing time
                     );
-                    registry.register(Box::new(subsystem)).unwrap();
+                    registry.register(Arc::new(subsystem)).unwrap();
                 }
                 
                 let cap_layer_registry = Arc::new(CapLayerRegistryImpl::new());
@@ -234,7 +234,7 @@ pub fn bench_aggregation_performance(c: &mut Criterion) {
                 // Create test actor
                 let mut actor = Actor::new("TestActor".to_string(), "Human".to_string());
                 for i in 0..subsystem_count {
-                    let subsystem = Subsystem::new(format!("subsystem_{}", i), 100);
+                    let subsystem = actor_core::types::Subsystem::new(format!("subsystem_{}", i), 100);
                     actor.add_subsystem(subsystem);
                 }
                 
@@ -313,7 +313,7 @@ pub fn bench_memory_usage(c: &mut Criterion) {
                 
                 // Add many subsystems
                 for i in 0..(size / 100) {
-                    let subsystem = Subsystem::new(format!("subsystem_{}", i), 100);
+                    let subsystem = actor_core::types::Subsystem::new(format!("subsystem_{}", i), 100);
                     actor.add_subsystem(subsystem);
                 }
                 

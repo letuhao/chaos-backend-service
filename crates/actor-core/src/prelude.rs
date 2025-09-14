@@ -33,6 +33,7 @@ pub use crate::types::{
     ModifierPack,
     EffectiveCaps,
     SubsystemMeta,
+    Subsystem as SubsystemStruct,
 };
 
 // Enums - the behavioral definitions
@@ -54,6 +55,40 @@ pub use crate::interfaces::{
     Cache,
     CombinerRegistryAsync,
     CapLayerRegistryAsync,
+    MergeRule,
+};
+
+// Registry implementations
+pub use crate::registry::{
+    PluginRegistryImpl,
+    CombinerRegistryImpl,
+    CapLayerRegistryImpl,
+    RegistryFactory,
+};
+
+// Registry loader functions
+pub use crate::registry::loader::{
+    load_cap_layers,
+    load_combiner,
+    load_all,
+};
+
+// Service implementations
+pub use crate::aggregator::AggregatorImpl;
+pub use crate::caps_provider::CapsProviderImpl;
+
+// Cache implementations
+pub use crate::cache::{
+    InMemoryCache,
+    LockFreeInMemoryCache,
+    MultiLayerCache,
+    CacheFactory,
+};
+
+// Bucket processor utilities
+pub use crate::bucket_processor::{
+    process_contributions_in_order,
+    get_bucket_processing_order,
 };
 
 // Error handling
@@ -71,6 +106,7 @@ pub use crate::validation::{
     ValidationWarning,
     validators,
     ValidationMiddlewareFactory,
+    validate_contributions,
 };
 
 // Deprecation management
@@ -111,6 +147,11 @@ pub use crate::service_factory::{
     ServiceFactory,
 };
 
+// Production readiness
+pub use crate::production::{
+    check_readiness,
+};
+
 // Observability and performance monitoring
 pub use crate::observability::{
     ObservabilityManager,
@@ -122,6 +163,9 @@ pub use crate::observability::{
     SLOMetricType,
     SLOSeverity,
     SLOViolation,
+    SLOViolationHandler,
+    ConsoleSLOViolationHandler,
+    StandardMetrics,
     default_slos,
     MetricsCollector,
     MetricsSnapshot,
@@ -147,6 +191,30 @@ pub use crate::metrics::{
     AggregatorMetrics,
     CapStatistics,
     CacheStats,
+};
+
+// Subsystems
+pub use crate::subsystems::{
+    ResourceManagerSubsystem,
+    EnhancedHybridResourceManager,
+    InMemoryResourceDatabase,
+    SystemResourceCalculator,
+    JindanSystemResourceCalculator,
+    RpgSystemResourceCalculator,
+    MagicSystemResourceCalculator,
+    ResourceCache,
+    CacheConfig,
+    CacheStats as ResourceCacheStats,
+    RpgResourceManager,
+    RpgResourceCategory,
+    RpgResourceEvent,
+    MagicResourceManager,
+    MagicResourceCategory,
+    MagicSchool,
+    MagicResourceEvent,
+    ResourceRegenerationManager,
+    RegenerationConfig,
+    RegenerationStats,
 };
 
 // Constants for common values
@@ -406,3 +474,11 @@ pub struct BuildInfo {
     /// Build operating system
     pub build_os: String,
 }
+
+// Re-export observability macros from crate root
+pub use crate::{
+    trace_operation,
+    trace_with_timing,
+    trace_cache_operation,
+    trace_error,
+};

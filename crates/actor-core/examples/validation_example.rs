@@ -109,7 +109,7 @@ async fn main() -> ActorCoreResult<()> {
 
     // Example 7: Invalid Actor (empty race)
     println!("\n7. Validating actor with empty race:");
-    let mut invalid_actor = Actor::new("player1".to_string(), "".to_string()); // Empty race!
+    let invalid_actor = Actor::new("player1".to_string(), "".to_string()); // Empty race!
     let result = validate_actor(&invalid_actor);
     
     if result.is_valid {
@@ -201,10 +201,20 @@ async fn main() -> ActorCoreResult<()> {
     println!("\n12. Using validation middleware:");
     let validator = Arc::new(Validator::new());
     
-    // Create a mock aggregator and wrap it with validation middleware
-    let mock_aggregator = Arc::new(crate::production::MockAggregator::new());
+    // Create a real aggregator and wrap it with validation middleware
+    let cache = ServiceFactory::create_cache()?;
+    let plugin_registry = ServiceFactory::create_plugin_registry();
+    let combiner_registry = ServiceFactory::create_combiner_registry();
+    let cap_layers = ServiceFactory::create_cap_layer_registry();
+    let caps_provider = ServiceFactory::create_caps_provider(cap_layers);
+    let aggregator = ServiceFactory::create_aggregator(
+        plugin_registry,
+        combiner_registry,
+        caps_provider,
+        cache,
+    );
     let validated_aggregator = ValidationMiddlewareFactory::create_validated_aggregator(
-        mock_aggregator,
+        aggregator,
         validator,
     );
     

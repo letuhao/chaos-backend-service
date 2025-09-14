@@ -3,9 +3,27 @@
 //! This module contains basic benchmarks that work with the current API.
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId, Throughput};
-use actor_core::types::*;
-use actor_core::bucket_processor::*;
+use actor_core::prelude::*;
 use std::collections::HashMap;
+
+/// Validate contributions (placeholder implementation)
+fn validate_contributions(contributions: &[Contribution]) -> bool {
+    contributions.iter().all(|c| c.value.is_finite() && !c.dimension.is_empty())
+}
+
+/// Process contributions in order (placeholder implementation)
+fn process_contributions_in_order(contributions: Vec<Contribution>, base_value: f64, _cap: Option<f64>) -> f64 {
+    let mut result = base_value;
+    for contribution in contributions {
+        match contribution.bucket {
+            Bucket::Flat => result += contribution.value,
+            Bucket::Mult => result *= contribution.value,
+            Bucket::PostAdd => result += contribution.value,
+            Bucket::Override => result = contribution.value,
+        }
+    }
+    result
+}
 
 /// Benchmark actor creation
 fn bench_actor_creation(c: &mut Criterion) {

@@ -261,8 +261,16 @@ jobs:
         sudo apt-get install -y pkg-config libssl-dev
     
     - name: Publish to crates.io
-      run: cargo publish -p actor-core --token ${{ secrets.CRATES_IO_TOKEN }}
+      run: |
+        if [ -z "$CRATES_IO_TOKEN" ]; then
+          echo "Error: CRATES_IO_TOKEN secret is not configured in repository settings"
+          echo "Please add the CRATES_IO_TOKEN secret to your repository settings"
+          exit 1
+        fi
+        cargo publish -p actor-core
       env:
+        # Note: CRATES_IO_TOKEN secret must be configured in repository settings
+        CRATES_IO_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
         CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
 
   # Post-release tasks

@@ -3,9 +3,7 @@
 //! This module contains tests for production readiness checks and validation
 //! of system components before deployment.
 
-use crate::production::{check_readiness};
-use crate::interfaces::{PluginRegistry, CombinerRegistry, CapsProvider, Cache};
-use crate::error::ActorCoreError;
+use actor_core::prelude::*;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
@@ -19,27 +17,27 @@ mod tests {
     }
 
     impl PluginRegistry for MockPluginRegistry {
-        fn register(&self, _subsystem: std::sync::Arc<dyn crate::interfaces::Subsystem>) -> crate::ActorCoreResult<()> {
+        fn register(&self, _subsystem: std::sync::Arc<dyn Subsystem>) -> ActorCoreResult<()> {
             if self.should_fail {
-                Err(crate::ActorCoreError::RegistryError("Plugin validation failed".to_string()))
+                Err(ActorCoreError::RegistryError("Plugin validation failed".to_string()))
             } else {
                 Ok(())
             }
         }
 
-        fn unregister(&self, _system_id: &str) -> crate::ActorCoreResult<()> {
+        fn unregister(&self, _system_id: &str) -> ActorCoreResult<()> {
             Ok(())
         }
 
-        fn get_by_id(&self, _system_id: &str) -> Option<std::sync::Arc<dyn crate::interfaces::Subsystem>> {
+        fn get_by_id(&self, _system_id: &str) -> Option<std::sync::Arc<dyn Subsystem>> {
             None
         }
 
-        fn get_by_priority(&self) -> Vec<std::sync::Arc<dyn crate::interfaces::Subsystem>> {
+        fn get_by_priority(&self) -> Vec<std::sync::Arc<dyn Subsystem>> {
             vec![]
         }
 
-        fn get_by_priority_range(&self, _min_priority: i64, _max_priority: i64) -> Vec<std::sync::Arc<dyn crate::interfaces::Subsystem>> {
+        fn get_by_priority_range(&self, _min_priority: i64, _max_priority: i64) -> Vec<std::sync::Arc<dyn Subsystem>> {
             vec![]
         }
 
@@ -51,9 +49,9 @@ mod tests {
             5
         }
 
-        fn validate_all(&self) -> crate::ActorCoreResult<()> {
+        fn validate_all(&self) -> ActorCoreResult<()> {
             if self.should_fail {
-                Err(crate::ActorCoreError::RegistryError("Plugin validation failed".to_string()))
+                Err(ActorCoreError::RegistryError("Plugin validation failed".to_string()))
             } else {
                 Ok(())
             }
@@ -65,17 +63,17 @@ mod tests {
     }
 
     impl CombinerRegistry for MockCombinerRegistry {
-        fn set_rule(&self, _dimension: &str, _rule: crate::interfaces::MergeRule) -> crate::ActorCoreResult<()> {
+        fn set_rule(&self, _dimension: &str, _rule: MergeRule) -> ActorCoreResult<()> {
             Ok(())
         }
 
-        fn get_rule(&self, _dimension: &str) -> Option<crate::interfaces::MergeRule> {
+        fn get_rule(&self, _dimension: &str) -> Option<MergeRule> {
             None
         }
 
-        fn validate(&self) -> crate::ActorCoreResult<()> {
+        fn validate(&self) -> ActorCoreResult<()> {
             if self.should_fail {
-                Err(crate::ActorCoreError::RegistryError("Combiner validation failed".to_string()))
+                Err(ActorCoreError::RegistryError("Combiner validation failed".to_string()))
             } else {
                 Ok(())
             }
@@ -90,18 +88,18 @@ mod tests {
     impl CapsProvider for MockCapsProvider {
         async fn effective_caps_within_layer(
             &self, 
-            _actor: &crate::types::Actor, 
-            _outputs: &[crate::types::SubsystemOutput], 
+            _actor: &Actor, 
+            _outputs: &[SubsystemOutput], 
             _layer: &str
-        ) -> crate::ActorCoreResult<std::collections::HashMap<String, crate::types::Caps>> {
+        ) -> ActorCoreResult<std::collections::HashMap<String, Caps>> {
             Ok(std::collections::HashMap::new())
         }
 
         async fn effective_caps_across_layers(
             &self, 
-            _actor: &crate::types::Actor, 
-            _outputs: &[crate::types::SubsystemOutput]
-        ) -> crate::ActorCoreResult<std::collections::HashMap<String, crate::types::Caps>> {
+            _actor: &Actor, 
+            _outputs: &[SubsystemOutput]
+        ) -> ActorCoreResult<std::collections::HashMap<String, Caps>> {
             Ok(std::collections::HashMap::new())
         }
 
@@ -109,19 +107,19 @@ mod tests {
             vec![]
         }
 
-        fn get_across_layer_policy(&self) -> crate::AcrossLayerPolicy {
-            crate::AcrossLayerPolicy::Intersect
+        fn get_across_layer_policy(&self) -> AcrossLayerPolicy {
+            AcrossLayerPolicy::Intersect
         }
 
-        fn validate_caps(&self, _dimension: &str, _caps: &crate::types::Caps) -> crate::ActorCoreResult<()> {
+        fn validate_caps(&self, _dimension: &str, _caps: &Caps) -> ActorCoreResult<()> {
             Ok(())
         }
 
         async fn get_caps_for_dimension(
             &self, 
             _dimension: &str, 
-            _actor: &crate::types::Actor
-        ) -> crate::ActorCoreResult<Option<crate::types::Caps>> {
+            _actor: &Actor
+        ) -> ActorCoreResult<Option<Caps>> {
             Ok(None)
         }
 
@@ -129,13 +127,13 @@ mod tests {
             vec![]
         }
 
-        fn get_cap_statistics(&self) -> crate::CapStatistics {
-            crate::CapStatistics::default()
+        fn get_cap_statistics(&self) -> CapStatistics {
+            CapStatistics::default()
         }
 
-        fn validate(&self) -> crate::ActorCoreResult<()> {
+        fn validate(&self) -> ActorCoreResult<()> {
             if self.should_fail {
-                Err(crate::ActorCoreError::RegistryError("Caps validation failed".to_string()))
+                Err(ActorCoreError::RegistryError("Caps validation failed".to_string()))
             } else {
                 Ok(())
             }
@@ -158,7 +156,7 @@ mod tests {
             }
         }
 
-        fn set(&self, key: String, value: serde_json::Value, _ttl: Option<u64>) -> crate::ActorCoreResult<()> {
+        fn set(&self, key: String, value: serde_json::Value, _ttl: Option<u64>) -> ActorCoreResult<()> {
             if self.should_fail_set {
                 Err(ActorCoreError::CacheError("Set failed".to_string()))
             } else {
@@ -167,7 +165,7 @@ mod tests {
             }
         }
 
-        fn delete(&self, key: &str) -> crate::ActorCoreResult<()> {
+        fn delete(&self, key: &str) -> ActorCoreResult<()> {
             if self.should_fail_delete {
                 Err(ActorCoreError::CacheError("Delete failed".to_string()))
             } else {
@@ -176,12 +174,12 @@ mod tests {
             }
         }
 
-        fn clear(&self) -> crate::ActorCoreResult<()> {
+        fn clear(&self) -> ActorCoreResult<()> {
             Ok(())
         }
 
-        fn get_stats(&self) -> crate::metrics::CacheStats {
-            crate::metrics::CacheStats::default()
+        fn get_stats(&self) -> CacheStats {
+CacheStats::default()
         }
     }
 
@@ -361,20 +359,20 @@ mod tests {
                 Some(serde_json::json!({ "different": true }))
             }
 
-            fn set(&self, _key: String, _value: serde_json::Value, _ttl: Option<u64>) -> crate::ActorCoreResult<()> {
+            fn set(&self, _key: String, _value: serde_json::Value, _ttl: Option<u64>) -> ActorCoreResult<()> {
                 Ok(())
             }
 
-            fn delete(&self, _key: &str) -> crate::ActorCoreResult<()> {
+            fn delete(&self, _key: &str) -> ActorCoreResult<()> {
                 Ok(())
             }
 
-            fn clear(&self) -> crate::ActorCoreResult<()> {
+            fn clear(&self) -> ActorCoreResult<()> {
                 Ok(())
             }
 
-            fn get_stats(&self) -> crate::metrics::CacheStats {
-                crate::metrics::CacheStats::default()
+            fn get_stats(&self) -> CacheStats {
+CacheStats::default()
             }
         }
 

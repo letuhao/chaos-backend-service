@@ -1,10 +1,8 @@
-use actor_core::{RegistryFactory, ServiceFactory, CacheFactory};
-use actor_core::interfaces::Subsystem as SubsystemTrait;
-use actor_core::types::{SubsystemOutput, Contribution, CapContribution};
-use actor_core::enums::{Bucket, CapMode};
+use actor_core::prelude::*;
 use serde::Deserialize;
 use std::fs;
 use std::path::Path;
+use std::sync::Arc;
 
 #[derive(Deserialize)]
 struct InputContribution { #[allow(dead_code)] dimension: String, #[allow(dead_code)] bucket: String, #[allow(dead_code)] value: f64, #[allow(dead_code)] system: String }
@@ -15,7 +13,7 @@ struct VectorFile { #[allow(dead_code)] actor_id: String, #[allow(dead_code)] ve
 struct InlineSubsystem { id: String, prio: i64, contribs: Vec<Contribution>, caps: Vec<CapContribution> }
 
 #[async_trait::async_trait]
-impl SubsystemTrait for InlineSubsystem {
+impl Subsystem for InlineSubsystem {
     fn system_id(&self) -> &str { &self.id }
     fn priority(&self) -> i64 { self.prio }
     async fn contribute(&self, _actor: &actor_core::types::Actor) -> actor_core::ActorCoreResult<SubsystemOutput> {

@@ -3,7 +3,7 @@
 //! These tests demonstrate the Resource Manager Subsystem working
 //! with the Actor Core aggregation system.
 
-use actor_core::*;
+use actor_core::prelude::*;
 use std::collections::HashMap;
 use rand::seq::SliceRandom;
 use rand::thread_rng;
@@ -11,11 +11,11 @@ use rand::thread_rng;
 #[tokio::test]
 async fn test_resource_manager_integration() {
     // Aggregator with registry defaults (resource subsystem auto-registered)
-    let plugin = RegistryFactory::create_plugin_registry();
-    let combiner = RegistryFactory::create_combiner_registry();
-    let cap_layers = RegistryFactory::create_cap_layer_registry();
+    let plugin = ServiceFactory::create_plugin_registry();
+    let combiner = ServiceFactory::create_combiner_registry();
+    let cap_layers = ServiceFactory::create_cap_layer_registry();
     let caps = ServiceFactory::create_caps_provider(cap_layers);
-    let cache = CacheFactory::create_in_memory_cache(10_000, 600);
+    let cache = ServiceFactory::create_cache().unwrap();
     let aggregator = ServiceFactory::create_aggregator(plugin, combiner, caps, cache);
 
     // Create an actor with different characteristics
@@ -88,7 +88,7 @@ async fn test_cultivation_modifiers() {
     let mut actor_with_cult = Actor::new("Cultivator".to_string(), "Human".to_string());
     actor_with_cult.set_lifespan(100);
     actor_with_cult.set_age(25);
-    actor_with_cult.add_subsystem(SubsystemStruct::new("jindan_system".to_string(), 100));
+    actor_with_cult.add_subsystem(actor_core::types::Subsystem::new("jindan_system".to_string(), 100));
     
     // Get results
     let result_no_cult = resource_manager.contribute(&actor_no_cult).await.unwrap();
@@ -112,11 +112,11 @@ async fn test_cultivation_modifiers() {
 
 #[tokio::test]
 async fn test_resource_bucket_processing() {
-    let plugin = RegistryFactory::create_plugin_registry();
-    let combiner = RegistryFactory::create_combiner_registry();
-    let cap_layers = RegistryFactory::create_cap_layer_registry();
+    let plugin = ServiceFactory::create_plugin_registry();
+    let combiner = ServiceFactory::create_combiner_registry();
+    let cap_layers = ServiceFactory::create_cap_layer_registry();
     let caps = ServiceFactory::create_caps_provider(cap_layers);
-    let cache = CacheFactory::create_in_memory_cache(10_000, 600);
+    let cache = ServiceFactory::create_cache().unwrap();
     let aggregator = ServiceFactory::create_aggregator(plugin, combiner, caps, cache);
 
     let mut actor = Actor::new("Test Actor".to_string(), "Human".to_string());
@@ -129,11 +129,11 @@ async fn test_resource_bucket_processing() {
 
 #[tokio::test]
 async fn test_resource_caps() {
-    let plugin = RegistryFactory::create_plugin_registry();
-    let combiner = RegistryFactory::create_combiner_registry();
-    let cap_layers = RegistryFactory::create_cap_layer_registry();
+    let plugin = ServiceFactory::create_plugin_registry();
+    let combiner = ServiceFactory::create_combiner_registry();
+    let cap_layers = ServiceFactory::create_cap_layer_registry();
     let caps = ServiceFactory::create_caps_provider(cap_layers);
-    let cache = CacheFactory::create_in_memory_cache(10_000, 600);
+    let cache = ServiceFactory::create_cache().unwrap();
     let aggregator = ServiceFactory::create_aggregator(plugin, combiner, caps, cache);
 
     let mut actor = Actor::new("Test Actor".to_string(), "Human".to_string());
@@ -148,11 +148,11 @@ async fn test_resource_caps() {
 #[tokio::test]
 async fn test_order_invariance_real_aggregator() {
     // Ensure ordering of contributions across subsystems does not change result
-    let plugin = RegistryFactory::create_plugin_registry();
-    let combiner = RegistryFactory::create_combiner_registry();
-    let cap_layers = RegistryFactory::create_cap_layer_registry();
+    let plugin = ServiceFactory::create_plugin_registry();
+    let combiner = ServiceFactory::create_combiner_registry();
+    let cap_layers = ServiceFactory::create_cap_layer_registry();
     let caps = ServiceFactory::create_caps_provider(cap_layers);
-    let cache = CacheFactory::create_in_memory_cache(10_000, 600);
+    let cache = ServiceFactory::create_cache().unwrap();
     let aggregator = ServiceFactory::create_aggregator(plugin, combiner, caps, cache);
 
     let mut actor = Actor::new("OrderTest".to_string(), "Human".to_string());
@@ -170,11 +170,11 @@ async fn test_order_invariance_real_aggregator() {
 #[tokio::test]
 async fn test_clamp_invariants_real_aggregator() {
     // Values must respect caps and clamp defaults
-    let plugin = RegistryFactory::create_plugin_registry();
-    let combiner = RegistryFactory::create_combiner_registry();
-    let cap_layers = RegistryFactory::create_cap_layer_registry();
+    let plugin = ServiceFactory::create_plugin_registry();
+    let combiner = ServiceFactory::create_combiner_registry();
+    let cap_layers = ServiceFactory::create_cap_layer_registry();
     let caps = ServiceFactory::create_caps_provider(cap_layers);
-    let cache = CacheFactory::create_in_memory_cache(10_000, 600);
+    let cache = ServiceFactory::create_cache().unwrap();
     let aggregator = ServiceFactory::create_aggregator(plugin, combiner, caps, cache);
 
     let actor = Actor::new("ClampTest".to_string(), "Human".to_string());
@@ -188,11 +188,11 @@ async fn test_clamp_invariants_real_aggregator() {
 
 #[tokio::test]
 async fn test_resource_regeneration_rates() {
-    let plugin = RegistryFactory::create_plugin_registry();
-    let combiner = RegistryFactory::create_combiner_registry();
-    let cap_layers = RegistryFactory::create_cap_layer_registry();
+    let plugin = ServiceFactory::create_plugin_registry();
+    let combiner = ServiceFactory::create_combiner_registry();
+    let cap_layers = ServiceFactory::create_cap_layer_registry();
     let caps = ServiceFactory::create_caps_provider(cap_layers);
-    let cache = CacheFactory::create_in_memory_cache(10_000, 600);
+    let cache = ServiceFactory::create_cache().unwrap();
     let aggregator = ServiceFactory::create_aggregator(plugin, combiner, caps, cache);
 
     let mut actor = Actor::new("Test Actor".to_string(), "Human".to_string());
@@ -209,11 +209,11 @@ async fn test_resource_regeneration_rates() {
 
 #[tokio::test]
 async fn test_resource_percentages() {
-    let plugin = RegistryFactory::create_plugin_registry();
-    let combiner = RegistryFactory::create_combiner_registry();
-    let cap_layers = RegistryFactory::create_cap_layer_registry();
+    let plugin = ServiceFactory::create_plugin_registry();
+    let combiner = ServiceFactory::create_combiner_registry();
+    let cap_layers = ServiceFactory::create_cap_layer_registry();
     let caps = ServiceFactory::create_caps_provider(cap_layers);
-    let cache = CacheFactory::create_in_memory_cache(10_000, 600);
+    let cache = ServiceFactory::create_cache().unwrap();
     let aggregator = ServiceFactory::create_aggregator(plugin, combiner, caps, cache);
 
     let mut actor = Actor::new("Test Actor".to_string(), "Human".to_string());

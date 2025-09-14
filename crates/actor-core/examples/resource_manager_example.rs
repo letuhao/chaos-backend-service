@@ -37,7 +37,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         
         // Add cultivation subsystem if applicable
         if has_cultivation {
-            actor.add_subsystem(SubsystemStruct::new("jindan_system".to_string(), 100));
+            actor.add_subsystem(crate::types::Subsystem::new("jindan_system".to_string(), 100));
             println!("  Added cultivation subsystem");
         }
         
@@ -99,7 +99,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut old_elf = Actor::new("Old Elf".to_string(), "Elf".to_string());
     old_elf.set_lifespan(200);
     old_elf.set_age(150);
-    old_elf.add_subsystem(SubsystemStruct::new("jindan_system".to_string(), 100));
+    old_elf.add_subsystem(crate::types::Subsystem::new("jindan_system".to_string(), 100));
     
     if let Ok(output) = resource_manager.contribute(&old_elf).await {
         println!("Old Elf with Cultivation (200 lifespan, 150 age):");

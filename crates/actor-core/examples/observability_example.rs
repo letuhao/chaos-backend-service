@@ -140,9 +140,12 @@ async fn main() -> ActorCoreResult<()> {
     // Example 9: Create and use observability dashboard
     println!("\n9. Creating Observability Dashboard:");
     
+    // Create a separate metrics collector for the dashboard to avoid borrowing issues
+    let dashboard_metrics_collector = MetricsCollector::new();
+    
     let dashboard = DashboardBuilder::new()
         .with_slo_manager(Arc::new(slo_manager))
-        .with_metrics_collector(Arc::new(metrics_collector))
+        .with_metrics_collector(Arc::new(dashboard_metrics_collector))
         .with_config(DashboardConfig {
             refresh_interval: Duration::from_secs(30),
             include_detailed_metrics: true,

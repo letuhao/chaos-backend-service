@@ -61,6 +61,7 @@ impl ExampleCache {
         if key.is_empty() {
             let duration_us = start_time.elapsed().as_micros() as u64;
             self.manager.record_component_error(&self.component_name, "empty_key");
+            self.manager.record_component_operation(&self.component_name, "get_error", duration_us);
             
             crate::trace_error!(
                 &self.manager,
@@ -98,7 +99,7 @@ impl ExampleCache {
     }
 
     /// Get metrics for this cache component.
-    pub fn get_metrics(&self) -> Option<crate::observability::StandardMetrics> {
+    pub fn get_metrics(&self) -> Option<StandardMetrics> {
         self.manager.get_component_metrics(&self.component_name)
     }
 }
@@ -166,7 +167,7 @@ impl ExampleSubsystem {
     }
 
     /// Get metrics for this subsystem.
-    pub fn get_metrics(&self) -> Option<crate::observability::StandardMetrics> {
+    pub fn get_metrics(&self) -> Option<StandardMetrics> {
         self.manager.get_component_metrics(&self.subsystem_id)
     }
 }

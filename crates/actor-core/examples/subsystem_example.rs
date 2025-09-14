@@ -372,7 +372,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .collect();
         
         if !strength_contribs.is_empty() {
-            let strength_result = bucket_processor::process_contributions_in_order(
+            let strength_result = process_contributions_in_order(
                 strength_contribs,
                 100.0, // Base strength
                 all_caps.get("strength")

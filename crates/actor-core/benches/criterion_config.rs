@@ -109,6 +109,7 @@ pub mod categories {
 pub mod utils {
     use std::collections::HashMap;
     use actor_core::types::*;
+    use actor_core::enums::Bucket;
     
     /// Generate test actors for benchmarking
     pub fn generate_actors(count: usize) -> Vec<Actor> {

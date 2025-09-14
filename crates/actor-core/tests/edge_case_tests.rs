@@ -3,10 +3,7 @@
 //! These tests focus on boundary conditions, error handling,
 //! and edge cases that might not be covered by normal usage.
 
-use actor_core::types::*;
-use actor_core::bucket_processor::*;
-use actor_core::Bucket;
-use actor_core::registry::loader::*;
+use actor_core::prelude::*;
 use std::collections::HashMap;
 
 /// Test Caps edge cases
@@ -126,7 +123,7 @@ fn test_bucket_processor_edge_cases() {
     // Test with empty contributions
     let contributions = vec![];
     let result = process_contributions_in_order(contributions, 5.0, None);
-    assert!(result.is_ok());
+    assert!(!result.is_err());
     assert_eq!(result.unwrap(), 5.0);
     
     // Test with single contribution
@@ -134,7 +131,7 @@ fn test_bucket_processor_edge_cases() {
         Contribution::new("test".to_string(), Bucket::Flat, 1.0, "test".to_string())
     ];
     let result = process_contributions_in_order(contributions, 0.0, None);
-    assert!(result.is_ok());
+    assert!(!result.is_err());
     assert_eq!(result.unwrap(), 1.0);
     
     // Test with zero value contributions
@@ -143,7 +140,7 @@ fn test_bucket_processor_edge_cases() {
         Contribution::new("test".to_string(), Bucket::Mult, 1.0, "test".to_string()),
     ];
     let result = process_contributions_in_order(contributions, 1.0, None);
-    assert!(result.is_ok());
+    assert!(!result.is_err());
     assert_eq!(result.unwrap(), 1.0);
 }
 
@@ -156,7 +153,7 @@ fn test_bucket_processor_extreme_values() {
         Contribution::new("test".to_string(), Bucket::Mult, 1.0, "test".to_string()),
     ];
     let result = process_contributions_in_order(contributions, 0.0, None);
-    assert!(result.is_ok());
+    assert!(!result.is_err());
     assert_eq!(result.unwrap(), f64::MAX);
     
     // Test with very small values
@@ -165,7 +162,7 @@ fn test_bucket_processor_extreme_values() {
         Contribution::new("test".to_string(), Bucket::Mult, 2.0, "test".to_string()),
     ];
     let result = process_contributions_in_order(contributions, 0.0, None);
-    assert!(result.is_ok());
+    assert!(!result.is_err());
     assert!(result.unwrap() > 0.0);
 }
 
@@ -175,28 +172,28 @@ fn test_validation_edge_cases() {
     // Test with empty contributions
     let contributions = vec![];
     let result = validate_contributions(&contributions);
-    assert!(result.is_ok());
+    assert!(!result.has_errors());
     
     // Test with single valid contribution
     let contributions = vec![
         Contribution::new("test".to_string(), Bucket::Flat, 1.0, "test".to_string())
     ];
     let result = validate_contributions(&contributions);
-    assert!(result.is_ok());
+    assert!(!result.has_errors());
     
     // Test with single NaN contribution
     let contributions = vec![
         Contribution::new("test".to_string(), Bucket::Flat, f64::NAN, "test".to_string())
     ];
     let result = validate_contributions(&contributions);
-    assert!(result.is_err());
+    assert!(result.has_errors());
     
     // Test with single infinite contribution
     let contributions = vec![
         Contribution::new("test".to_string(), Bucket::Flat, f64::INFINITY, "test".to_string())
     ];
     let result = validate_contributions(&contributions);
-    assert!(result.is_err());
+    assert!(result.has_errors());
 }
 
 /// Test config loading edge cases
@@ -252,7 +249,7 @@ fn test_bucket_processing_all_types() {
     ];
     
     let result = process_contributions_in_order(contributions, 0.0, None);
-    assert!(result.is_ok());
+    assert!(!result.is_err());
     assert_eq!(result.unwrap(), 100.0); // Override should win
 }
 
@@ -268,7 +265,7 @@ fn test_bucket_processing_extra_buckets() {
     ];
     
     let result = process_contributions_in_order(contributions, 1.0, None);
-    assert!(result.is_ok());
+    assert!(!result.is_err());
     assert!(result.unwrap().is_finite());
 }
 
@@ -282,12 +279,12 @@ fn test_bucket_processing_clamping_edge_cases() {
     // Test with tight clamping
     let caps = Caps::new(0.0, 100.0);
     let result = process_contributions_in_order(contributions.clone(), 0.0, Some(&caps));
-    assert!(result.is_ok());
+    assert!(!result.is_err());
     assert_eq!(result.unwrap(), 100.0);
     
     // Test with no clamping
     let result = process_contributions_in_order(contributions, 0.0, None);
-    assert!(result.is_ok());
+    assert!(!result.is_err());
     assert_eq!(result.unwrap(), 1000.0);
 }
 
@@ -301,6 +298,6 @@ fn test_bucket_processing_zero_negative() {
     ];
     
     let result = process_contributions_in_order(contributions, 1.0, None);
-    assert!(result.is_ok());
+    assert!(!result.is_err());
     assert_eq!(result.unwrap(), 5.0); // 1 + (-10) = -9, -9 * 0 = 0, 0 + 5 = 5
 }

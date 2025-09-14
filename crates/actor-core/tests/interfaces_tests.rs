@@ -3,12 +3,7 @@
 //! This module contains tests for interfaces, traits, and core data structures
 //! used throughout the actor-core system.
 
-use crate::metrics::{
-    SubsystemMetrics, AggregatorMetrics, CapStatistics, CacheStats
-};
-use crate::interfaces::{MergeRule};
-use crate::enums::{Operator, AcrossLayerPolicy};
-use crate::types::{Actor, Caps};
+use actor_core::prelude::*;
 use chrono;
 
 #[cfg(test)]

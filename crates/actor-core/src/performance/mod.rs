@@ -39,5 +39,5 @@ pub use test_suite::{
     TestSuiteResults,
     OverallTestResults
 };
-pub use workflow::{PerformanceWorkflow, WorkflowConfig, BaselineConfig, WorkflowState, PerformanceTrends, WorkflowExecution, WorkflowReport};
+pub use workflow::{PerformanceWorkflow, WorkflowConfig, BaselineConfig, WorkflowState, PerformanceTrends, WorkflowExecution, WorkflowReport, PerformanceAlert};
 pub use config::{PerformanceConfig as PerfConfig};

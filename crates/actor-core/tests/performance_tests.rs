@@ -3,12 +3,7 @@
 //! This module contains performance tests that measure the efficiency
 //! of various operations and help identify performance bottlenecks.
 
-use actor_core::types::{Actor, Subsystem as SubsystemStruct, Contribution, SubsystemOutput, Caps};
-use actor_core::enums::Bucket;
-use actor_core::interfaces::{Aggregator, PluginRegistry, Cache};
-use actor_core::{AggregatorImpl, CapsProviderImpl};
-use actor_core::registry::{CapLayerRegistryImpl, PluginRegistryImpl, CombinerRegistryImpl};
-use actor_core::InMemoryCache;
+use actor_core::prelude::*;
 use std::sync::Arc;
 use std::time::Instant;
 

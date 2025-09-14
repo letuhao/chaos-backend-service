@@ -177,3 +177,19 @@ fn apply_caps(value: f64, caps: &Caps) -> f64 {
     
     result
 }
+
+/// Get the standard bucket processing order.
+/// 
+/// Returns the buckets in the order they should be processed:
+/// FLAT → MULT → POST_ADD → OVERRIDE
+/// 
+/// # Returns
+/// * `Vec<Bucket>` - The processing order
+pub fn get_bucket_processing_order() -> Vec<Bucket> {
+    vec![
+        Bucket::Flat,
+        Bucket::Mult,
+        Bucket::PostAdd,
+        Bucket::Override,
+    ]
+}

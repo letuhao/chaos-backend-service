@@ -56,6 +56,14 @@ async fn main() -> ActorCoreResult<()> {
     let strength_caps = create_basic_caps(0.0, 100.0);
     let health_caps = create_basic_caps(0.0, 1000.0);
     println!("✅ Created caps for strength and health");
+    println!("   Strength caps: min={:.1}, max={:.1}", 
+        strength_caps.min, 
+        strength_caps.max
+    );
+    println!("   Health caps: min={:.1}, max={:.1}", 
+        health_caps.min, 
+        health_caps.max
+    );
 
     // Display final results
     println!("\n📊 Final Results:");

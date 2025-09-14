@@ -15,6 +15,7 @@ pub use validator::{
     ValidationWarning,
     validators,
 };
+pub use validator::validators::validate_contributions;
 
 // Re-export middleware types
 pub use middleware::{

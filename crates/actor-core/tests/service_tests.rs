@@ -3,13 +3,7 @@
 //! This module contains detailed tests for all service implementations,
 //! including AggregatorImpl, CapsProviderImpl, and related functionality.
 
-use actor_core::types::{Actor, Contribution, SubsystemOutput};
-use actor_core::enums::Bucket;
-use actor_core::interfaces::{Aggregator, CapsProvider, PluginRegistry};
-use actor_core::AcrossLayerPolicy;
-use actor_core::{AggregatorImpl, CapsProviderImpl};
-use actor_core::registry::{CapLayerRegistryImpl, PluginRegistryImpl, CombinerRegistryImpl};
-use actor_core::InMemoryCache;
+use actor_core::prelude::*;
 use std::collections::HashMap;
 use std::sync::Arc;
 

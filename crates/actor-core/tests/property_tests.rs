@@ -3,9 +3,7 @@
 //! These tests use proptest to generate random inputs and verify
 //! that certain properties hold for all valid inputs.
 
-use actor_core::types::*;
-use actor_core::bucket_processor::*;
-use actor_core::Bucket;
+use actor_core::prelude::*;
 use std::collections::HashMap;
 
 /// Test that Caps operations are commutative where expected
@@ -245,7 +243,7 @@ fn test_contribution_validation_works() {
     
     // Valid contributions should pass validation
     let result = validate_contributions(&valid_contributions);
-    assert!(result.is_ok());
+    assert!(!result.has_errors());
 }
 
 /// Test that contribution validation rejects invalid values
@@ -258,5 +256,5 @@ fn test_contribution_validation_rejects_invalid() {
     
     // Invalid contributions should fail validation
     let result = validate_contributions(&invalid_contributions);
-    assert!(result.is_err());
+    assert!(result.has_errors());
 }

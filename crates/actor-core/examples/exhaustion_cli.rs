@@ -4,12 +4,16 @@
 
 #[cfg(feature = "cli-tools")]
 use clap::{Parser, Subcommand};
+#[cfg(feature = "cli-tools")]
 use actor_core::subsystems::{
     ResourceExhaustionSubsystem, ExhaustionConfigLoader,
     InMemoryEventPublisher
 };
+#[cfg(feature = "cli-tools")]
 use actor_core::types::{Actor, Snapshot};
+#[cfg(feature = "cli-tools")]
 use std::collections::HashMap;
+#[cfg(feature = "cli-tools")]
 use std::sync::Arc;
 
 #[cfg(feature = "cli-tools")]
@@ -75,6 +79,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(feature = "cli-tools")]
     let cli = Cli::parse();
 
+    #[cfg(feature = "cli-tools")]
     match cli.command {
         Commands::Validate { config_path } => {
             validate_config(&config_path).await?;
@@ -119,9 +124,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
+    #[cfg(not(feature = "cli-tools"))]
+    {
+        eprintln!("CLI tools feature is not enabled. Please enable the 'cli-tools' feature to use this example.");
+        eprintln!("Run with: cargo run --example exhaustion_cli --features cli-tools");
+    }
+
     Ok(())
 }
 
+#[cfg(feature = "cli-tools")]
 async fn validate_config(config_path: &str) -> Result<(), Box<dyn std::error::Error>> {
     println!("Validating configuration: {}", config_path);
     
@@ -132,6 +144,7 @@ async fn validate_config(config_path: &str) -> Result<(), Box<dyn std::error::Er
     Ok(())
 }
 
+#[cfg(feature = "cli-tools")]
 async fn test_exhaustion(
     config_path: &str,
     archetype: &str,
@@ -212,6 +225,7 @@ async fn test_exhaustion(
     Ok(())
 }
 
+#[cfg(feature = "cli-tools")]
 async fn run_golden_vector_test(
     config_path: &str,
     case_name: &str,
@@ -244,6 +258,7 @@ async fn run_golden_vector_test(
     Ok(())
 }
 
+#[cfg(feature = "cli-tools")]
 async fn run_case05_test(
     subsystem: ResourceExhaustionSubsystem,
     event_publisher: Arc<InMemoryEventPublisher>,
@@ -298,6 +313,7 @@ async fn run_case05_test(
     Ok(())
 }
 
+#[cfg(feature = "cli-tools")]
 async fn run_case06_test(
     subsystem: ResourceExhaustionSubsystem,
     event_publisher: Arc<InMemoryEventPublisher>,
@@ -349,6 +365,7 @@ async fn run_case06_test(
     Ok(())
 }
 
+#[cfg(feature = "cli-tools")]
 async fn debug_config_merge(
     global_config_path: &str,
     area_config_path: Option<&str>,

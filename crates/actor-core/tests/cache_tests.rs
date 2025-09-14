@@ -3,10 +3,7 @@
 //! This module contains tests for all cache-related functionality including
 //! in-memory caches, distributed caches, and multi-layer cache systems.
 
-use crate::cache::{
-    LockFreeInMemoryCache, InMemoryCache, MultiLayerCache, CacheFactory
-};
-use crate::interfaces::Cache;
+use actor_core::prelude::*;
 use std::sync::Arc;
 
 #[cfg(test)]
@@ -64,7 +61,7 @@ mod tests {
         cache.set("key1".to_string(), serde_json::Value::String("value1".to_string()), Some(60)).unwrap();
         cache.get("key1");
         cache.get("nonexistent");
-        cache.delete("key1");
+        let _ = cache.delete("key1");
         
         let stats = cache.get_stats();
         assert_eq!(stats.sets, 1);
@@ -133,7 +130,7 @@ mod tests {
         cache.set("key1".to_string(), serde_json::Value::String("value1".to_string()), Some(60)).unwrap();
         cache.get("key1");
         cache.get("nonexistent");
-        cache.delete("key1");
+        let _ = cache.delete("key1");
         
         let stats = cache.get_stats();
         assert_eq!(stats.sets, 1);
@@ -292,7 +289,7 @@ mod tests {
         cache.set("key1".to_string(), serde_json::Value::String("value1".to_string()), Some(60)).unwrap();
         cache.get("key1");
         cache.get("nonexistent");
-        cache.delete("key1");
+        let _ = cache.delete("key1");
         
         let stats = cache.get_stats();
         // Multi-layer cache aggregates stats from all layers

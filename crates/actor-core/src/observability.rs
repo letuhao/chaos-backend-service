@@ -9,7 +9,7 @@ pub mod metrics_collector;
 pub mod dashboard;
 
 // Re-export key observability components
-pub use slos::{SLOManager, SLO, SLOStatus, SLOMetricType, SLOSeverity, SLOViolation, default_slos};
+pub use slos::{SLOManager, SLO, SLOStatus, SLOMetricType, SLOSeverity, SLOViolation, SLOViolationHandler, ConsoleSLOViolationHandler, default_slos};
 pub use metrics_collector::{MetricsCollector, MetricsSnapshot, MetricValue, MetricType, default_metrics};
 pub use dashboard::{ObservabilityDashboard, DashboardConfig, DashboardStatus, SystemHealthStatus, DashboardBuilder};
 
