@@ -379,8 +379,8 @@ fn test_cache_entry_age() {
     let value = serde_json::Value::String("test_value".to_string());
     let entry = CacheEntry::new(value, Some(300));
     
-    let age = entry.age();
-    assert!(age >= 0);
+    let _age = entry.age();
+    // age() returns u64 which is always >= 0, so we just test the method works
 }
 
 #[test]
@@ -388,8 +388,8 @@ fn test_cache_entry_time_since_last_access() {
     let value = serde_json::Value::String("test_value".to_string());
     let entry = CacheEntry::new(value, Some(300));
     
-    let time_since = entry.time_since_last_access();
-    assert!(time_since >= 0);
+    let _time_since = entry.time_since_last_access();
+    // time_since_last_access() returns u64 which is always >= 0, so we just test the method works
 }
 
 #[test]
