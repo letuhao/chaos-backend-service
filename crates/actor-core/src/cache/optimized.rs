@@ -3,15 +3,12 @@
 //! This module provides high-performance cache implementations using
 //! smallvec, fxhash, and atomic operations for hot paths.
 
-use async_trait::async_trait;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
-use tracing::{warn, error, debug};
+use tracing::error;
 
-use smallvec::{SmallVec, smallvec};
 use fxhash::FxHashMap;
-use ahash::AHashMap;
 
 use crate::interfaces::Cache;
 use crate::ActorCoreResult;
@@ -86,7 +83,7 @@ impl OptimizedL1Cache {
     /// Evict expired entries with optimized cleanup.
     async fn cleanup_expired(&self) {
         let mut storage = self.storage.write().await;
-        let mut expired_keys = SmallVec::<[String; 32]>::new();
+        let mut expired_keys = Vec::new();
         
         // Find expired entries
         for (key, entry) in storage.iter() {
@@ -118,49 +115,48 @@ impl OptimizedL1Cache {
     }
 }
 
-#[async_trait]
 impl Cache for OptimizedL1Cache {
-    async fn get(&self, key: &str) -> ActorCoreResult<Option<serde_json::Value>> {
-        let mut storage = self.storage.write().await;
+    fn get(&self, key: &str) -> Option<serde_json::Value> {
+        let mut storage = futures::executor::block_on(self.storage.write());
         
         if let Some(entry) = storage.get(key) {
             if entry.is_expired() {
                 storage.remove(key);
                 self.current_size.fetch_sub(1, std::sync::atomic::Ordering::Relaxed);
                 self.misses.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-                Ok(None)
+                None
             } else {
                 self.hits.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-                Ok(Some(entry.value.clone()))
+                Some(entry.value.clone())
             }
         } else {
             self.misses.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-            Ok(None)
+            None
         }
     }
     
-    async fn set(
+    fn set(
         &self,
-        key: &str,
-        value: &serde_json::Value,
-        ttl: Option<Duration>,
+        key: String,
+        value: serde_json::Value,
+        ttl: Option<u64>,
     ) -> ActorCoreResult<()> {
-        let mut storage = self.storage.write().await;
+        let mut storage = futures::executor::block_on(self.storage.write());
         
         // Check if we need to evict
         let current_size = self.current_size.load(std::sync::atomic::Ordering::Relaxed);
-        if current_size >= self.max_size && !storage.contains_key(key) {
-            self.evict_lru().await;
+        if current_size >= self.max_size && !storage.contains_key(&key) {
+            futures::executor::block_on(self.evict_lru());
         }
         
         let entry = CacheEntry {
             value: value.clone(),
             created_at: Instant::now(),
-            ttl,
+            ttl: ttl.map(|t| Duration::from_secs(t)),
         };
         
-        let is_new_entry = !storage.contains_key(key);
-        storage.insert(key.to_string(), entry);
+        let is_new_entry = !storage.contains_key(&key);
+        storage.insert(key, entry);
         
         if is_new_entry {
             self.current_size.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
@@ -169,26 +165,33 @@ impl Cache for OptimizedL1Cache {
         Ok(())
     }
     
-    async fn delete(&self, key: &str) -> ActorCoreResult<bool> {
-        let mut storage = self.storage.write().await;
+    fn delete(&self, key: &str) -> ActorCoreResult<()> {
+        let mut storage = futures::executor::block_on(self.storage.write());
         
         if storage.remove(key).is_some() {
             self.current_size.fetch_sub(1, std::sync::atomic::Ordering::Relaxed);
-            Ok(true)
+            Ok(())
         } else {
-            Ok(false)
+            Ok(())
         }
     }
     
-    async fn clear(&self) -> ActorCoreResult<()> {
-        let mut storage = self.storage.write().await;
+    fn clear(&self) -> ActorCoreResult<()> {
+        let mut storage = futures::executor::block_on(self.storage.write());
         storage.clear();
         self.current_size.store(0, std::sync::atomic::Ordering::Relaxed);
         Ok(())
     }
     
-    async fn get_stats(&self) -> ActorCoreResult<crate::metrics::CacheStats> {
-        Ok(self.get_stats())
+    fn get_stats(&self) -> crate::metrics::CacheStats {
+        crate::metrics::CacheStats {
+            hits: self.hits.load(std::sync::atomic::Ordering::Relaxed),
+            misses: self.misses.load(std::sync::atomic::Ordering::Relaxed),
+            sets: 0, // TODO: Add sets counter
+            deletes: 0, // TODO: Add deletes counter
+            memory_usage: self.current_size.load(std::sync::atomic::Ordering::Relaxed) as u64 * 1024, // Estimate
+            max_memory_usage: self.max_size as u64 * 1024, // Estimate
+        }
     }
 }
 
@@ -207,27 +210,17 @@ pub struct BatchCacheOperations;
 
 impl BatchCacheOperations {
     /// Get multiple keys in a single operation with optimized batching.
-    pub async fn get_many<C: Cache>(
+    pub fn get_many<C: Cache + ?Sized>(
         cache: &C,
         keys: &[String],
     ) -> ActorCoreResult<Vec<Option<serde_json::Value>>> {
         let mut results = Vec::with_capacity(keys.len());
         
-        // Use SmallVec for small key collections
-        let keys_small: SmallVec<[&String; 32]> = keys.iter().collect();
-        
-        // Process in parallel batches
+        // Process in batches
         let batch_size = 16; // Optimal batch size for most use cases
-        for chunk in keys_small.chunks(batch_size) {
-            let mut batch_futures = Vec::new();
-            
+        for chunk in keys.chunks(batch_size) {
             for key in chunk {
-                batch_futures.push(cache.get(key));
-            }
-            
-            // Wait for batch to complete
-            for future in batch_futures {
-                results.push(future.await?);
+                results.push(cache.get(key));
             }
         }
         
@@ -235,26 +228,16 @@ impl BatchCacheOperations {
     }
     
     /// Set multiple key-value pairs in a single operation.
-    pub async fn set_many<C: Cache>(
+    pub fn set_many<C: Cache + ?Sized>(
         cache: &C,
         items: &[(String, serde_json::Value)],
-        ttl: Option<Duration>,
+        ttl: Option<u64>,
     ) -> ActorCoreResult<()> {
-        // Use SmallVec for small item collections
-        let items_small: SmallVec<[&(String, serde_json::Value); 32]> = items.iter().collect();
-        
-        // Process in parallel batches
+        // Process in batches
         let batch_size = 16;
-        for chunk in items_small.chunks(batch_size) {
-            let mut batch_futures = Vec::new();
-            
+        for chunk in items.chunks(batch_size) {
             for (key, value) in chunk {
-                batch_futures.push(cache.set(key, value, ttl));
-            }
-            
-            // Wait for batch to complete
-            for future in batch_futures {
-                future.await?;
+                cache.set(key.clone(), value.clone(), ttl)?;
             }
         }
         
@@ -273,7 +256,7 @@ pub struct CacheWarmer {
 }
 
 /// Cache warming statistics.
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct WarmingStats {
     pub items_warmed: u64,
     pub warming_time: Duration,
@@ -301,7 +284,7 @@ impl CacheWarmer {
         
         // Process in optimized batches
         for chunk in items.chunks(self.batch_size) {
-            match BatchCacheOperations::set_many(&*self.cache, chunk, ttl).await {
+            match BatchCacheOperations::set_many(&*self.cache, chunk, ttl.map(|d| d.as_secs())) {
                 Ok(()) => {
                     let mut stats = self.stats.write().await;
                     stats.items_warmed += chunk.len() as u64;

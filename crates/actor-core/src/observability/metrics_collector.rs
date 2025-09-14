@@ -5,10 +5,10 @@
 
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
-use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
+use std::time::{Duration, Instant, SystemTime};
+use std::sync::atomic::{AtomicU64, Ordering};
 use serde::{Deserialize, Serialize};
-use tracing::{info, warn, error, debug};
+use tracing::{info, debug};
 
 use crate::ActorCoreResult;
 use crate::ActorCoreError;

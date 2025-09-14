@@ -4,10 +4,9 @@
 //! and rollback procedures to ensure smooth transitions and maintain system reliability.
 
 use std::collections::HashMap;
-use std::sync::Arc;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime};
 use serde::{Deserialize, Serialize};
-use tracing::{info, warn, error, debug};
+use tracing::{info, warn, error};
 
 use crate::ActorCoreResult;
 use crate::ActorCoreError;
@@ -239,7 +238,7 @@ impl DeprecationManager {
     pub fn get_approaching_removal(&self) -> Vec<&DeprecationEntry> {
         let now = SystemTime::now();
         let warning_threshold = Duration::from_secs(self.config.warning_threshold_days * 24 * 60 * 60);
-        let critical_threshold = Duration::from_secs(self.config.critical_threshold_days * 24 * 60 * 60);
+        let _critical_threshold = Duration::from_secs(self.config.critical_threshold_days * 24 * 60 * 60);
 
         self.deprecations.values()
             .filter(|d| {

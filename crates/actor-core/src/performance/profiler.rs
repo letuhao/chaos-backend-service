@@ -308,7 +308,7 @@ impl PerformanceProfiler {
         F: FnOnce() -> ActorCoreResult<()>,
     {
         let start_time = Instant::now();
-        let start_metrics = self.get_metrics();
+        let _start_metrics = self.get_metrics();
 
         // Run the test
         let test_result = test_fn();

@@ -4,7 +4,6 @@
 //! including CI/CD integration, regression detection, and reporting.
 
 use std::time::{Duration, SystemTime, UNIX_EPOCH, Instant};
-use std::collections::HashMap;
 use std::sync::Arc;
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
@@ -451,7 +450,7 @@ impl PerformanceWorkflow {
             return PerformanceTrends::default();
         }
 
-        let recent = &history[history.len() - 1];
+        let _recent = &history[history.len() - 1];
         let previous = &history[history.len() - 2];
 
         let score_trend = report.performance_score - previous.performance_report.performance_score;

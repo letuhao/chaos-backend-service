@@ -7,18 +7,16 @@ use async_trait::async_trait;
 use dashmap::DashMap;
 #[cfg(feature = "memory-mapped")]
 use memmap2::Mmap;
-use std::collections::HashMap;
 use std::fs::{File, create_dir_all, read_dir, remove_file};
 use std::io::{Read, Write};
 use std::path::Path;
 use std::sync::Arc;
 use std::time::{Duration, Instant, SystemTime};
 use tokio::sync::RwLock;
-use tracing::error;
 
 use crate::ActorCoreResult;
-use super::layers::{L1Cache, L2Cache, L3Cache, CacheEntry, LayerConfig};
-use super::metrics::{L1CacheStats, L2CacheStats, L3CacheStats};
+use super::layers::{L1Cache, L3Cache, CacheEntry, LayerConfig};
+use super::metrics::{L1CacheStats, L3CacheStats};
 
 /// Lock-free L1 cache implementation using DashMap.
 pub struct LockFreeL1Cache {

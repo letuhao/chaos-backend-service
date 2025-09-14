@@ -3,10 +3,7 @@
 //! This module provides high-performance versions of bucket processing
 //! functions using smallvec, fxhash, and other micro-optimizations.
 
-use std::collections::HashMap;
-use smallvec::{SmallVec, smallvec};
 use fxhash::FxHashMap;
-use ahash::AHashMap;
 
 use crate::enums::Bucket;
 use crate::types::{Contribution, Caps};
@@ -33,18 +30,17 @@ impl OptimizedBucketProcessor {
         
         // Use SmallVec for small collections to avoid heap allocation
         // Most actors have < 32 contributions per dimension
-        let mut contributions_small: SmallVec<[Contribution; 32]> = 
-            SmallVec::from_vec(contributions);
+        let mut contributions_small = contributions;
         
         // Group contributions by bucket type using FxHash for faster hashing
-        let mut contributions_by_bucket: FxHashMap<Bucket, SmallVec<[Contribution; 16]>> = 
+        let mut contributions_by_bucket: FxHashMap<Bucket, Vec<Contribution>> = 
             FxHashMap::default();
         
         // Process contributions in place to avoid allocation
         for contribution in contributions_small.drain(..) {
             contributions_by_bucket
                 .entry(contribution.bucket)
-                .or_insert_with(SmallVec::new)
+                .or_insert_with(Vec::new)
                 .push(contribution);
         }
         
@@ -93,15 +89,15 @@ impl OptimizedBucketProcessor {
     
     /// Optimized contribution sorting with branch prediction hints.
     #[inline(always)]
-    fn sort_contributions_optimized(contribs: &mut SmallVec<[Contribution; 16]>) {
+    fn sort_contributions_optimized(contribs: &mut Vec<Contribution>) {
         // Use unstable sort for better performance with complex comparisons
         contribs.sort_unstable_by(|a, b| {
             // Branch prediction hint: most contributions have priority
             let pa = a.priority.unwrap_or(0);
             let pb = b.priority.unwrap_or(0);
             
-            // Use likely/unlikely hints for branch prediction
-            if std::intrinsics::likely(pa != pb) {
+            // Sort by priority (descending)
+            if pa != pb {
                 pb.cmp(&pa) // DESC by priority
             } else {
                 // Secondary sort by system name
@@ -121,7 +117,7 @@ impl OptimizedBucketProcessor {
     fn apply_bucket_processing(
         mut value: f64,
         bucket: Bucket,
-        contribs: &SmallVec<[Contribution; 16]>,
+        contribs: &Vec<Contribution>,
     ) -> f64 {
         match bucket {
             Bucket::Flat => {
@@ -182,17 +178,14 @@ impl OptimizedBucketProcessor {
     fn apply_caps_optimized(value: f64, caps: &Caps) -> f64 {
         let mut result = value;
         
-        // Use branch prediction hints
-        if std::intrinsics::likely(caps.min.is_some()) {
-            if let Some(min_val) = caps.min {
-                result = result.max(min_val);
-            }
+        // Apply minimum cap
+        if caps.min > result {
+            result = caps.min;
         }
         
-        if std::intrinsics::likely(caps.max.is_some()) {
-            if let Some(max_val) = caps.max {
-                result = result.min(max_val);
-            }
+        // Apply maximum cap
+        if caps.max < result {
+            result = caps.max;
         }
         
         result
@@ -206,14 +199,14 @@ impl OptimizedContributionGrouper {
     /// Group contributions by dimension using FxHash for performance.
     pub fn group_by_dimension(
         contributions: Vec<Contribution>,
-    ) -> FxHashMap<String, SmallVec<[Contribution; 16]>> {
-        let mut groups: FxHashMap<String, SmallVec<[Contribution; 16]>> = 
+    ) -> FxHashMap<String, Vec<Contribution>> {
+        let mut groups: FxHashMap<String, Vec<Contribution>> = 
             FxHashMap::default();
         
         for contrib in contributions {
             groups
-                .entry(contrib.dimension)
-                .or_insert_with(SmallVec::new)
+                .entry(contrib.dimension.clone())
+                .or_insert_with(Vec::new)
                 .push(contrib);
         }
         
@@ -223,14 +216,14 @@ impl OptimizedContributionGrouper {
     /// Group contributions by bucket type with optimized allocation.
     pub fn group_by_bucket(
         contributions: Vec<Contribution>,
-    ) -> FxHashMap<Bucket, SmallVec<[Contribution; 16]>> {
-        let mut groups: FxHashMap<Bucket, SmallVec<[Contribution; 16]>> = 
+    ) -> FxHashMap<Bucket, Vec<Contribution>> {
+        let mut groups: FxHashMap<Bucket, Vec<Contribution>> = 
             FxHashMap::default();
         
         for contrib in contributions {
             groups
                 .entry(contrib.bucket)
-                .or_insert_with(SmallVec::new)
+                .or_insert_with(Vec::new)
                 .push(contrib);
         }
         
@@ -369,7 +362,6 @@ impl BucketProcessorTable {
             Bucket::Mult => self.processors[1],
             Bucket::PostAdd => self.processors[2],
             Bucket::Override => self.processors[3],
-            _ => Self::process_flat, // Default fallback
         }
     }
     

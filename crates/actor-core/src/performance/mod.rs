@@ -11,10 +11,33 @@ pub mod test_suite;
 pub mod workflow;
 pub mod config;
 
-pub use simd::*;
-pub use benchmarks::*;
-pub use analytics::*;
-pub use profiler::*;
-pub use test_suite::*;
-pub use workflow::*;
-pub use config::*;
+// Re-export specific types to avoid naming conflicts
+pub use simd::{SimdConfig, SimdOptimizer, SimdStats, SimdResult};
+pub use benchmarks::{BenchmarkConfig, BenchmarkRunner, BenchmarkResults, ComprehensiveBenchmarkResults};
+pub use analytics::{
+    AnalyticsCollector, AnalyticsConfig,
+    PerformanceMetrics as AnalyticsPerformanceMetrics,
+    SystemMetrics as AnalyticsSystemMetrics,
+    CacheMetrics as AnalyticsCacheMetrics,
+    AggregationMetrics as AnalyticsAggregationMetrics,
+    MemoryMetrics,
+    ErrorMetrics as AnalyticsErrorMetrics
+};
+pub use profiler::{
+    PerformanceProfiler,
+    PerformanceMetrics as ProfilerPerformanceMetrics,
+    SystemMetrics as ProfilerSystemMetrics,
+    CacheMetrics as ProfilerCacheMetrics,
+    AggregationMetrics as ProfilerAggregationMetrics,
+    ErrorMetrics as ProfilerErrorMetrics,
+    PerformanceTestResult as ProfilerPerformanceTestResult
+};
+pub use test_suite::{
+    PerformanceTestSuite,
+    PerformanceTestResult as TestSuitePerformanceTestResult,
+    TestSuiteConfig,
+    TestSuiteResults,
+    OverallTestResults
+};
+pub use workflow::{PerformanceWorkflow, WorkflowConfig, BaselineConfig, WorkflowState, PerformanceTrends, WorkflowExecution, WorkflowReport};
+pub use config::{PerformanceConfig as PerfConfig};

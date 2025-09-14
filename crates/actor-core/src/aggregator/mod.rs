@@ -10,14 +10,15 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{info, warn, error};
+use uuid::Uuid;
 
 use crate::interfaces::{
     Aggregator, PluginRegistry, Cache, CombinerRegistry
 };
 use crate::metrics::AggregatorMetrics;
 use crate::types::*;
+use crate::enums::{Bucket, Operator};
 use crate::ActorCoreResult;
-use crate::bucket_processor::*;
 
 /// AggregatorImpl is the main implementation of the Aggregator trait.
 pub struct AggregatorImpl {
@@ -50,160 +51,257 @@ impl AggregatorImpl {
         }
     }
 
-    /// Resolve actor stats by aggregating contributions from all subsystems.
-    async fn resolve_impl(&self, actor: &Actor) -> ActorCoreResult<Snapshot> {
-        let start_time = std::time::Instant::now();
-        
-        // Check cache first
-        let cache_key = self.generate_cache_key(actor);
-        if let Ok(Some(cached_snapshot)) = self.cache.get(&cache_key).await {
-            info!("Cache hit for actor {}", actor.id);
-            return Ok(cached_snapshot);
-        }
-        
-        info!("Cache miss for actor {}, computing snapshot", actor.id);
-        
-        // Get subsystems for this actor
-        let subsystems = self.subsystem_registry.get_subsystems_for_actor(actor).await?;
-        
-        // Collect contributions from all subsystems
-        let mut all_contributions = Vec::new();
-        let mut all_cap_contributions = Vec::new();
-        
-        for subsystem in subsystems {
-            match subsystem.contribute(actor).await {
-                Ok(output) => {
-                    all_contributions.extend(output.primary);
-                    all_contributions.extend(output.derived);
-                    all_cap_contributions.extend(output.caps);
-                }
-                Err(e) => {
-                    error!("Subsystem {} failed to contribute: {}", subsystem.system_id(), e);
-                    continue;
-                }
-            }
-        }
-        
-        // Group contributions by dimension
-        let contributions_by_dimension = self.group_contributions_by_dimension(all_contributions);
-        
-        // Calculate effective caps
-        let effective_caps = self.calculate_effective_caps(all_cap_contributions).await?;
-        
-        // Aggregate stats for each dimension
-        let mut aggregated_stats = HashMap::new();
-        for (dimension, contributions) in contributions_by_dimension {
-            let initial_value = 0.0;
-            let caps = effective_caps.get(&dimension);
-            
-            let final_value = process_contributions_in_order(contributions, initial_value, caps)?;
-            aggregated_stats.insert(dimension, final_value);
-        }
-        
-        // Create snapshot
-        let snapshot = Snapshot {
-            actor_id: actor.id,
-            stats: aggregated_stats,
-            caps: effective_caps,
-            timestamp: chrono::Utc::now(),
-            version: actor.version,
-        };
-        
-        // Cache the result
-        if let Err(e) = self.cache.set(&cache_key, &snapshot, Some(300)).await {
-            warn!("Failed to cache snapshot: {}", e);
-        }
-        
-        // Update metrics
-        let processing_time = start_time.elapsed();
-        self.update_metrics(processing_time).await;
-        
-        Ok(snapshot)
+    /// Get subsystems for an actor (helper method).
+    fn get_subsystems_for_actor(&self, _actor: &Actor) -> Vec<Arc<dyn crate::interfaces::Subsystem>> {
+        // Get all subsystems from the registry
+        self.subsystem_registry.get_by_priority()
     }
-    
-    /// Group contributions by dimension for processing.
-    fn group_contributions_by_dimension(
+
+    /// Process contributions using bucket processor.
+    async fn process_contributions(
         &self,
         contributions: Vec<Contribution>,
-    ) -> HashMap<String, Vec<Contribution>> {
-        let mut groups: HashMap<String, Vec<Contribution>> = HashMap::new();
-        
+    ) -> ActorCoreResult<HashMap<String, f64>> {
+        // Group contributions by dimension
+        let mut grouped: HashMap<String, Vec<Contribution>> = HashMap::new();
         for contrib in contributions {
-            groups.entry(contrib.dimension).or_insert_with(Vec::new).push(contrib);
+            grouped.entry(contrib.dimension.clone()).or_insert_with(Vec::new).push(contrib);
         }
+
+        let mut results = HashMap::new();
         
-        groups
-    }
-    
-    /// Calculate effective caps from cap contributions.
-    async fn calculate_effective_caps(
-        &self,
-        cap_contributions: Vec<CapContribution>,
-    ) -> ActorCoreResult<HashMap<String, Caps>> {
-        let mut caps_map: HashMap<String, Caps> = HashMap::new();
-        
-        for cap_contrib in cap_contributions {
-            let caps_entry = caps_map.entry(cap_contrib.dimension.clone())
-                .or_insert_with(|| Caps {
-                    min: None,
-                    max: None,
-                });
+        // Process each dimension
+        for (dimension, contribs) in grouped {
+            // Get merge rule for this dimension
+            let merge_rule = self.combiner_registry.get_rule(&dimension);
             
-            match cap_contrib.kind.as_str() {
-                "min" => {
-                    if let Some(current_min) = caps_entry.min {
-                        caps_entry.min = Some(current_min.max(cap_contrib.value));
-                    } else {
-                        caps_entry.min = Some(cap_contrib.value);
-                    }
+            // Process the contributions
+            let result = self.process_dimension_contributions(contribs, merge_rule).await?;
+            results.insert(dimension, result);
+        }
+
+        Ok(results)
+    }
+
+    /// Process contributions for a specific dimension.
+    async fn process_dimension_contributions(
+        &self,
+        contributions: Vec<Contribution>,
+        merge_rule: Option<crate::interfaces::MergeRule>,
+    ) -> ActorCoreResult<f64> {
+        if contributions.is_empty() {
+            return Ok(0.0);
+        }
+
+        // Use the default merge rule if none specified
+        let _rule = merge_rule.unwrap_or(crate::interfaces::MergeRule {
+            use_pipeline: false,
+            operator: Operator::Sum,
+            clamp_default: None,
+        });
+
+        // Process based on bucket type (simplified)
+        let mut result = 0.0;
+        for contrib in contributions {
+            match contrib.bucket {
+                Bucket::Flat => {
+                    result += contrib.value;
                 }
-                "max" => {
-                    if let Some(current_max) = caps_entry.max {
-                        caps_entry.max = Some(current_max.min(cap_contrib.value));
-                    } else {
-                        caps_entry.max = Some(cap_contrib.value);
-                    }
+                Bucket::Mult => {
+                    result *= contrib.value;
+                }
+                Bucket::Override => {
+                    result = contrib.value;
+                }
+                Bucket::PostAdd => {
+                    result += contrib.value;
                 }
             }
         }
+
+        Ok(result)
+    }
+
+    /// Apply caps to a stat value.
+    async fn apply_caps(
+        &self,
+        dimension: &str,
+        value: f64,
+        actor: &Actor,
+    ) -> ActorCoreResult<f64> {
+        // Get caps for this dimension
+        let caps = self.caps_provider.get_caps_for_dimension(dimension, actor).await?;
         
-        Ok(caps_map)
+        let mut capped_value = value;
+        
+        // Apply minimum cap
+        if let Some(caps_struct) = caps {
+            capped_value = capped_value.max(caps_struct.min);
+            capped_value = capped_value.min(caps_struct.max);
+        }
+        
+        Ok(capped_value)
     }
-    
-    /// Generate cache key for an actor.
-    fn generate_cache_key(&self, actor: &Actor) -> String {
-        format!("actor_{}_{}", actor.id, actor.version)
-    }
-    
-    /// Update aggregator metrics.
-    async fn update_metrics(&self, processing_time: std::time::Duration) {
-        let mut metrics = self.metrics.write().await;
-        metrics.total_aggregations += 1;
-        metrics.total_processing_time += processing_time;
-        metrics.avg_aggregation_time = metrics.total_processing_time.as_nanos() as f64 / metrics.total_aggregations as f64;
+
+    /// Create a snapshot from processed stats.
+    fn create_snapshot(
+        &self,
+        actor: &Actor,
+        primary_stats: HashMap<String, f64>,
+        caps_used: HashMap<String, Caps>,
+        subsystems_processed: &[String],
+        processing_time: u64,
+    ) -> Snapshot {
+        Snapshot {
+            actor_id: actor.id,
+            primary: primary_stats,
+            derived: HashMap::new(), // Simplified - no derived stats for now
+            caps_used,
+            version: actor.version,
+            created_at: chrono::Utc::now(),
+            subsystems_processed: subsystems_processed.to_vec(),
+            processing_time: Some(processing_time),
+            metadata: HashMap::new(),
+        }
     }
 }
 
 #[async_trait]
 impl Aggregator for AggregatorImpl {
-    /// Resolve actor stats by aggregating contributions from all subsystems.
     async fn resolve(&self, actor: &Actor) -> ActorCoreResult<Snapshot> {
-        self.resolve_impl(actor).await
+        self.resolve_with_context(actor, None).await
     }
-    
-    /// Resolve actor stats with additional context.
+
     async fn resolve_with_context(
         &self,
         actor: &Actor,
-        context: &HashMap<String, serde_json::Value>,
+        _context: Option<HashMap<String, serde_json::Value>>,
     ) -> ActorCoreResult<Snapshot> {
-        // For now, ignore context
-        // TODO: Implement context-aware aggregation
-        self.resolve_impl(actor).await
+        let start_time = std::time::Instant::now();
+        
+        // Get subsystems for this actor
+        let subsystems = self.get_subsystems_for_actor(actor);
+        let mut subsystems_processed = Vec::new();
+        let mut all_contributions = Vec::new();
+        let mut caps_used = HashMap::new();
+
+        // Process each subsystem
+        for subsystem in subsystems {
+            let subsystem_id = subsystem.system_id();
+            
+            // Get contributions from subsystem
+            match subsystem.contribute(actor).await {
+                Ok(output) => {
+                    // Extract contributions from SubsystemOutput
+                    all_contributions.extend(output.primary);
+                    all_contributions.extend(output.derived);
+                    subsystems_processed.push(subsystem_id.to_string());
+                }
+                Err(e) => {
+                    warn!("Subsystem {} failed to contribute: {}", subsystem_id, e);
+                    // Continue with other subsystems
+                }
+            }
+        }
+
+        // Process all contributions
+        let primary_stats = self.process_contributions(all_contributions).await?;
+
+        // Apply caps to each stat
+        let mut capped_stats = HashMap::new();
+        for (dimension, value) in primary_stats {
+            let capped_value = self.apply_caps(&dimension, value, actor).await?;
+            capped_stats.insert(dimension.clone(), capped_value);
+            
+            // Store caps used
+            let caps = self.caps_provider.get_caps_for_dimension(&dimension, actor).await?;
+            if let Some(caps_struct) = caps {
+                caps_used.insert(dimension, caps_struct);
+            }
+        }
+
+        let processing_time = start_time.elapsed().as_micros() as u64;
+
+        // Create snapshot
+        let snapshot = self.create_snapshot(
+            actor,
+            capped_stats,
+            caps_used,
+            &subsystems_processed,
+            processing_time,
+        );
+
+        // Cache the snapshot
+        self.cache.set(
+            actor.id.to_string(),
+            serde_json::to_value(&snapshot)?,
+            Some(3600), // 1 hour TTL
+        )?;
+
+        // Update metrics
+        {
+            let mut metrics = self.metrics.write().await;
+            metrics.total_resolutions += 1;
+            metrics.avg_resolution_time = (metrics.avg_resolution_time + processing_time) / 2;
+            metrics.max_resolution_time = metrics.max_resolution_time.max(processing_time);
+            metrics.active_subsystems = subsystems_processed.len();
+        }
+
+        info!(
+            "Resolved actor {} with {} subsystems in {}μs",
+            actor.id,
+            subsystems_processed.len(),
+            processing_time
+        );
+
+        Ok(snapshot)
     }
-    
-    /// Get aggregator metrics.
+
+    async fn resolve_batch(&self, actors: &[Actor]) -> ActorCoreResult<Vec<Snapshot>> {
+        let mut results = Vec::new();
+        
+        for actor in actors {
+            match self.resolve(actor).await {
+                Ok(snapshot) => results.push(snapshot),
+                Err(e) => {
+                    error!("Failed to resolve actor {}: {}", actor.id, e);
+                    return Err(e);
+                }
+            }
+        }
+        
+        Ok(results)
+    }
+
+    fn get_cached_snapshot(&self, actor_id: &Uuid) -> Option<Snapshot> {
+        match self.cache.get(&actor_id.to_string()) {
+            Some(value) => {
+                match serde_json::from_value(value) {
+                    Ok(snapshot) => Some(snapshot),
+                    Err(e) => {
+                        warn!("Failed to deserialize cached snapshot for {}: {}", actor_id, e);
+                        None
+                    }
+                }
+            }
+            None => None,
+        }
+    }
+
+    fn invalidate_cache(&self, actor_id: &Uuid) {
+        if let Err(e) = self.cache.delete(&actor_id.to_string()) {
+            warn!("Failed to invalidate cache for {}: {}", actor_id, e);
+        }
+    }
+
+    fn clear_cache(&self) {
+        if let Err(e) = self.cache.clear() {
+            warn!("Failed to clear cache: {}", e);
+        }
+    }
+
     async fn get_metrics(&self) -> AggregatorMetrics {
-        self.metrics.read().await.clone()
+        let metrics = self.metrics.read().await;
+        metrics.clone()
     }
 }

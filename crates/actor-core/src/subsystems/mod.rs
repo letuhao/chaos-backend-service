@@ -10,17 +10,13 @@
 //! - `exhaustion/` - Resource exhaustion system components
 //! - `performance/` - Performance monitoring and optimization tools
 //! - `core/` - Core system functionality
-//! - `testing/` - Testing utilities and integration tests
-
 pub mod resource_management;
 pub mod exhaustion;
 pub mod performance;
 pub mod core;
-pub mod testing;
 
 // Re-export commonly used subsystems for backward compatibility
 pub use resource_management::*;
 pub use exhaustion::*;
 pub use performance::*;
 pub use core::*;
-pub use testing::*;

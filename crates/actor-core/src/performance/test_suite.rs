@@ -3,12 +3,11 @@
 //! This module provides a comprehensive test suite for validating
 //! performance thresholds and detecting regressions.
 
-use std::time::{Duration, Instant};
+use std::time::Duration;
 use std::sync::Arc;
 use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use crate::ActorCoreResult;
-use crate::interfaces::{Aggregator, Cache, PluginRegistry};
 use crate::types::{Actor, Contribution, SubsystemOutput};
 use crate::service_factory::ServiceFactory;
 use super::profiler::{PerformanceProfiler, ProfilerConfig, PerformanceReport};
@@ -32,6 +31,32 @@ pub struct PerformanceTestResult {
     pub violations: Vec<String>,
     /// Performance recommendations
     pub recommendations: Vec<String>,
+}
+
+impl PerformanceTestResult {
+    /// Convert from profiler's PerformanceTestResult to test suite's PerformanceTestResult
+    pub fn from_profiler_result(profiler_result: super::profiler::PerformanceTestResult) -> Self {
+        let mut metrics = HashMap::new();
+        // Extract metrics from the PerformanceMetrics struct
+        metrics.insert("aggregation_ops".to_string(), profiler_result.metrics.aggregation.total_aggregations as f64);
+        metrics.insert("cache_hit_rate".to_string(), profiler_result.metrics.cache.hit_rate);
+        metrics.insert("cache_miss_rate".to_string(), profiler_result.metrics.cache.miss_rate);
+        metrics.insert("system_memory".to_string(), profiler_result.metrics.system.memory_usage as f64);
+        metrics.insert("error_count".to_string(), profiler_result.metrics.errors.total_errors as f64);
+
+        Self {
+            test_name: profiler_result.test_name,
+            duration: profiler_result.duration,
+            passed: profiler_result.passed,
+            score: profiler_result.score,
+            metrics,
+            error_message: None, // Profiler result doesn't have error_message field
+            violations: profiler_result.violations.into_iter().map(|v| {
+                format!("{}: {} (threshold: {})", v.threshold_name, v.actual_value, v.threshold_value)
+            }).collect(),
+            recommendations: profiler_result.recommendations,
+        }
+    }
 }
 
 /// Performance test suite that runs comprehensive performance tests.
@@ -137,7 +162,7 @@ impl PerformanceTestSuite {
                 Ok(())
             },
         )?;
-        results.push(cache_creation_result);
+        results.push(PerformanceTestResult::from_profiler_result(cache_creation_result));
 
         // Test cache operations performance
         let cache_operations_result = self.profiler.run_performance_test(
@@ -161,7 +186,7 @@ impl PerformanceTestSuite {
                 Ok(())
             },
         )?;
-        results.push(cache_operations_result);
+        results.push(PerformanceTestResult::from_profiler_result(cache_operations_result));
 
         // Test cache hit rate performance
         let cache_hit_rate_result = self.profiler.run_performance_test(
@@ -187,7 +212,7 @@ impl PerformanceTestSuite {
                 Ok(())
             },
         )?;
-        results.push(cache_hit_rate_result);
+        results.push(PerformanceTestResult::from_profiler_result(cache_hit_rate_result));
 
         Ok(results)
     }
@@ -222,7 +247,7 @@ impl PerformanceTestSuite {
                     Contribution::new("intelligence".to_string(), crate::Bucket::Flat, 12.0, "test_system".to_string()),
                 ];
 
-                let subsystem_output = SubsystemOutput {
+                let _subsystem_output = SubsystemOutput {
                     primary: contributions,
                     derived: Vec::new(),
                     caps: Vec::new(),
@@ -239,7 +264,7 @@ impl PerformanceTestSuite {
                 Ok(())
             },
         )?;
-        results.push(basic_aggregation_result);
+        results.push(PerformanceTestResult::from_profiler_result(basic_aggregation_result));
 
         // Test stress aggregation performance
         let stress_aggregation_result = self.profiler.run_performance_test(
@@ -271,7 +296,7 @@ impl PerformanceTestSuite {
                         ));
                     }
 
-                    let subsystem_output = SubsystemOutput {
+                    let _subsystem_output = SubsystemOutput {
                         primary: contributions,
                         derived: Vec::new(),
                         caps: Vec::new(),
@@ -288,7 +313,7 @@ impl PerformanceTestSuite {
                 Ok(())
             },
         )?;
-        results.push(stress_aggregation_result);
+        results.push(PerformanceTestResult::from_profiler_result(stress_aggregation_result));
 
         Ok(results)
     }
@@ -314,7 +339,7 @@ impl PerformanceTestSuite {
                 Ok(())
             },
         )?;
-        results.push(memory_allocation_result);
+        results.push(PerformanceTestResult::from_profiler_result(memory_allocation_result));
 
         // Test memory cleanup performance
         let memory_cleanup_result = self.profiler.run_performance_test(
@@ -329,7 +354,7 @@ impl PerformanceTestSuite {
                 Ok(())
             },
         )?;
-        results.push(memory_cleanup_result);
+        results.push(PerformanceTestResult::from_profiler_result(memory_cleanup_result));
 
         Ok(results)
     }
@@ -366,7 +391,7 @@ impl PerformanceTestSuite {
                 Ok(())
             },
         )?;
-        results.push(concurrent_cache_result);
+        results.push(PerformanceTestResult::from_profiler_result(concurrent_cache_result));
 
         // Test concurrent aggregation operations
         let concurrent_aggregation_result = self.profiler.run_performance_test(
@@ -400,7 +425,7 @@ impl PerformanceTestSuite {
                                     "test_system".to_string(),
                                 ),
                             ];
-                            let subsystem_output = SubsystemOutput {
+                            let _subsystem_output = SubsystemOutput {
                                 primary: contributions,
                                 derived: Vec::new(),
                                 caps: Vec::new(),
@@ -424,7 +449,7 @@ impl PerformanceTestSuite {
                 Ok(())
             },
         )?;
-        results.push(concurrent_aggregation_result);
+        results.push(PerformanceTestResult::from_profiler_result(concurrent_aggregation_result));
 
         Ok(results)
     }

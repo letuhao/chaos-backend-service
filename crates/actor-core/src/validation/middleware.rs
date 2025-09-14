@@ -24,7 +24,7 @@ pub struct ValidationMiddleware<T> {
 }
 
 /// Validation statistics for monitoring.
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct ValidationStats {
     /// Total validations performed
     pub total_validations: u64,
@@ -193,7 +193,7 @@ impl crate::interfaces::Aggregator for AggregatorValidationMiddleware {
     async fn resolve_with_context(
         &self,
         actor: &Actor,
-        context: &HashMap<String, serde_json::Value>,
+        context: Option<HashMap<String, serde_json::Value>>,
     ) -> ActorCoreResult<Snapshot> {
         // Validate actor before processing
         let validation_result = self.validate_with_stats(|validator| {
@@ -208,14 +208,16 @@ impl crate::interfaces::Aggregator for AggregatorValidationMiddleware {
         }
 
         // Validate context if provided
-        if !context.is_empty() {
-            let context_validation = self.validate_with_stats(|validator| {
-                validator.validate_config(context)
-            }).await;
+        if let Some(context_map) = &context {
+            if !context_map.is_empty() {
+                let context_validation = self.validate_with_stats(|validator| {
+                    validator.validate_config(context_map)
+                }).await;
 
-            if !context_validation.is_valid {
-                warn!("Context validation failed: {:?}", context_validation.errors);
-                // Context validation failures are warnings, not errors
+                if !context_validation.is_valid {
+                    warn!("Context validation failed: {:?}", context_validation.errors);
+                    // Context validation failures are warnings, not errors
+                }
             }
         }
 
@@ -238,12 +240,50 @@ impl crate::interfaces::Aggregator for AggregatorValidationMiddleware {
         Ok(snapshot)
     }
 
+    async fn resolve_batch(&self, actors: &[Actor]) -> ActorCoreResult<Vec<Snapshot>> {
+        let mut results = Vec::with_capacity(actors.len());
+        for actor in actors {
+            results.push(self.resolve(actor).await?);
+        }
+        Ok(results)
+    }
+
+    fn get_cached_snapshot(&self, actor_id: &uuid::Uuid) -> Option<Snapshot> {
+        if let Some(cached) = self.inner.get_cached_snapshot(actor_id) {
+            // Validate cached snapshot before returning
+            let validation_result = futures::executor::block_on(self.validate_with_stats(|validator| {
+                validator.validate_snapshot(&cached)
+            }));
+
+            if !validation_result.is_valid {
+                warn!("Cached snapshot validation failed: {:?}", validation_result.errors);
+                return None;
+            }
+
+            if validation_result.has_warnings() {
+                warn!("Cached snapshot validation warnings: {:?}", validation_result.warnings);
+            }
+
+            Some(cached)
+        } else {
+            None
+        }
+    }
+
+    fn invalidate_cache(&self, actor_id: &uuid::Uuid) {
+        self.inner.invalidate_cache(actor_id);
+    }
+
+    fn clear_cache(&self) {
+        self.inner.clear_cache();
+    }
+
     /// Get aggregator metrics.
     async fn get_metrics(&self) -> crate::metrics::AggregatorMetrics {
-        let mut metrics = self.inner.get_metrics().await;
+        let metrics = self.inner.get_metrics().await;
         
         // Add validation statistics to metrics
-        let validation_stats = self.get_stats().await;
+        let _validation_stats = self.get_stats().await;
         
         // Note: We can't directly add validation stats to AggregatorMetrics
         // as it doesn't have validation fields. In a real implementation,
@@ -305,28 +345,28 @@ impl CacheValidationMiddleware {
     }
 }
 
-#[async_trait::async_trait]
 impl crate::interfaces::Cache for CacheValidationMiddleware {
     /// Get value from cache with validation.
-    async fn get(&self, key: &str) -> ActorCoreResult<Option<serde_json::Value>> {
+    fn get(&self, key: &str) -> Option<serde_json::Value> {
         // Validate key
         if key.is_empty() {
-            return Err(ActorCoreError::InvalidInput("Cache key cannot be empty".to_string()));
+            warn!("Cache key cannot be empty");
+            return None;
         }
 
-        let result = self.inner.get(key).await?;
+        let result = self.inner.get(key);
 
         // If we got a value, try to validate it as a snapshot
         if let Some(value) = &result {
             if let Ok(snapshot) = serde_json::from_value::<Snapshot>(value.clone()) {
-                let validation_result = self.validate_with_stats(|validator| {
+                let validation_result = futures::executor::block_on(self.validate_with_stats(|validator| {
                     validator.validate_snapshot(&snapshot)
-                }).await;
+                }));
 
                 if !validation_result.is_valid {
                     warn!("Cached snapshot validation failed: {:?}", validation_result.errors);
                     // Return None instead of the invalid cached value
-                    return Ok(None);
+                    return None;
                 }
 
                 if validation_result.has_warnings() {
@@ -335,11 +375,11 @@ impl crate::interfaces::Cache for CacheValidationMiddleware {
             }
         }
 
-        Ok(result)
+        result
     }
 
     /// Set value in cache with validation.
-    async fn set(
+    fn set(
         &self,
         key: String,
         value: serde_json::Value,
@@ -352,9 +392,9 @@ impl crate::interfaces::Cache for CacheValidationMiddleware {
 
         // If the value is a snapshot, validate it
         if let Ok(snapshot) = serde_json::from_value::<Snapshot>(value.clone()) {
-            let validation_result = self.validate_with_stats(|validator| {
+            let validation_result = futures::executor::block_on(self.validate_with_stats(|validator| {
                 validator.validate_snapshot(&snapshot)
-            }).await;
+            }));
 
             if !validation_result.is_valid {
                 error!("Snapshot validation failed before caching: {:?}", validation_result.errors);
@@ -368,27 +408,27 @@ impl crate::interfaces::Cache for CacheValidationMiddleware {
             }
         }
 
-        self.inner.set(key, value, ttl).await
+        self.inner.set(key, value, ttl)
     }
 
     /// Delete value from cache.
-    async fn delete(&self, key: &str) -> ActorCoreResult<bool> {
+    fn delete(&self, key: &str) -> ActorCoreResult<()> {
         // Validate key
         if key.is_empty() {
             return Err(ActorCoreError::InvalidInput("Cache key cannot be empty".to_string()));
         }
 
-        self.inner.delete(key).await
+        self.inner.delete(key)
     }
 
     /// Clear cache.
-    async fn clear(&self) -> ActorCoreResult<()> {
-        self.inner.clear().await
+    fn clear(&self) -> ActorCoreResult<()> {
+        self.inner.clear()
     }
 
     /// Get cache statistics.
-    async fn get_stats(&self) -> ActorCoreResult<crate::metrics::CacheStats> {
-        self.inner.get_stats().await
+    fn get_stats(&self) -> crate::metrics::CacheStats {
+        self.inner.get_stats()
     }
 }
 
@@ -460,8 +500,18 @@ impl crate::interfaces::PluginRegistry for RegistryValidationMiddleware {
     /// Register subsystem with validation.
     fn register(&self, subsystem: Arc<dyn crate::interfaces::Subsystem>) -> ActorCoreResult<()> {
         // Validate subsystem metadata
-        let validation_result = self.validate_with_stats_sync(|validator| {
-            validator.validate_system(subsystem.system_id(), "system_id", &mut ValidationResult::new())
+        let validation_result = self.validate_with_stats_sync(|_validator| {
+            let mut result = ValidationResult::new();
+            // Simple validation - check if system_id is not empty
+            if subsystem.system_id().is_empty() {
+                result.add_error(ValidationError {
+                    code: "EMPTY_SYSTEM_ID".to_string(),
+                    field: Some("system_id".to_string()),
+                    message: "System ID cannot be empty".to_string(),
+                    context: None,
+                });
+            }
+            result
         });
 
         if !validation_result.is_valid {
@@ -516,6 +566,42 @@ impl crate::interfaces::PluginRegistry for RegistryValidationMiddleware {
     /// Get the number of registered subsystems.
     fn count(&self) -> usize {
         self.inner.count()
+    }
+
+    /// Validate all registered subsystems.
+    fn validate_all(&self) -> ActorCoreResult<()> {
+        let validation_result = self.validate_with_stats_sync(|_validator| {
+            // Get all registered subsystems and validate them
+            let subsystems = self.inner.get_by_priority();
+            let mut result = ValidationResult::new();
+            
+            for subsystem in subsystems {
+                // Simple validation - check if system_id is not empty
+                if subsystem.system_id().is_empty() {
+                    result.add_error(ValidationError {
+                        code: "EMPTY_SYSTEM_ID".to_string(),
+                        field: Some("system_id".to_string()),
+                        message: "System ID cannot be empty".to_string(),
+                        context: None,
+                    });
+                }
+            }
+            
+            result
+        });
+
+        if !validation_result.is_valid {
+            error!("Registry validation failed: {:?}", validation_result.errors);
+            return Err(ActorCoreError::RegistryError(
+                validation_result.first_error().unwrap_or_else(|| "Registry validation failed".to_string())
+            ));
+        }
+
+        if validation_result.has_warnings() {
+            warn!("Registry validation warnings: {:?}", validation_result.warnings);
+        }
+
+        Ok(())
     }
 }
 

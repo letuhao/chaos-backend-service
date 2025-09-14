@@ -4,10 +4,9 @@
 //! providing automated monitoring and alerting capabilities.
 
 use std::collections::HashMap;
-use std::sync::Arc;
-use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime};
 use serde::{Deserialize, Serialize};
-use tracing::{info, warn, error, debug};
+use tracing::{info, warn, error};
 
 use crate::ActorCoreResult;
 use crate::ActorCoreError;
@@ -161,7 +160,8 @@ impl SLOManager {
         );
 
         self.slos.insert(slo.id.clone(), slo);
-        self.measurements.insert(self.slos[&self.slos.keys().last().unwrap()].id.clone(), Vec::new());
+        let last_key = self.slos.keys().last().unwrap();
+        self.measurements.insert(self.slos[last_key].id.clone(), Vec::new());
         Ok(())
     }
 

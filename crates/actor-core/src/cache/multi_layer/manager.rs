@@ -168,7 +168,7 @@ impl MultiLayerCacheManager {
     /// Synchronize caches between layers.
     async fn sync_caches(
         l2_cache: &Arc<dyn L2Cache>,
-        l3_cache: &Arc<dyn L3Cache>,
+        _l3_cache: &Arc<dyn L3Cache>,
         stats: &Arc<RwLock<MultiLayerStats>>,
     ) -> ActorCoreResult<()> {
         debug!("Starting cache synchronization");

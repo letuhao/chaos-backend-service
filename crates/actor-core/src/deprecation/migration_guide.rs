@@ -4,9 +4,8 @@
 //! to help users transition between different versions of Actor Core.
 
 use std::collections::HashMap;
-use std::time::SystemTime;
 use serde::{Deserialize, Serialize};
-use tracing::{info, warn, error, debug};
+use tracing::{info, debug};
 
 use crate::ActorCoreResult;
 use crate::ActorCoreError;
@@ -45,7 +44,7 @@ pub struct MigrationGuide {
 }
 
 /// Complexity levels for migrations.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum MigrationComplexity {
     /// Low complexity - minor changes
     Low,
@@ -58,7 +57,7 @@ pub enum MigrationComplexity {
 }
 
 /// Estimated migration time ranges.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum MigrationTime {
     /// Less than 1 hour
     Quick,

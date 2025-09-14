@@ -165,12 +165,14 @@ fn apply_bucket_processing(
 fn apply_caps(value: f64, caps: &Caps) -> f64 {
     let mut result = value;
     
-    if let Some(min_val) = caps.min {
-        result = result.max(min_val);
+    // Apply minimum cap
+    if caps.min > result {
+        result = caps.min;
     }
     
-    if let Some(max_val) = caps.max {
-        result = result.min(max_val);
+    // Apply maximum cap
+    if caps.max < result {
+        result = caps.max;
     }
     
     result

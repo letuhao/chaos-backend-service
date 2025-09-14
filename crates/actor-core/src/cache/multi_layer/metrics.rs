@@ -470,3 +470,113 @@ impl CacheLayer {
         }
     }
 }
+
+/// Statistics for cache warming operations.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CacheWarmingStats {
+    /// Total warming operations performed
+    pub total_warming_ops: u64,
+    /// Total warming operations that succeeded
+    pub successful_warming_ops: u64,
+    /// Total warming operations that failed
+    pub failed_warming_ops: u64,
+    /// Total items warmed
+    pub total_items_warmed: u64,
+    /// Total warming time
+    pub total_warming_time: Duration,
+    /// Average warming time per operation
+    pub avg_warming_time: Duration,
+    /// Last warming operation timestamp
+    #[serde(serialize_with = "serialize_instant", deserialize_with = "deserialize_instant")]
+    pub last_warming_time: Instant,
+}
+
+impl CacheWarmingStats {
+    /// Create new cache warming statistics.
+    pub fn new() -> Self {
+        Self {
+            total_warming_ops: 0,
+            successful_warming_ops: 0,
+            failed_warming_ops: 0,
+            total_items_warmed: 0,
+            total_warming_time: Duration::ZERO,
+            avg_warming_time: Duration::ZERO,
+            last_warming_time: Instant::now(),
+        }
+    }
+
+    /// Record a successful warming operation.
+    pub fn record_success(&mut self, items_warmed: u64, duration: Duration) {
+        self.total_warming_ops += 1;
+        self.successful_warming_ops += 1;
+        self.total_items_warmed += items_warmed;
+        self.total_warming_time += duration;
+        self.last_warming_time = Instant::now();
+        self.update_avg_warming_time();
+    }
+
+    /// Record a failed warming operation.
+    pub fn record_failure(&mut self, duration: Duration) {
+        self.total_warming_ops += 1;
+        self.failed_warming_ops += 1;
+        self.total_warming_time += duration;
+        self.last_warming_time = Instant::now();
+        self.update_avg_warming_time();
+    }
+
+    /// Update the average warming time.
+    fn update_avg_warming_time(&mut self) {
+        if self.total_warming_ops > 0 {
+            let total_nanos = self.total_warming_time.as_nanos() as u64;
+            let avg_nanos = total_nanos / self.total_warming_ops;
+            self.avg_warming_time = Duration::from_nanos(avg_nanos);
+        }
+    }
+
+    /// Get the success rate as a percentage.
+    pub fn success_rate(&self) -> f64 {
+        if self.total_warming_ops == 0 {
+            0.0
+        } else {
+            (self.successful_warming_ops as f64 / self.total_warming_ops as f64) * 100.0
+        }
+    }
+
+    /// Get the failure rate as a percentage.
+    pub fn failure_rate(&self) -> f64 {
+        if self.total_warming_ops == 0 {
+            0.0
+        } else {
+            (self.failed_warming_ops as f64 / self.total_warming_ops as f64) * 100.0
+        }
+    }
+
+    /// Record a warming operation with success and error counts.
+    pub fn record_warming_operation(&mut self, success_count: u64, error_count: u64, duration: Duration) {
+        self.total_warming_ops += 1;
+        if error_count == 0 {
+            self.successful_warming_ops += 1;
+            self.total_items_warmed += success_count;
+        } else {
+            self.failed_warming_ops += 1;
+        }
+        self.total_warming_time += duration;
+        self.last_warming_time = Instant::now();
+        self.update_avg_warming_time();
+    }
+
+    /// Record a scheduled warming operation.
+    pub fn record_scheduled_warming(&mut self, duration: Duration) {
+        self.total_warming_ops += 1;
+        self.successful_warming_ops += 1;
+        self.total_warming_time += duration;
+        self.last_warming_time = Instant::now();
+        self.update_avg_warming_time();
+    }
+}
+
+impl Default for CacheWarmingStats {
+    fn default() -> Self {
+        Self::new()
+    }
+}

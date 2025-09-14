@@ -7,19 +7,17 @@ use async_trait::async_trait;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{info, warn, error};
+use tracing::{warn, error};
 
-use smallvec::{SmallVec, smallvec};
 use fxhash::FxHashMap;
-use ahash::AHashMap;
 
 use crate::interfaces::{
-    Aggregator, PluginRegistry, Cache, CombinerRegistry, Subsystem
+    Aggregator, PluginRegistry, Cache, CombinerRegistry
 };
 use crate::metrics::AggregatorMetrics;
 use crate::types::*;
 use crate::ActorCoreResult;
-use crate::bucket_processor::{process_contributions_in_order, optimized::OptimizedBucketProcessor};
+use uuid::Uuid;
 
 /// Optimized aggregator implementation with micro-optimizations.
 pub struct OptimizedAggregator {
@@ -64,18 +62,20 @@ impl OptimizedAggregator {
         
         // Check cache first using atomic operations
         let cache_key = self.generate_cache_key(actor);
-        if let Ok(Some(cached_snapshot)) = self.cache.get(&cache_key).await {
-            self.atomic_metrics.record_cache_hit();
-            return Ok(cached_snapshot);
+        if let Some(cached_value) = self.cache.get(&cache_key) {
+            if let Ok(cached_snapshot) = serde_json::from_value(cached_value) {
+                self.atomic_metrics.record_cache_hit();
+                return Ok(cached_snapshot);
+            }
         }
         
         self.atomic_metrics.record_cache_miss();
         
         // Get subsystems with optimized collection
-        let subsystems = self.subsystem_registry.get_subsystems_for_actor(actor).await?;
+        let subsystems = self.subsystem_registry.get_by_priority();
         
-        // Use SmallVec for small subsystem collections
-        let mut subsystem_outputs: SmallVec<[SubsystemOutput; 16]> = SmallVec::new();
+        // Use Vec for subsystem collections
+        let mut subsystem_outputs: Vec<SubsystemOutput> = Vec::new();
         
         // Process subsystems with optimized async batching
         for subsystem in subsystems {
@@ -92,7 +92,7 @@ impl OptimizedAggregator {
         let snapshot = self.aggregate_contributions_optimized(actor, &subsystem_outputs).await?;
         
         // Cache the result
-        if let Err(e) = self.cache.set(&cache_key, &snapshot, Some(300)).await {
+        if let Err(e) = self.cache.set(cache_key, serde_json::to_value(&snapshot)?, Some(300)) {
             warn!("Failed to cache snapshot: {}", e);
         }
         
@@ -107,7 +107,7 @@ impl OptimizedAggregator {
     async fn aggregate_contributions_optimized(
         &self,
         actor: &Actor,
-        subsystem_outputs: &SmallVec<[SubsystemOutput; 16]>,
+        subsystem_outputs: &[SubsystemOutput],
     ) -> ActorCoreResult<Snapshot> {
         // Use FxHashMap for faster lookups in hot paths
         let mut aggregated_stats: FxHashMap<String, f64> = FxHashMap::default();
@@ -135,10 +135,14 @@ impl OptimizedAggregator {
         // Create snapshot with optimized data structures
         Ok(Snapshot {
             actor_id: actor.id,
-            stats: aggregated_stats.into_iter().collect(),
-            caps: effective_caps.into_iter().collect(),
-            timestamp: chrono::Utc::now(),
+            primary: aggregated_stats.into_iter().collect(),
+            derived: HashMap::new(), // Simplified - no derived stats for now
+            caps_used: effective_caps.into_iter().collect(),
             version: actor.version,
+            created_at: chrono::Utc::now(),
+            subsystems_processed: Vec::new(), // Will be filled by caller
+            processing_time: None,
+            metadata: HashMap::new(),
         })
     }
     
@@ -149,19 +153,19 @@ impl OptimizedAggregator {
         contributions: &[Contribution],
     ) {
         // Group contributions by dimension using FxHash
-        let mut grouped: FxHashMap<String, SmallVec<[Contribution; 16]>> = FxHashMap::default();
+        let mut grouped: FxHashMap<String, Vec<Contribution>> = FxHashMap::default();
         
         for contrib in contributions {
             grouped
                 .entry(contrib.dimension.clone())
-                .or_insert_with(SmallVec::new)
+                .or_insert_with(Vec::new)
                 .push(contrib.clone());
         }
         
         // Process each dimension group
-        for (dimension, mut contribs) in grouped {
+        for (dimension, contribs) in grouped {
             // Use interned dimension names to reduce allocations
-            let interned_dimension = {
+            let _interned_dimension = {
                 let mut interner = self.dimension_interner.blocking_write();
                 interner.intern(&dimension)
             };
@@ -170,12 +174,12 @@ impl OptimizedAggregator {
             let initial_value = stats.get(&dimension).copied().unwrap_or(0.0);
             
             // Process with optimized bucket processor
-            if let Ok(final_value) = OptimizedBucketProcessor::process_contributions_optimized(
-                contribs.into_vec(),
-                initial_value,
-                None,
-            ) {
-                stats.insert(dimension, final_value);
+            let mut temp_stats = FxHashMap::default();
+            temp_stats.insert(dimension.clone(), initial_value);
+            self.process_contributions_optimized(&mut temp_stats, &contribs);
+            
+            if let Some(final_value) = temp_stats.get(&dimension) {
+                stats.insert(dimension, *final_value);
             }
         }
     }
@@ -189,24 +193,19 @@ impl OptimizedAggregator {
         for cap_contrib in cap_contributions {
             let caps_entry = caps.entry(cap_contrib.dimension.clone())
                 .or_insert_with(|| Caps {
-                    min: None,
-                    max: None,
+                    min: 0.0,
+                    max: f64::INFINITY,
                 });
             
             match cap_contrib.kind.as_str() {
                 "min" => {
-                    if let Some(current_min) = caps_entry.min {
-                        caps_entry.min = Some(current_min.max(cap_contrib.value));
-                    } else {
-                        caps_entry.min = Some(cap_contrib.value);
-                    }
+                    caps_entry.min = caps_entry.min.max(cap_contrib.value);
                 }
                 "max" => {
-                    if let Some(current_max) = caps_entry.max {
-                        caps_entry.max = Some(current_max.min(cap_contrib.value));
-                    } else {
-                        caps_entry.max = Some(cap_contrib.value);
-                    }
+                    caps_entry.max = caps_entry.max.min(cap_contrib.value);
+                }
+                _ => {
+                    // Ignore unknown cap kinds
                 }
             }
         }
@@ -217,12 +216,12 @@ impl OptimizedAggregator {
     fn apply_caps_optimized(&self, value: f64, caps: &Caps) -> f64 {
         let mut result = value;
         
-        if let Some(min_val) = caps.min {
-            result = result.max(min_val);
+        if caps.min > value {
+            result = caps.min;
         }
         
-        if let Some(max_val) = caps.max {
-            result = result.min(max_val);
+        if caps.max < result {
+            result = caps.max;
         }
         
         result
@@ -239,7 +238,7 @@ impl OptimizedAggregator {
         
         // Include subsystem IDs for cache invalidation
         for subsystem in &actor.subsystems {
-            subsystem.id.hash(&mut hasher);
+            subsystem.system_id.hash(&mut hasher);
         }
         
         format!("actor_{}", hasher.finish())
@@ -267,23 +266,54 @@ impl Aggregator for OptimizedAggregator {
     async fn resolve_with_context(
         &self,
         actor: &Actor,
-        context: &HashMap<String, serde_json::Value>,
+        context: Option<HashMap<String, serde_json::Value>>,
     ) -> ActorCoreResult<Snapshot> {
         // For now, ignore context in optimized version
         // TODO: Implement context-aware optimization
+        let _context = context;
         self.resolve_optimized(actor).await
     }
     
+    async fn resolve_batch(&self, actors: &[Actor]) -> ActorCoreResult<Vec<Snapshot>> {
+        let mut results = Vec::with_capacity(actors.len());
+        for actor in actors {
+            results.push(self.resolve(actor).await?);
+        }
+        Ok(results)
+    }
+
+    fn get_cached_snapshot(&self, actor_id: &Uuid) -> Option<Snapshot> {
+        let cache_key = format!("actor_{}", actor_id);
+        match self.cache.get(&cache_key) {
+            Some(value) => {
+                match serde_json::from_value(value) {
+                    Ok(snapshot) => Some(snapshot),
+                    Err(e) => {
+                        warn!("Failed to deserialize cached snapshot for {}: {}", actor_id, e);
+                        None
+                    }
+                }
+            }
+            None => None,
+        }
+    }
+
+    fn invalidate_cache(&self, actor_id: &Uuid) {
+        let cache_key = format!("actor_{}", actor_id);
+        if let Err(e) = self.cache.delete(&cache_key) {
+            warn!("Failed to invalidate cache for {}: {}", actor_id, e);
+        }
+    }
+
+    fn clear_cache(&self) {
+        if let Err(e) = self.cache.clear() {
+            warn!("Failed to clear cache: {}", e);
+        }
+    }
+
     /// Get aggregator metrics.
     async fn get_metrics(&self) -> AggregatorMetrics {
-        let mut metrics = self.metrics.read().await.clone();
-        
-        // Update with atomic metrics
-        metrics.cache_hit_rate = self.get_cache_hit_rate();
-        metrics.total_operations = self.atomic_metrics.total_ops.load(std::sync::atomic::Ordering::Relaxed);
-        metrics.avg_processing_time_ns = self.atomic_metrics.avg_processing_time.load(std::sync::atomic::Ordering::Relaxed);
-        
-        metrics
+        self.metrics.read().await.clone()
     }
 }
 
@@ -348,7 +378,7 @@ impl BatchAggregator {
             match handle.await {
                 Ok(Ok(snapshot)) => results.push(snapshot),
                 Ok(Err(e)) => return Err(e),
-                Err(e) => return Err(crate::ActorCoreError::InternalError(format!("Task join error: {}", e))),
+                Err(e) => return Err(crate::ActorCoreError::AggregationError(format!("Task join error: {}", e))),
             }
         }
         
