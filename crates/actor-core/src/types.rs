@@ -94,8 +94,9 @@ impl Actor {
 
     /// Check if the actor has active buffs.
     pub fn has_buffs(&self) -> bool {
-        self.data.get("has_buffs")
-            .and_then(|v| v.as_bool())
+        self.data.get("buffs")
+            .and_then(|v| v.as_array())
+            .map(|buffs| !buffs.is_empty())
             .unwrap_or(false)
     }
 
