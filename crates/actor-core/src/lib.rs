@@ -180,6 +180,7 @@ pub mod error;
 pub mod service_factory;
 pub mod validation;
 pub mod deprecation;
+pub mod api_stability;
 
 // Prelude module - clean API surface
 pub mod prelude;

@@ -458,7 +458,7 @@ async fn test_run_comprehensive_test_suite() {
     assert!(results.success_rate > 0.0);
     assert!(results.total_execution_time > 0.0);
     assert!(results.average_execution_time > 0.0);
-    assert!(results.total_memory_usage >= 0); // This is always true for usize, but kept for clarity
+    // Note: total_memory_usage is usize (unsigned), so >= 0 is always true
     assert!(!results.test_results.is_empty());
 }
 
