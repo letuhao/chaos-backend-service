@@ -6,6 +6,8 @@ Damage System là trung tâm của Combat Core, xử lý tất cả các loại 
 
 **Integration với Element-Core**: Damage System sử dụng hybrid approach, trong đó Element-Core cung cấp element stats (bao gồm Omni stats) và Combat-Core thực hiện damage calculation dựa trên những stats này.
 
+**⚠️ Critical Implementation Notes**: Xem [Element Core Implementation Notes](../element-core/06_Implementation_Notes.md) để biết các yêu cầu implementation quan trọng, bao gồm damage composition law, Omni additive-only rule, và status hit dependency.
+
 ## 🎯 **Nguyên Tắc Thiết Kế**
 
 ### **1. Flexible & Extensible**
@@ -58,6 +60,57 @@ Damage System
     ├── Range Validation
     ├── Type Validation
     └── Limit Enforcement
+```
+
+## ⚠️ **Critical Implementation Requirements**
+
+### **1. Damage Composition Law**
+
+#### **Correct Order of Operations**
+```rust
+// 1. Base damage calculation
+let base_damage = calculate_base_damage(action);
+
+// 2. Apply element multiplier
+let element_multiplier = get_element_multiplier(attacker_element, target_element);
+let element_damage = base_damage * element_multiplier;
+
+// 3. Apply resistance (after penetration)
+let resistance = calculate_resistance_after_penetration(target, element_type);
+let final_damage = element_damage * (1.0 - resistance);
+
+// 4. Apply DoT/CC after damage calculation
+if should_apply_status {
+    apply_status_effects(attacker, target, element_type);
+}
+```
+
+#### **Omni Additive-Only Rule**
+```rust
+// Omni stats chỉ cộng, không nhân
+let total_power = omni_power + element_power;  // ✅ Correct
+let total_power = omni_power * element_power;  // ❌ Wrong - causes snowball
+
+// Tương tự cho tất cả stats
+let total_defense = omni_defense + element_defense;
+let total_crit_rate = omni_crit_rate + element_crit_rate;
+let total_accuracy = omni_accuracy + element_accuracy;
+```
+
+#### **Status Hit Dependency**
+```rust
+// Status chỉ apply khi hit thành công
+if !hit_success && status_config.requires_hit {
+    return; // Không apply status nếu miss
+}
+
+// Calculate status probability
+let status_prob = calculate_status_probability(attacker_stats, defender_stats);
+
+// Apply status if probability check passes
+if status_prob > random_threshold {
+    apply_status_effect(status_effect, duration, intensity);
+}
 ```
 
 ## 🔗 **Element-Core Integration**

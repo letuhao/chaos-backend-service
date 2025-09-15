@@ -44,6 +44,28 @@ Element Core là hệ thống trung tâm quản lý tất cả các loại eleme
   - Multi-system aggregation
   - Conflict resolution
 
+### **4. [06_Implementation_Notes.md](./06_Implementation_Notes.md)** ⚠️ **CRITICAL**
+- **Mục đích**: Guidelines và requirements quan trọng cho implementation
+- **Nội dung**:
+  - Omni additive-only rule enforcement
+  - Status hit dependency requirements
+  - Element-specific sigmoid parameters
+  - Damage composition law
+  - Clamping & validation requirements
+  - Testing requirements
+  - Critical implementation notes
+
+### **5. [07_Resource_Manager_Integration_Design.md](./07_Resource_Manager_Integration_Design.md)**
+- **Mục đích**: Tích hợp với Resource Manager systems
+- **Nội dung**:
+  - Primary stats to derived stats mapping
+  - Event-driven stats change propagation
+  - Multi-system stats aggregation
+  - RPG Resource Manager integration
+  - Magic Resource Manager integration
+  - Stats change event system
+  - Performance optimization
+
 ## 🎯 **Hướng Dẫn Đọc**
 
 ### **Cho Developers**

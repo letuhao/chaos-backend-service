@@ -4,6 +4,73 @@
 
 Tài liệu này mô tả chi tiết hệ thống probability mechanics cho Element Core, bao gồm các công thức tính toán cho critical hits, accuracy, và các probability-based stats khác.
 
+**⚠️ Critical Implementation Notes**: Xem [Implementation Notes](06_Implementation_Notes.md) để biết các yêu cầu implementation quan trọng, bao gồm element-specific sigmoid parameters và Omni additive-only rule.
+
+## 🎯 **Nguyên Tắc Thiết Kế**
+
+### **⚠️ Element-Specific Sigmoid Parameters**
+
+#### **Per-Element Scaling Configuration**
+```rust
+// Mỗi element có scaling parameters riêng
+pub struct ElementSigmoidConfig {
+    pub element_type: String,
+    pub crit_scaling_factor: f64,
+    pub accuracy_scaling_factor: f64,
+    pub status_scaling_factor: f64,
+    pub steepness: f64,
+}
+
+// Ví dụ: Fire có crit scaling cao
+let fire_config = ElementSigmoidConfig {
+    element_type: "fire".to_string(),
+    crit_scaling_factor: 120.0,  // Cao hơn default
+    accuracy_scaling_factor: 80.0,
+    status_scaling_factor: 100.0,
+    steepness: 1.2,
+};
+
+// Ví dụ: Water có accuracy scaling cao
+let water_config = ElementSigmoidConfig {
+    element_type: "water".to_string(),
+    crit_scaling_factor: 100.0,
+    accuracy_scaling_factor: 120.0,  // Cao hơn default
+    status_scaling_factor: 110.0,
+    steepness: 1.0,
+};
+```
+
+#### **Element-Specific Probability Calculation**
+```rust
+// Tính probability với element-specific parameters
+pub fn calculate_element_probability(
+    &self,
+    attacker_omni_stat: f64,
+    attacker_element_stat: f64,
+    defender_omni_stat: f64,
+    defender_element_stat: f64,
+    element_type: &str,
+    stat_type: &str,
+) -> f64 {
+    let config = self.get_element_sigmoid_config(element_type);
+    let scaling_factor = match stat_type {
+        "crit" => config.crit_scaling_factor,
+        "accuracy" => config.accuracy_scaling_factor,
+        "status" => config.status_scaling_factor,
+        _ => 100.0,
+    };
+    
+    let difference = calculate_stat_difference(
+        attacker_omni_stat,
+        attacker_element_stat,
+        defender_omni_stat,
+        defender_element_stat,
+    );
+    
+    custom_sigmoid(difference / scaling_factor, config.steepness)
+}
+```
+
 ## 🎯 **Nguyên Tắc Thiết Kế**
 
 ### **1. Smooth Probability Curves**

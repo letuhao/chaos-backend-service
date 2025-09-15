@@ -4,6 +4,57 @@
 
 Tài liệu này mô tả hệ thống status effects cho Element Core, bao gồm 6 derived stats mới cho việc gây và chống status effects, cùng với định nghĩa chi tiết các status effects cho từng element type.
 
+**⚠️ Critical Implementation Notes**: Xem [Implementation Notes](06_Implementation_Notes.md) để biết các yêu cầu implementation quan trọng, bao gồm status hit dependency, clamping requirements, và integration với Actor Core.
+
+## 🎯 **Status Effect Derived Stats**
+
+### **⚠️ Critical Implementation Requirements**
+
+#### **1. Status Hit Dependency**
+```rust
+// Status chỉ apply khi hit thành công (trừ khi config cho phép)
+pub struct StatusEffectConfig {
+    pub requires_hit: bool,  // Mới thêm: status chỉ apply khi hit
+    pub base_probability: f64,
+    pub max_duration: f64,
+    pub max_intensity: f64,
+    pub stackable: bool,
+    pub max_stacks: u32,
+    pub refresh_duration: bool,
+}
+```
+
+#### **2. Status Application Flow**
+```rust
+// 1. Check hit success first
+if !hit_success && status_config.requires_hit {
+    return; // Không apply status nếu miss
+}
+
+// 2. Calculate status probability
+let status_prob = calculate_status_probability(attacker_stats, defender_stats);
+
+// 3. Apply status if probability check passes
+if status_prob > random_threshold {
+    apply_status_effect(status_effect, duration, intensity);
+}
+```
+
+#### **3. Clamping Requirements**
+```rust
+// Cần clamp duration và intensity để tránh overflow
+pub struct StatusClamping {
+    pub max_duration: f64,
+    pub max_intensity: f64,
+    pub min_duration: f64,
+    pub min_intensity: f64,
+}
+
+// Apply clamping before applying status
+let clamped_duration = duration.clamp(min_duration, max_duration);
+let clamped_intensity = intensity.clamp(min_intensity, max_intensity);
+```
+
 ## 🎯 **Status Effect Derived Stats**
 
 ### **1. 6 Derived Stats Mới**

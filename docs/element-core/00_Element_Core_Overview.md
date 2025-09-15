@@ -999,6 +999,16 @@ mod integration_tests {
 3. **Concurrency**: Multi-threaded processing
 4. **Monitoring**: Performance metrics and logging
 
+## 📚 **Related Documents**
+
+- [Probability Mechanics Design](01_Probability_Mechanics_Design.md)
+- [Multi-System Integration Design](02_Multi_System_Integration_Design.md)
+- [Element Types Comprehensive Design](03_Element_Types_Comprehensive_Design.md)
+- [Status Effect System Design](04_Status_Effect_System_Design.md)
+- [Element Summary Comprehensive](05_Element_Summary_Comprehensive.md)
+- [Implementation Notes](06_Implementation_Notes.md) - **Critical implementation guidelines and requirements**
+- [Resource Manager Integration Design](07_Resource_Manager_Integration_Design.md) - **Integration with Resource Manager systems**
+
 ## ❓ **Questions for Discussion**
 
 1. **Element Interactions**: Có nên có element rock-paper-scissors system?
