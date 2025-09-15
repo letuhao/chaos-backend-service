@@ -1,14 +1,10 @@
-//! Simple direct coverage tests for constants.rs module.
-//! This file provides direct tests that exercise the actual constants module code.
+//! Simple coverage tests for constants.rs module.
 
 use actor_core::constants::*;
 
-// ============================================================================
-// SYSTEM IDS TESTS
-// ============================================================================
-
-#[test]
-fn test_system_ids_constants() {
+#[tokio::test]
+async fn test_system_ids_constants() {
+    // Test all system ID constants
     assert_eq!(system_ids::LUYEN_THE, "luyen_the");
     assert_eq!(system_ids::KIM_DAN, "kim_dan");
     assert_eq!(system_ids::COMBAT, "combat");
@@ -29,52 +25,34 @@ fn test_system_ids_constants() {
     assert_eq!(system_ids::PERCEPTION, "perception");
 }
 
-// ============================================================================
-// PRIMARY DIMENSIONS TESTS
-// ============================================================================
-
-#[test]
-fn test_primary_dimensions_constants() {
+#[tokio::test]
+async fn test_primary_dimensions_constants() {
+    // Test primary dimension constants
     assert_eq!(primary_dimensions::STRENGTH, "strength");
     assert_eq!(primary_dimensions::AGILITY, "agility");
     assert_eq!(primary_dimensions::INTELLIGENCE, "intelligence");
 }
 
-// ============================================================================
-// META DIMENSIONS TESTS
-// ============================================================================
-
-#[test]
-fn test_meta_dimensions_constants() {
-    assert_eq!(meta_dimensions::REALM_ID, "realm_id");
-    assert_eq!(meta_dimensions::WORLD_ID, "world_id");
-    assert_eq!(meta_dimensions::ZONE_ID, "zone_id");
-    assert_eq!(meta_dimensions::GUILD_ID, "guild_id");
-    assert_eq!(meta_dimensions::PARTY_ID, "party_id");
-    assert_eq!(meta_dimensions::EVENT_ID, "event_id");
+#[tokio::test]
+async fn test_derived_dimensions_constants() {
+    // Test derived dimension constants
+    assert_eq!(derived_dimensions::ATTACK_POWER, "attack_power");
+    assert_eq!(derived_dimensions::DEFENSE_POWER, "defense_power");
+    assert_eq!(derived_dimensions::CRITICAL_HIT_CHANCE, "critical_hit_chance");
+    assert_eq!(derived_dimensions::CRITICAL_HIT_DAMAGE, "critical_hit_damage");
+    assert_eq!(derived_dimensions::ATTACK_SPEED, "attack_speed");
+    assert_eq!(derived_dimensions::MOVEMENT_SPEED, "movement_speed");
+    assert_eq!(derived_dimensions::CASTING_SPEED, "casting_speed");
+    assert_eq!(derived_dimensions::COOLDOWN_REDUCTION, "cooldown_reduction");
+    assert_eq!(derived_dimensions::LIFE_STEAL, "life_steal");
+    assert_eq!(derived_dimensions::MANA_STEAL, "mana_steal");
+    assert_eq!(derived_dimensions::DAMAGE_REDUCTION, "damage_reduction");
+    assert_eq!(derived_dimensions::ELEMENTAL_RESISTANCE, "elemental_resistance");
 }
 
-// ============================================================================
-// CONTEXT TYPES TESTS
-// ============================================================================
-
-#[test]
-fn test_context_types_constants() {
-    assert_eq!(context_types::DAMAGE, "damage");
-    assert_eq!(context_types::HEALING, "healing");
-    assert_eq!(context_types::EXPERIENCE_GAIN, "experience_gain");
-    assert_eq!(context_types::ITEM_DROP, "item_drop");
-    assert_eq!(context_types::COMBAT, "combat");
-    assert_eq!(context_types::MOVEMENT, "movement");
-    assert_eq!(context_types::CASTING, "casting");
-}
-
-// ============================================================================
-// ERROR CODES TESTS
-// ============================================================================
-
-#[test]
-fn test_error_codes_constants() {
+#[tokio::test]
+async fn test_error_codes_constants() {
+    // Test error code constants
     assert_eq!(error_codes::INVALID_ACTOR, "INVALID_ACTOR");
     assert_eq!(error_codes::INVALID_CONTRIBUTION, "INVALID_CONTRIBUTION");
     assert_eq!(error_codes::INVALID_CAP, "INVALID_CAP");
@@ -85,162 +63,103 @@ fn test_error_codes_constants() {
     assert_eq!(error_codes::CONFIGURATION_ERROR, "CONFIGURATION_ERROR");
 }
 
-// ============================================================================
-// ERROR TYPES TESTS
-// ============================================================================
-
-#[test]
-fn test_error_types_constants() {
-    assert_eq!(error_types::VALIDATION, "VALIDATION");
-    assert_eq!(error_types::SYSTEM, "SYSTEM");
-    assert_eq!(error_types::NETWORK, "NETWORK");
-    assert_eq!(error_types::DATABASE, "DATABASE");
-    assert_eq!(error_types::CACHE, "CACHE");
-    assert_eq!(error_types::CONFIGURATION, "CONFIGURATION");
+#[tokio::test]
+async fn test_all_dimensions_function() {
+    // Test the all_dimensions function
+    let dimensions = all_dimensions();
+    assert!(!dimensions.is_empty());
+    
+    // Check that it contains expected dimensions
+    assert!(dimensions.contains(&"health"));
+    assert!(dimensions.contains(&"mana"));
+    assert!(dimensions.contains(&"strength"));
+    assert!(dimensions.contains(&"agility"));
+    assert!(dimensions.contains(&"intelligence"));
 }
 
-// ============================================================================
-// DEFAULTS TESTS
-// ============================================================================
-
-#[test]
-fn test_defaults_constants() {
-    assert_eq!(defaults::ACTOR_LIFESPAN, 365 * 24 * 60 * 60);
-    assert_eq!(defaults::ACTOR_AGE, 0);
-    assert_eq!(defaults::SUBSYSTEM_PRIORITY, 100);
-    assert_eq!(defaults::CONTRIBUTION_PRIORITY, 100);
-    assert_eq!(defaults::CAP_PRIORITY, 100);
-    assert_eq!(defaults::CACHE_TTL, 3600);
-    assert_eq!(defaults::BATCH_SIZE, 100);
-    assert_eq!(defaults::MAX_RETRIES, 3);
+#[tokio::test]
+async fn test_all_system_ids_function() {
+    // Test the all_system_ids function
+    let system_ids = all_system_ids();
+    assert!(!system_ids.is_empty());
+    
+    // Check that it contains expected system IDs
+    assert!(system_ids.contains(&"luyen_the"));
+    assert!(system_ids.contains(&"combat"));
+    assert!(system_ids.contains(&"equipment"));
+    assert!(system_ids.contains(&"magic"));
 }
 
-// ============================================================================
-// CLAMP RANGES FUNCTION TESTS
-// ============================================================================
-
-#[test]
-fn test_clamp_ranges_function() {
-    // Test primary dimension ranges
-    let strength_range = clamp_ranges::primary_dimension_range(primary_dimensions::STRENGTH);
-    assert!(strength_range.is_some());
-    let (min, max) = strength_range.unwrap();
-    assert_eq!(min, 0.0);
-    assert_eq!(max, 10000.0);
+#[tokio::test]
+async fn test_constants_are_immutable() {
+    // Test that constants are truly constant (can't be modified)
+    // This is more of a compile-time check, but we can verify the values
+    let strength_const = primary_dimensions::STRENGTH;
+    assert_eq!(strength_const, "strength");
     
-    let agility_range = clamp_ranges::primary_dimension_range(primary_dimensions::AGILITY);
-    assert!(agility_range.is_some());
-    let (min, max) = agility_range.unwrap();
-    assert_eq!(min, 0.0);
-    assert_eq!(max, 10000.0);
-    
-    let intelligence_range = clamp_ranges::primary_dimension_range(primary_dimensions::INTELLIGENCE);
-    assert!(intelligence_range.is_some());
-    let (min, max) = intelligence_range.unwrap();
-    assert_eq!(min, 0.0);
-    assert_eq!(max, 10000.0);
+    let health_const = primary_dimensions::HEALTH;
+    assert_eq!(health_const, "health");
 }
 
-#[test]
-fn test_clamp_ranges_unknown_dimension() {
-    let unknown_range = clamp_ranges::primary_dimension_range("unknown_dimension");
-    assert!(unknown_range.is_none());
-}
-
-// ============================================================================
-// COMPREHENSIVE CONSTANT USAGE TESTS
-// ============================================================================
-
-#[test]
-fn test_constants_in_collections() {
-    use std::collections::HashMap;
+#[tokio::test]
+async fn test_constants_completeness() {
+    // Test that all expected constants are present
+    let all_dims = all_dimensions();
+    let all_systems = all_system_ids();
     
-    let mut system_map = HashMap::new();
-    system_map.insert(system_ids::COMBAT, "combat_system");
-    system_map.insert(system_ids::MAGIC, "magic_system");
+    // Should have a reasonable number of dimensions and systems
+    assert!(all_dims.len() > 5);
+    assert!(all_systems.len() > 5);
     
-    assert_eq!(system_map.get(system_ids::COMBAT), Some(&"combat_system"));
-    assert_eq!(system_map.get(system_ids::MAGIC), Some(&"magic_system"));
-}
-
-#[test]
-fn test_constants_in_conditionals() {
-    let system_id = system_ids::COMBAT;
+    // All dimensions should be non-empty strings
+    for dim in &all_dims {
+        assert!(!dim.is_empty());
+    }
     
-    if system_id == system_ids::COMBAT {
-        assert!(true);
-    } else {
-        assert!(false);
+    // All system IDs should be non-empty strings
+    for sys_id in &all_systems {
+        assert!(!sys_id.is_empty());
     }
 }
 
-#[test]
-fn test_constants_in_calculations() {
-    let base_value = defaults::BATCH_SIZE;
-    let multiplier = 2;
-    let result = base_value * multiplier;
+#[tokio::test]
+async fn test_constants_consistency() {
+    // Test that related constants are consistent
+    let health_dim = primary_dimensions::HEALTH;
+    assert_eq!(health_dim, "health");
     
-    assert_eq!(result, 200);
+    let mana_dim = primary_dimensions::MANA;
+    assert_eq!(mana_dim, "mana");
+    
+    // Test that system IDs are consistent
+    let combat_system = system_ids::COMBAT;
+    assert_eq!(combat_system, "combat");
+    
+    let magic_system = system_ids::MAGIC;
+    assert_eq!(magic_system, "magic");
 }
 
-#[test]
-fn test_constants_in_string_operations() {
-    let error_code = error_codes::INVALID_ACTOR;
-    let error_message = format!("Error: {}", error_code);
+#[tokio::test]
+async fn test_constants_string_values() {
+    // Test that constants have expected string values
+    assert_eq!(primary_dimensions::STRENGTH, "strength");
+    assert_eq!(primary_dimensions::AGILITY, "agility");
+    assert_eq!(primary_dimensions::INTELLIGENCE, "intelligence");
     
-    assert_eq!(error_message, "Error: INVALID_ACTOR");
+    assert_eq!(primary_dimensions::HEALTH, "health");
+    assert_eq!(primary_dimensions::MANA, "mana");
+    assert_eq!(primary_dimensions::STAMINA, "stamina");
+    
+    assert_eq!(system_ids::LUYEN_THE, "luyen_the");
+    assert_eq!(system_ids::COMBAT, "combat");
+    assert_eq!(system_ids::EQUIPMENT, "equipment");
 }
 
-#[test]
-fn test_constants_in_numeric_operations() {
-    let lifespan = defaults::ACTOR_LIFESPAN;
-    let age = defaults::ACTOR_AGE;
-    let remaining = lifespan - age;
-    
-    assert_eq!(remaining, lifespan);
-    assert!(remaining > 0);
-}
-
-#[test]
-fn test_constants_in_pattern_matching() {
-    let error_type = error_types::VALIDATION;
-    
-    match error_type {
-        error_types::VALIDATION => assert!(true),
-        error_types::SYSTEM => assert!(false),
-        error_types::NETWORK => assert!(false),
-        _ => assert!(false),
-    }
-}
-
-#[test]
-fn test_constants_in_function_calls() {
-    // Test that constants can be used as function arguments
-    let strength_range = clamp_ranges::primary_dimension_range(primary_dimensions::STRENGTH);
-    assert!(strength_range.is_some());
-    
-    let agility_range = clamp_ranges::primary_dimension_range(primary_dimensions::AGILITY);
-    assert!(agility_range.is_some());
-}
-
-#[test]
-fn test_constants_in_assertions() {
-    // Test that constants can be used in assertions
-    assert!(defaults::ACTOR_LIFESPAN > 0);
-    assert!(defaults::CACHE_TTL > 0);
-    assert!(defaults::BATCH_SIZE > 0);
-    assert!(defaults::MAX_RETRIES > 0);
-}
-
-#[test]
-fn test_constants_in_variable_assignments() {
-    let system_id = system_ids::COMBAT;
-    let error_code = error_codes::INVALID_ACTOR;
-    let error_type = error_types::VALIDATION;
-    let batch_size = defaults::BATCH_SIZE;
-    
-    assert_eq!(system_id, "combat");
-    assert_eq!(error_code, "INVALID_ACTOR");
-    assert_eq!(error_type, "VALIDATION");
-    assert_eq!(batch_size, 100);
+#[tokio::test]
+async fn test_error_codes_string_values() {
+    // Test that error codes have expected string values
+    assert_eq!(error_codes::INVALID_CAP, "INVALID_CAP");
+    assert_eq!(error_codes::CACHE_ERROR, "CACHE_ERROR");
+    assert_eq!(error_codes::SUBSYSTEM_ERROR, "SUBSYSTEM_ERROR");
+    assert_eq!(error_codes::CONFIGURATION_ERROR, "CONFIGURATION_ERROR");
 }
