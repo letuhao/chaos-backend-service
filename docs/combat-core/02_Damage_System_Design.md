@@ -4,6 +4,8 @@
 
 Damage System là trung tâm của Combat Core, xử lý tất cả các loại sát thương trong game. Hệ thống được thiết kế để hỗ trợ nhiều loại damage khác nhau, từ vật lý cơ bản đến các loại damage phức tạp trong cultivation systems.
 
+**Integration với Element-Core**: Damage System sử dụng hybrid approach, trong đó Element-Core cung cấp element stats (bao gồm Omni stats) và Combat-Core thực hiện damage calculation dựa trên những stats này.
+
 ## 🎯 **Nguyên Tắc Thiết Kế**
 
 ### **1. Flexible & Extensible**
@@ -27,22 +29,27 @@ Damage System là trung tâm của Combat Core, xử lý tất cả các loại 
 
 ```
 Damage System
+├── Element-Core Integration
+│   ├── Element Stats Provider
+│   ├── Omni Stats Integration
+│   ├── Element Interaction Calculator
+│   └── Status Effect Calculator
 ├── Damage Calculation Engine
 │   ├── Base Damage Calculation
-│   ├── Power Points Calculation
-│   ├── Defense Calculation
+│   ├── Power Points Calculation (from Element-Core)
+│   ├── Defense Calculation (from Element-Core)
 │   ├── Multiplier Application
-│   └── Critical Hit Processing
+│   └── Critical Hit Processing (from Element-Core)
 ├── Damage Types & Categories
 │   ├── Physical Damage
 │   ├── Magical Damage
-│   ├── Elemental Damage
+│   ├── Elemental Damage (Element-Core)
 │   ├── True Damage
 │   └── Special Damage
 ├── DoT (Damage over Time) System
 │   ├── DoT Manager
 │   ├── Tick Processing
-│   └── DoT Effects
+│   └── DoT Effects (Element-Core)
 ├── Damage Events & Logging
 │   ├── Event System
 │   ├── Damage Tracking
@@ -52,6 +59,113 @@ Damage System
     ├── Type Validation
     └── Limit Enforcement
 ```
+
+## 🔗 **Element-Core Integration**
+
+### **1. Hybrid Architecture**
+
+Combat-Core sử dụng hybrid approach để tích hợp với Element-Core:
+
+```rust
+// Element-Core provides stats
+pub struct ElementStatsProvider {
+    element_core: Arc<ElementCore>,
+}
+
+impl ElementStatsProvider {
+    pub fn get_combat_stats(&self, attacker: &Actor, target: &Actor, element_type: &str) -> CombatElementStats {
+        // Get Omni + Element stats from Element-Core
+        let attacker_omni = self.element_core.get_omni_stats(attacker);
+        let attacker_element = self.element_core.get_element_stats(attacker, element_type);
+        let target_omni = self.element_core.get_omni_stats(target);
+        let target_element = self.element_core.get_element_stats(target, element_type);
+        
+        CombatElementStats {
+            // Power stats
+            attacker_power: attacker_omni.power + attacker_element.power,
+            target_defense: target_omni.defense + target_element.defense,
+            
+            // Critical stats
+            attacker_crit_rate: attacker_omni.crit_rate + attacker_element.crit_rate,
+            attacker_crit_damage: attacker_omni.crit_damage + attacker_element.crit_damage,
+            target_resist_crit: target_omni.resist_crit + target_element.resist_crit,
+            target_resist_crit_damage: target_omni.resist_crit_damage + target_element.resist_crit_damage,
+            
+            // Accuracy stats
+            attacker_accuracy: attacker_omni.accuracy + attacker_element.accuracy,
+            target_dodge: target_omni.dodge + target_element.dodge,
+            
+            // Status effect stats
+            attacker_status_prob: attacker_omni.status_prob + attacker_element.status_prob,
+            target_status_resist: target_omni.status_resist + target_element.status_resist,
+            
+            // Element interactions
+            damage_multiplier: self.element_core.get_damage_multiplier(element_type, target.get_primary_element()),
+        }
+    }
+}
+```
+
+### **2. Combat-Core Integration**
+
+```rust
+// Combat-Core uses Element-Core stats
+impl CombatCore {
+    pub fn calculate_damage(&self, action: &Action, attacker: &Actor, target: &Actor) -> DamageResult {
+        // 1. Get element stats from Element-Core
+        let element_stats = self.element_stats_provider.get_combat_stats(
+            attacker, 
+            target, 
+            action.element_type
+        );
+        
+        // 2. Create damage input with element stats
+        let damage_input = DamageInput {
+            base_damage: action.base_damage,
+            power_points: vec![element_stats.attacker_power],
+            target_defense: element_stats.target_defense,
+            critical_chance: element_stats.attacker_crit_rate,
+            critical_multiplier: element_stats.attacker_crit_damage,
+            accuracy: element_stats.attacker_accuracy,
+            target_dodge: element_stats.target_dodge,
+            element_multiplier: element_stats.damage_multiplier,
+            // ... other fields
+        };
+        
+        // 3. Calculate damage using existing formula
+        let mut damage_result = self.damage_calculator.calculate_final_damage(damage_input, target);
+        
+        // 4. Apply element-specific effects
+        damage_result.final_damage *= element_stats.damage_multiplier;
+        
+        // 5. Apply status effects if applicable
+        if self.should_apply_status_effects(action, element_stats) {
+            let status_effects = self.element_core.calculate_status_effects(
+                attacker, target, action.element_type
+            );
+            damage_result.status_effects = status_effects;
+        }
+        
+        damage_result
+    }
+}
+```
+
+### **3. Benefits of Hybrid Approach**
+
+#### **Separation of Concerns**
+- **Element-Core**: Quản lý element stats, interactions, status effects
+- **Combat-Core**: Quản lý combat mechanics, action processing, event handling
+
+#### **Performance**
+- **Element-Core**: Có thể cache element calculations
+- **Combat-Core**: Có thể cache combat calculations
+- **Minimal overhead**: Chỉ pass data, không duplicate calculations
+
+#### **Flexibility**
+- **Element-Core**: Có thể được sử dụng bởi systems khác (Shield, Item, Race)
+- **Combat-Core**: Có thể sử dụng element stats từ nhiều sources
+- **Easy testing**: Có thể test từng component riêng biệt
 
 ## ⚔️ **Damage Categories Chuẩn**
 
