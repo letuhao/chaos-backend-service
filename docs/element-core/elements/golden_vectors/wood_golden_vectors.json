@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "description": "Golden vectors for wood element calculations (sanity checks)",
+  "probability_engine": {
+    "entangled_status_probability": {
+      "attacker": { "omni": 70.0, "element": 35.0 },
+      "defender": { "omni": 25.0, "element": 15.0 },
+      "expected_range": [0.35, 0.9]
+    }
+  },
+  "status_effects": {
+    "entangled_base": {
+      "base_probability": 0.1,
+      "base_duration": 6.0,
+      "base_intensity": 1.0
+    }
+  }
+}
+

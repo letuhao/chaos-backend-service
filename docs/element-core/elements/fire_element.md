@@ -7,7 +7,7 @@
 ### **Basic Information**
 - **Element ID**: `fire`
 - **Element Name**: Fire (Hỏa)
-- **Category**: Ngũ Hành (Five Elements)
+- **Category**: Ngũ Hành (Five Elements) — engine category: `five_elements`
 - **Classification**: Yang - Active, hot, destructive
 - **Visual**: Red, orange, yellow with fire effects
 
@@ -25,12 +25,13 @@ Fire represents energy, passion, and destructive power. In Eastern philosophy, F
 
 ### **Scaling Factors**
 ```yaml
+# Defined centrally in probability_config.yaml (do not duplicate here)
 scaling_factors:
-  crit_rate: 120.0      # Higher crit chance
-  crit_damage: 130.0    # Higher crit damage
-  accuracy: 100.0       # Normal accuracy
-  defense: 80.0         # Lower defense
-  power: 120.0          # Higher power
+  crit_rate: 120.0
+  crit_damage: 130.0
+  accuracy: 100.0
+  defense: 80.0
+  power: 120.0
 ```
 
 ### **Special Properties**
@@ -56,10 +57,14 @@ burning_status:
   base_probability: 0.15        # 15% base chance
   base_duration: 8.0            # 8 seconds base duration
   base_intensity: 1.0           # 1.0x base intensity
-  max_duration: 30.0            # 30 seconds max duration
-  max_intensity: 3.0            # 3.0x max intensity
   tick_interval: 1.0            # 1 second per tick
   max_stacks: 5                 # Maximum 5 stacks
+  dynamics:
+    intensity_gain: 0.02
+    intensity_damping: 0.01
+    decay_rate: 0.05
+    refractory_gain: 0.5
+    refractory_decay: 0.1
 ```
 
 #### **Damage Calculation**
@@ -80,11 +85,185 @@ fn calculate_burning_damage(base_damage: f64, intensity: f64, current_tick: i32)
 - **Intensity**: New intensity replaces old intensity if higher
 - **Refresh**: Refreshes duration if same or higher intensity
 
+#### **Spread Mechanics**
+- Burning can spread to nearby targets based on environment and intensity.
+- Controlled by `spread_rules` in the element config.
+
+```yaml
+# elements/configs/fire_element.yaml (burning spread excerpt)
+burning_status:
+  spread_rules:
+    enabled: true
+    spread_chance_base: 0.05
+    spread_range: 2.5
+    spread_max_targets: 2
+```
+
 #### **Visual Effects**
 - **Particle Effect**: Red/orange flames around target
 - **Sound Effect**: Crackling fire sounds
 - **UI Indicator**: Fire icon with stack count
 - **Damage Numbers**: Red damage numbers
+
+### **Fire Regeneration Buff (Defender)**
+
+#### **Mechanics**
+- **Buff Name**: Fire Regeneration
+- **Element Type**: Fire (Defender receives)
+- **Type**: Healing over Time (HoT)
+- **Trigger**: When defender takes fire damage
+- **Stackable**: Yes (up to 3 stacks)
+- **Refresh Duration**: Yes
+
+#### **Buff Properties**
+```yaml
+fire_regeneration_buff:
+  base_probability: 0.0         # 0% base chance to trigger (mastery-based only)
+  base_duration: 12.0           # 12 seconds base duration
+  base_intensity: 1.0           # 1.0x base intensity
+  tick_interval: 2.0            # 2 seconds per tick
+  max_stacks: 3                 # Maximum 3 stacks
+  dynamics:
+    intensity_gain: 0.015
+    intensity_damping: 0.012
+    decay_rate: 0.04
+    refractory_gain: 0.6
+    refractory_decay: 0.12
+  hp_heal_per_tick: 0.02        # 2% max HP per tick
+  stamina_heal_per_tick: 0.03   # 3% max Stamina per tick
+```
+
+#### **Healing Calculation**
+```rust
+// Fire regeneration healing increases with each tick
+fn calculate_fire_regeneration_healing(
+    max_hp: f64, 
+    max_stamina: f64, 
+    intensity: f64, 
+    current_tick: i32
+) -> (f64, f64) {
+    let tick_multiplier = 1.0 + (current_tick as f64 * 0.05);
+    let hp_heal = max_hp * 0.02 * intensity * tick_multiplier;
+    let stamina_heal = max_stamina * 0.03 * intensity * tick_multiplier;
+    
+    (hp_heal, stamina_heal)
+}
+
+// Example: 1000 max HP, 500 max Stamina, 1.5 intensity, tick 4
+// HP Heal = 1000 * 0.02 * 1.5 * 1.2 = 36 HP per tick
+// Stamina Heal = 500 * 0.03 * 1.5 * 1.2 = 27 Stamina per tick
+```
+
+#### **Trigger Conditions**
+```rust
+// Fire regeneration trigger using Probability Engine (sigmoid; probability bound only)
+fn calculate_fire_regeneration_trigger(
+    attacker_fire_mastery: f64,
+    defender_fire_mastery: f64,
+    base_probability: f64,
+    cfg: &InteractionConfig,
+) -> f64 {
+    let norm_diff = normalize_mastery_difference(defender_fire_mastery, attacker_fire_mastery);
+    let scaled = custom_sigmoid(norm_diff / cfg.trigger_scale, cfg.steepness);
+    let trig = base_probability + scaled;
+    trig.clamp(0.0, 1.0)
+}
+```
+
+#### **Stacking Rules**
+- **Stacking Type**: Additive duration, multiplicative intensity
+- **New Stack**: Adds duration to existing stacks
+- **Intensity**: New intensity replaces old intensity if higher
+- **Refresh**: Refreshes duration if same or higher intensity
+- **Refractory**: xác suất trigger giảm tạm thời sau khi kích hoạt (không dùng cooldown cứng)
+
+### **Same-Element Interaction: Fire ↔ Fire**
+
+#### **Heat Resonance**
+- +skill_execution_speed và +crit_rate theo thời gian giao tranh; đồng thời +resource_cost (risk-reward).
+- Dynamics: intensity tăng theo Δ (mastery/power chênh lệch), dập bởi damping; refractory tránh spam.
+
+#### **Ember Shield**
+- Chuyển một phần damage nhận thành Burning DoT trả ngược attacker (thorns-burn) với ramp nhanh rồi tự giảm.
+- Dynamics: α cao, β cũng cao (bùng nổ ngắn, dập nhanh).
+
+#### **Overheat**
+- Tích “nhiệt” khi tấn công liên tục: +crit_damage nhưng tăng self-DoT mỏng (overheat burn) nếu vượt ngưỡng.
+- Dynamics: refractory tăng nhanh để ngăn tích vô hạn; self-DoT tỷ lệ với intensity hiện tại.
+
+```yaml
+# elements/configs/fire_element.yaml (same-element excerpt)
+same_element_effects:
+  - id: "heat_resonance"
+    from_status_pool: true
+    apply_to: "both"
+    dynamics:
+      intensity_gain: 0.015
+      intensity_damping: 0.012
+      refractory_gain: 0.4
+      refractory_decay: 0.1
+    stat_hooks:
+      skill_execution_speed: { delta_weight: 0.12 }
+      crit_rate: { delta_weight: 0.06 }
+      resource_cost: { delta_weight: 0.05 }
+
+  - id: "ember_shield"
+    from_status_pool: true
+    apply_to: "defender"
+    dynamics:
+      intensity_gain: 0.02
+      intensity_damping: 0.02
+    reflect:
+      type: "burning_thorns"
+    proportion_of_damage: 0.08
+
+  - id: "overheat"
+    from_status_pool: true
+    apply_to: "attacker"
+    dynamics:
+      intensity_gain: 0.018
+      intensity_damping: 0.015
+      refractory_gain: 0.5
+    stat_hooks:
+      crit_damage: { delta_weight: 0.08 }
+      self_dot_risk: { base: "light", scales_with_intensity: true }
+```
+
+### **Neutral Interaction: Fire ↔ Neutral**
+
+- Áp dụng khi đối phương không thuộc các cặp trong `pairs`. Fire vẫn có thể gây Burning theo xác suất cơ bản và cơ chế probability engine.
+- Không buff/debuff đặc thù tương sinh/khắc; coi như trung lập nhưng vẫn kích hoạt trạng thái nền của Fire.
+
+```yaml
+# elements/configs/fire_element.yaml (neutral excerpt)
+neutral_effects:
+  - id: "burning_fallback"
+    from_status_pool: true
+    apply_to: "defender"
+    pool_id: "burning_fallback"
+    probability:
+      base: "from_element"            # lấy base_probability từ burning
+      use_probability_engine: true
+      scaling_factor_key: "status_probability"
+    dynamics_override: {}              # có thể rỗng để dùng dynamics mặc định
+```
+
+### **Environmental Modifiers**
+
+Certain environments adjust Fire behavior. These are optional tuning knobs.
+
+```yaml
+# elements/configs/fire_element.yaml (environment excerpt)
+environment_mods:
+  rain:
+    status_probability_add: -0.05
+    intensity_gain_mod: -0.005
+  dry:
+    status_probability_add: +0.05
+    intensity_gain_mod: +0.005
+  indoors:
+    spread_chance_add: -0.02
+```
 
 ## 📊 **Derived Stats**
 
@@ -100,26 +279,33 @@ pub const FIRE_DERIVED_STATS: [DerivedStatType; 12] = [
     DerivedStatType::AccurateRate,         // Fire accuracy
     DerivedStatType::DodgeRate,            // Fire dodge rate
     
-    // Status effect stats
-    DerivedStatType::StatusProbability,    // Burning probability
-    DerivedStatType::StatusDuration,       // Burning duration
-    DerivedStatType::StatusIntensity,      // Burning intensity
-    DerivedStatType::StatusResistance,     // Burning resistance
-    DerivedStatType::StatusDurationReduction, // Burning duration reduction
-    DerivedStatType::StatusIntensityReduction, // Burning intensity reduction
+    // Status effect stats (Burning + Fire Regeneration)
+    DerivedStatType::StatusProbability,    // Burning probability + Fire regeneration trigger chance
+    DerivedStatType::StatusDuration,       // Burning duration + Fire regeneration duration
+    DerivedStatType::StatusIntensity,      // Burning intensity + Fire regeneration intensity
+    DerivedStatType::StatusResistance,     // Burning resistance + Fire regeneration resistance
+    DerivedStatType::StatusDurationReduction, // Burning duration reduction + Fire regeneration duration reduction
+    DerivedStatType::StatusIntensityReduction, // Burning intensity reduction + Fire regeneration intensity reduction
 ];
 ```
 
 ### **Stat Weights**
 ```yaml
 stat_weights:
+  # Basic combat stats
   power_point: 1.0              # High priority
   crit_rate: 0.8                # High priority
   crit_damage: 0.7              # High priority
-  status_probability: 0.6       # Medium priority
-  status_intensity: 0.5         # Medium priority
   defense_point: 0.3            # Low priority
   dodge_rate: 0.2               # Low priority
+  
+  # Status effect stats (Burning + Fire Regeneration)
+  status_probability: 0.7       # High priority (Burning + Regeneration trigger)
+  status_intensity: 0.6         # High priority (Burning + Regeneration intensity)
+  status_duration: 0.5          # Medium priority (Burning + Regeneration duration)
+  status_resistance: 0.4        # Medium priority (Burning + Regeneration resistance)
+  status_duration_reduction: 0.3 # Low priority (Defensive)
+  status_intensity_reduction: 0.2 # Low priority (Defensive)
 ```
 
 ### **Scaling Formulas**
@@ -138,6 +324,12 @@ fn calculate_fire_crit_rate(base_crit: f64, fire_stat: f64) -> f64 {
 fn calculate_burning_probability(base_prob: f64, fire_stat: f64) -> f64 {
     base_prob + (fire_stat * 0.001) // 0.1% per point
 }
+
+// Fire regeneration uses same stats as Burning status
+// StatusProbability -> Fire regeneration trigger chance
+// StatusIntensity -> Fire regeneration intensity  
+// StatusDuration -> Fire regeneration duration
+// StatusResistance -> Fire regeneration resistance
 ```
 
 ## 🔄 **Element Interactions**
@@ -215,7 +407,7 @@ interactions:
 #### **Shield Properties**
 ```yaml
 fire_shield:
-  absorption_rate: 0.8          # 80% fire damage absorption
+  absorption_rate: 0.6          # capped by global absorption_max
   reflection_rate: 0.3          # 30% fire damage reflection
   burning_immunity: true        # Immune to burning
   heat_resistance: 0.5          # 50% fire damage reduction
@@ -259,10 +451,12 @@ fire_shield:
 ### **YAML Configuration**
 ```yaml
 # fire_element.yaml
+# Full stub stored at elements/configs/fire_element.yaml
+# Below is a shortened view
 element:
   id: "fire"
   name: "Fire"
-  category: "nguhang"
+  category: "five_elements"
   description: "Fire, hot, destructive"
   
   # Base properties
@@ -280,7 +474,7 @@ element:
     crit_damage: 1.3
     accuracy: 1.0
   
-  # Derived stats
+  # Derived stats (Burning + Fire Regeneration share same stats)
   derived_stats:
     - "power_point"
     - "defense_point"
@@ -288,12 +482,12 @@ element:
     - "crit_damage"
     - "accurate_rate"
     - "dodge_rate"
-    - "status_probability"
-    - "status_duration"
-    - "status_intensity"
-    - "status_resistance"
-    - "status_duration_reduction"
-    - "status_intensity_reduction"
+    - "status_probability"        # Burning probability + Fire regeneration trigger
+    - "status_duration"           # Burning duration + Fire regeneration duration
+    - "status_intensity"          # Burning intensity + Fire regeneration intensity
+    - "status_resistance"         # Burning resistance + Fire regeneration resistance
+    - "status_duration_reduction" # Burning duration reduction + Fire regeneration duration reduction
+    - "status_intensity_reduction" # Burning intensity reduction + Fire regeneration intensity reduction
   
   # Status effects
   status_effects:
@@ -307,6 +501,21 @@ element:
       max_stacks: 5
       stackable: true
       refresh_duration: true
+    
+    # Fire regeneration buff (defender receives)
+    - name: "fire_regeneration"
+      base_probability: 0.0       # 0% base chance (mastery-based only)
+      base_duration: 12.0
+      base_intensity: 1.0
+      max_duration: 30.0
+      max_intensity: 2.5
+      tick_interval: 2.0
+      max_stacks: 3
+      stackable: true
+      refresh_duration: true
+      trigger_cooldown: 5.0
+      hp_heal_per_tick: 0.02      # 2% max HP per tick
+      stamina_heal_per_tick: 0.03 # 3% max Stamina per tick
   
   # Interactions
   interactions:
@@ -340,7 +549,7 @@ element:
       "properties": {
         "id": { "type": "string", "enum": ["fire"] },
         "name": { "type": "string" },
-        "category": { "type": "string", "enum": ["nguhang"] },
+        "category": { "type": "string", "enum": ["five_elements"] },
         "description": { "type": "string" },
         "base_damage": { "type": "number", "minimum": 0 },
         "base_defense": { "type": "number", "minimum": 0 },
@@ -477,18 +686,25 @@ mod fire_element_performance_tests {
 - **Critical Hit Focus**: Great for burst damage
 - **Status Effect**: Burning provides consistent DoT
 - **Element Synergy**: Good with Earth and Wood elements
+- **Defensive Regeneration**: Fire mastery provides defensive healing
+- **Dual Purpose**: Offensive damage + defensive regeneration
 
 ### **Weaknesses**
 - **Low Defense**: Vulnerable to counter-attacks
 - **Water Vulnerability**: Weak against water attacks
 - **Resource Intensive**: High mana/stamina cost
 - **Self-Damage Risk**: Can damage self if uncontrolled
+- **Mastery Dependency**: Regeneration requires high fire mastery
+- **Cooldown Limitation**: 5-second cooldown between regeneration triggers
 
 ### **Balance Recommendations**
 - **Damage**: Keep fire damage high but not overwhelming
 - **Defense**: Ensure fire users have ways to mitigate low defense
 - **Status Effects**: Balance burning damage vs duration
 - **Interactions**: Ensure water counter is meaningful but not overpowered
+- **Regeneration**: Balance regeneration healing vs mastery requirements
+- **Cooldown**: Monitor 5-second cooldown to prevent regeneration spam
+- **Mastery Scaling**: Ensure regeneration scales appropriately with mastery
 
 ## 🚀 **Future Enhancements**
 

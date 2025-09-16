@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "description": "Golden vectors for water element calculations (sanity checks)",
+  "probability_engine": {
+    "soaked_status_probability": {
+      "attacker": { "omni": 80.0, "element": 40.0 },
+      "defender": { "omni": 20.0, "element": 10.0 },
+      "expected_range": [0.4, 0.95]
+    },
+    "hit_accuracy": {
+      "attacker": { "omni": 70.0, "element": 35.0 },
+      "defender": { "omni": 25.0, "element": 15.0 },
+      "expected_range": [0.5, 0.98]
+    }
+  },
+  "interactions": {
+    "water_vs_fire": {
+      "attacker_element": "water",
+      "defender_element": "fire",
+      "expected_behavior": "overcoming",
+      "notes": "Cross-element effects defined centrally; this file focuses on sanity bounds."
+    }
+  },
+  "status_effects": {
+    "soaked_base": {
+      "base_probability": 0.12,
+      "base_duration": 6.0,
+      "base_intensity": 1.0
+    }
+  }
+}
+

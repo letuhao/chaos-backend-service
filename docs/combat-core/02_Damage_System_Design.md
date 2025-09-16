@@ -4,9 +4,11 @@
 
 Damage System là trung tâm của Combat Core, xử lý tất cả các loại sát thương trong game. Hệ thống được thiết kế để hỗ trợ nhiều loại damage khác nhau, từ vật lý cơ bản đến các loại damage phức tạp trong cultivation systems.
 
-**Integration với Element-Core**: Damage System sử dụng hybrid approach, trong đó Element-Core cung cấp element stats (bao gồm Omni stats) và Combat-Core thực hiện damage calculation dựa trên những stats này.
+**Integration với Element-Core**: Damage System sử dụng hybrid approach, trong đó Element-Core cung cấp element stats (bao gồm Omni stats và Elemental Mastery stats) và Combat-Core thực hiện damage calculation dựa trên những stats này.
 
 **⚠️ Critical Implementation Notes**: Xem [Element Core Implementation Notes](../element-core/06_Implementation_Notes.md) để biết các yêu cầu implementation quan trọng, bao gồm damage composition law, Omni additive-only rule, và status hit dependency.
+
+**🎯 Elemental Mastery Integration**: Xem [Elemental Mastery System Design](../element-core/08_Elemental_Mastery_System_Design.md) và [Actor Core Integration Guide](../element-core/09_Actor_Core_Integration_Guide.md) để hiểu cách Elemental Mastery System tích hợp vào damage calculation.
 
 ## 🎯 **Nguyên Tắc Thiết Kế**
 
@@ -34,24 +36,25 @@ Damage System
 ├── Element-Core Integration
 │   ├── Element Stats Provider
 │   ├── Omni Stats Integration
+│   ├── Elemental Mastery Stats Integration
 │   ├── Element Interaction Calculator
 │   └── Status Effect Calculator
 ├── Damage Calculation Engine
 │   ├── Base Damage Calculation
-│   ├── Power Points Calculation (from Element-Core)
-│   ├── Defense Calculation (from Element-Core)
+│   ├── Power Points Calculation (from Element-Core + Mastery)
+│   ├── Defense Calculation (from Element-Core + Mastery)
 │   ├── Multiplier Application
-│   └── Critical Hit Processing (from Element-Core)
+│   └── Critical Hit Processing (from Element-Core + Mastery)
 ├── Damage Types & Categories
 │   ├── Physical Damage
 │   ├── Magical Damage
-│   ├── Elemental Damage (Element-Core)
+│   ├── Elemental Damage (Element-Core + Mastery)
 │   ├── True Damage
 │   └── Special Damage
 ├── DoT (Damage over Time) System
 │   ├── DoT Manager
 │   ├── Tick Processing
-│   └── DoT Effects (Element-Core)
+│   └── DoT Effects (Element-Core + Mastery)
 ├── Damage Events & Logging
 │   ├── Event System
 │   ├── Damage Tracking
@@ -115,64 +118,84 @@ if status_prob > random_threshold {
 
 ## 🔗 **Element-Core Integration**
 
-### **1. Hybrid Architecture**
+### **1. Hybrid Architecture với Elemental Mastery**
 
-Combat-Core sử dụng hybrid approach để tích hợp với Element-Core:
+Combat-Core sử dụng hybrid approach để tích hợp với Element-Core và Elemental Mastery System:
 
 ```rust
-// Element-Core provides stats
+// Element-Core provides stats including mastery
 pub struct ElementStatsProvider {
     element_core: Arc<ElementCore>,
+    mastery_provider: Arc<ElementMasteryStatsProvider>,
 }
 
 impl ElementStatsProvider {
     pub fn get_combat_stats(&self, attacker: &Actor, target: &Actor, element_type: &str) -> CombatElementStats {
-        // Get Omni + Element stats from Element-Core
+        // Get Omni + Element + Mastery stats from Element-Core
         let attacker_omni = self.element_core.get_omni_stats(attacker);
         let attacker_element = self.element_core.get_element_stats(attacker, element_type);
+        let attacker_mastery = self.mastery_provider.get_element_derived_stats(attacker, element_type).await?;
+        
         let target_omni = self.element_core.get_omni_stats(target);
         let target_element = self.element_core.get_element_stats(target, element_type);
+        let target_mastery = self.mastery_provider.get_element_derived_stats(target, element_type).await?;
         
         CombatElementStats {
-            // Power stats
-            attacker_power: attacker_omni.power + attacker_element.power,
-            target_defense: target_omni.defense + target_element.defense,
+            // Power stats (Omni + Element + Mastery)
+            attacker_power: attacker_omni.power + attacker_element.power + attacker_mastery.get("attack_power", 0.0),
+            target_defense: target_omni.defense + target_element.defense + target_mastery.get("defense", 0.0),
             
-            // Critical stats
-            attacker_crit_rate: attacker_omni.crit_rate + attacker_element.crit_rate,
-            attacker_crit_damage: attacker_omni.crit_damage + attacker_element.crit_damage,
-            target_resist_crit: target_omni.resist_crit + target_element.resist_crit,
-            target_resist_crit_damage: target_omni.resist_crit_damage + target_element.resist_crit_damage,
+            // Critical stats (Omni + Element + Mastery)
+            attacker_crit_rate: attacker_omni.crit_rate + attacker_element.crit_rate + attacker_mastery.get("crit_rate", 0.0),
+            attacker_crit_damage: attacker_omni.crit_damage + attacker_element.crit_damage + attacker_mastery.get("crit_damage", 0.0),
+            target_resist_crit: target_omni.resist_crit + target_element.resist_crit + target_mastery.get("resist_crit", 0.0),
+            target_resist_crit_damage: target_omni.resist_crit_damage + target_element.resist_crit_damage + target_mastery.get("resist_crit_damage", 0.0),
             
-            // Accuracy stats
-            attacker_accuracy: attacker_omni.accuracy + attacker_element.accuracy,
-            target_dodge: target_omni.dodge + target_element.dodge,
+            // Accuracy stats (Omni + Element + Mastery)
+            attacker_accuracy: attacker_omni.accuracy + attacker_element.accuracy + attacker_mastery.get("accuracy", 0.0),
+            target_dodge: target_omni.dodge + target_element.dodge + target_mastery.get("dodge", 0.0),
             
-            // Status effect stats
-            attacker_status_prob: attacker_omni.status_prob + attacker_element.status_prob,
-            target_status_resist: target_omni.status_resist + target_element.status_resist,
+            // Status effect stats (Omni + Element + Mastery)
+            attacker_status_prob: attacker_omni.status_prob + attacker_element.status_prob + attacker_mastery.get("status_prob", 0.0),
+            target_status_resist: target_omni.status_resist + target_element.status_resist + target_mastery.get("status_resist", 0.0),
             
-            // Element interactions
+            // Element interactions (affected by mastery)
             damage_multiplier: self.element_core.get_damage_multiplier(element_type, target.get_primary_element()),
+            
+            // Mastery-specific stats
+            mastery_bonus: self.calculate_mastery_bonus(attacker_mastery, target_mastery),
         }
+    }
+    
+    /// Calculate mastery-based damage bonus
+    fn calculate_mastery_bonus(&self, attacker_mastery: &HashMap<String, f64>, target_mastery: &HashMap<String, f64>) -> f64 {
+        let attacker_mastery_level = attacker_mastery.get("mastery_level").unwrap_or(&0.0);
+        let target_mastery_level = target_mastery.get("mastery_level").unwrap_or(&0.0);
+        
+        // Mastery difference affects damage bonus
+        let mastery_difference = attacker_mastery_level - target_mastery_level;
+        let mastery_bonus = mastery_difference * 0.01; // 1% per mastery point difference
+        
+        // No cap - mastery can provide unlimited bonus/penalty
+        mastery_bonus
     }
 }
 ```
 
-### **2. Combat-Core Integration**
+### **2. Combat-Core Integration với Mastery**
 
 ```rust
-// Combat-Core uses Element-Core stats
+// Combat-Core uses Element-Core stats including mastery
 impl CombatCore {
-    pub fn calculate_damage(&self, action: &Action, attacker: &Actor, target: &Actor) -> DamageResult {
-        // 1. Get element stats from Element-Core
+    pub async fn calculate_damage(&self, action: &Action, attacker: &Actor, target: &Actor) -> DamageResult {
+        // 1. Get element stats from Element-Core (including mastery)
         let element_stats = self.element_stats_provider.get_combat_stats(
             attacker, 
             target, 
             action.element_type
-        );
+        ).await?;
         
-        // 2. Create damage input with element stats
+        // 2. Create damage input with element stats + mastery
         let damage_input = DamageInput {
             base_damage: action.base_damage,
             power_points: vec![element_stats.attacker_power],
@@ -182,6 +205,7 @@ impl CombatCore {
             accuracy: element_stats.attacker_accuracy,
             target_dodge: element_stats.target_dodge,
             element_multiplier: element_stats.damage_multiplier,
+            mastery_bonus: element_stats.mastery_bonus,
             // ... other fields
         };
         
@@ -191,12 +215,27 @@ impl CombatCore {
         // 4. Apply element-specific effects
         damage_result.final_damage *= element_stats.damage_multiplier;
         
-        // 5. Apply status effects if applicable
+        // 5. Apply mastery bonus
+        damage_result.final_damage *= (1.0 + element_stats.mastery_bonus);
+        
+        // 6. Apply status effects if applicable (affected by mastery)
         if self.should_apply_status_effects(action, element_stats) {
             let status_effects = self.element_core.calculate_status_effects(
                 attacker, target, action.element_type
-            );
+            ).await?;
             damage_result.status_effects = status_effects;
+        }
+        
+        // 7. Log mastery-based damage
+        if element_stats.mastery_bonus != 0.0 {
+            info!(
+                attacker = %attacker.id,
+                target = %target.id,
+                element = %action.element_type,
+                mastery_bonus = %element_stats.mastery_bonus,
+                final_damage = %damage_result.final_damage,
+                "Mastery-based damage calculation"
+            );
         }
         
         damage_result
@@ -204,21 +243,30 @@ impl CombatCore {
 }
 ```
 
-### **3. Benefits of Hybrid Approach**
+### **3. Benefits of Hybrid Approach với Mastery**
 
 #### **Separation of Concerns**
 - **Element-Core**: Quản lý element stats, interactions, status effects
+- **Elemental Mastery System**: Quản lý mastery progression, decay, training
 - **Combat-Core**: Quản lý combat mechanics, action processing, event handling
 
 #### **Performance**
 - **Element-Core**: Có thể cache element calculations
+- **Elemental Mastery System**: Có thể cache mastery calculations
 - **Combat-Core**: Có thể cache combat calculations
 - **Minimal overhead**: Chỉ pass data, không duplicate calculations
 
 #### **Flexibility**
 - **Element-Core**: Có thể được sử dụng bởi systems khác (Shield, Item, Race)
+- **Elemental Mastery System**: Có thể được sử dụng bởi systems khác (Skills, Items, Locations)
 - **Combat-Core**: Có thể sử dụng element stats từ nhiều sources
 - **Easy testing**: Có thể test từng component riêng biệt
+
+#### **Mastery Integration Benefits**
+- **Progressive Power**: Mastery tăng dần theo thời gian tu luyện
+- **Decay System**: Tạo động lực tu luyện liên tục
+- **Element Specialization**: Players có thể chuyên sâu vào elements cụ thể
+- **Balanced Meta**: Mastery difference tạo ra meta game cân bằng
 
 ## ⚔️ **Damage Categories Chuẩn**
 
@@ -345,13 +393,333 @@ const (
 
 ## 🔢 **Công Thức Tính Damage**
 
-### **1. Công Thức Chính**
+### **1. Công Thức Chính với Mastery**
 
 ```
-Final Damage = (BaseDamage + (PowerPoints - TargetDefense) + FlatAdditions) × TotalMultiplier × CriticalMultiplier + AbsoluteDamage
+Final Damage = (BaseDamage + (PowerPoints - TargetDefense) + FlatAdditions) × TotalMultiplier × CriticalMultiplier × (1 + MasteryBonus) + AbsoluteDamage
 ```
 
-### **2. Công Thức Chi Tiết**
+**Trong đó:**
+- **PowerPoints**: Omni Power + Element Power + Mastery Power
+- **TargetDefense**: Omni Defense + Element Defense + Mastery Defense
+- **MasteryBonus**: (Attacker Mastery - Target Mastery) × 0.01 (không có cap)
+
+### **2. Derived Stats Calculation Flow**
+
+#### **A. Primary Stats → Derived Stats Mapping**
+
+**Từ Actor Core Resource Manager:**
+```rust
+// Primary Stats (từ equipment, level, cultivation)
+let primary_stats = actor.get_primary_stats();
+// Ví dụ: strength: 100, intelligence: 150, agility: 80, vitality: 120
+```
+
+**Element-Core tính Derived Stats:**
+```rust
+// Omni Stats (baseline cho tất cả elements)
+let omni_stats = element_core.calculate_omni_derived_stats(primary_stats);
+// Formula: omni_attack = (strength + intelligence) * 0.2
+// = (100 + 150) * 0.2 = 50
+
+// Fire Element Stats (specific cho fire)
+let fire_element_stats = element_core.calculate_element_derived_stats(primary_stats, "fire");
+// Formula: fire_attack = intelligence * 0.8 + strength * 0.4
+// = 150 * 0.8 + 100 * 0.4 = 120 + 40 = 160
+```
+
+**Elemental Mastery System tính Mastery Stats:**
+```rust
+// Mastery Stats (từ mastery level và training)
+let fire_mastery_stats = mastery_system.calculate_mastery_derived_stats(actor, "fire");
+// Formula: mastery_attack = mastery_level * 1.5 + training_hours * 0.1
+// = 150 * 1.5 + 500 * 0.1 = 225 + 50 = 275
+```
+
+#### **B. Stats Combination**
+
+**Attacker Stats:**
+```rust
+// Tổng hợp tất cả derived stats cho attacker
+let total_attack = omni_stats.attack + fire_element_stats.attack + fire_mastery_stats.attack;
+// = 50 + 160 + 275 = 485
+
+let total_defense = omni_stats.defense + fire_element_stats.defense + fire_mastery_stats.defense;
+// = 30 + 80 + 200 = 310
+
+let total_crit_rate = omni_stats.crit_rate + fire_element_stats.crit_rate + fire_mastery_stats.crit_rate;
+// = 5 + 8 + 15 = 28
+```
+
+**Target Stats:**
+```rust
+// Tổng hợp tất cả derived stats cho target
+let target_omni_defense = target.get_omni_defense(); // 40
+let target_fire_defense = target.get_fire_element_defense(); // 120
+let target_fire_mastery_defense = target.get_fire_mastery_defense(); // 200
+let target_total_defense = target_omni_defense + target_fire_defense + target_fire_mastery_defense;
+// = 40 + 120 + 200 = 360
+```
+
+### **3. Step-by-Step Damage Calculation**
+
+#### **A. Tổng Quan Quy Trình**
+
+```
+Step 1: Thu thập Base Stats
+Step 2: Tính Derived Stats (Element-Core)
+Step 3: Tính Mastery Stats (Elemental Mastery System)
+Step 4: Kết hợp tất cả Stats
+Step 5: Tính Damage theo công thức
+Step 6: Áp dụng Mastery Bonus
+Step 7: Tính Final Damage
+```
+
+#### **B. Visual Flow Diagram**
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Actor Core    │    │   Element-Core  │    │ Elemental Mastery│
+│ Resource Manager│    │                 │    │     System      │
+│                 │    │                 │    │                 │
+│ Primary Stats:  │───▶│ Derived Stats:  │    │ Mastery Stats:  │
+│ • strength: 100 │    │ • omni_attack:  │    │ • mastery_attack│
+│ • intel: 150    │    │   50            │    │   275           │
+│ • agility: 80   │    │ • fire_attack:  │    │ • mastery_defense│
+│ • vitality: 120 │    │   160           │    │   200           │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                                │                        │
+                                ▼                        ▼
+                       ┌─────────────────────────────────────────┐
+                       │      Attacker Stats Combination        │
+                       │                                         │
+                       │ total_attack = 50 + 160 + 275 = 485    │
+                       │ total_defense = 30 + 80 + 200 = 310    │
+                       │ total_crit_rate = 5 + 8 + 15 = 28      │
+                       └─────────────────────────────────────────┘
+                                                │
+                                                ▼
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Actor Core    │    │   Element-Core  │    │ Elemental Mastery│
+│ Resource Manager│    │                 │    │     System      │
+│                 │    │                 │    │                 │
+│ Primary Stats:  │───▶│ Derived Stats:  │    │ Mastery Stats:  │
+│ • strength: 120 │    │ • omni_defense: │    │ • mastery_defense│
+│ • intel: 80     │    │   40            │    │   200           │
+│ • agility: 100  │    │ • fire_defense: │    │ • mastery_level │
+│ • vitality: 140 │    │   120           │    │   100           │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                                │                        │
+                                ▼                        ▼
+                       ┌─────────────────────────────────────────┐
+                       │       Target Stats Combination         │
+                       │                                         │
+                       │ target_omni_defense = 40               │
+                       │ target_fire_defense = 120              │
+                       │ target_mastery_defense = 200           │
+                       │ target_total_defense = 40+120+200=360  │
+                       └─────────────────────────────────────────┘
+                                                │
+                                                ▼
+                       ┌─────────────────────────────────────────┐
+                       │         Damage Calculation             │
+                       │                                         │
+                       │ base_damage = 500                      │
+                       │ power_points = total_attack = 485      │
+                       │ target_defense = target_total_defense  │
+                       │ power_diff = 485 - 360 = 125           │
+                       │ pre_multiplier = 500 + 125 = 625       │
+                       │                                         │
+                       │ mastery_diff = 150 - 100 = 50          │
+                       │ mastery_bonus = 50 * 0.01 = 0.5        │
+                       │                                         │
+                       │ final = 625 * 1.2 * 2.0 * 1.5 = 2250   │
+                       └─────────────────────────────────────────┘
+```
+
+#### **C. Chi Tiết Từng Step**
+
+**Step 1: Thu thập Base Stats**
+```rust
+// Từ Actor Core Resource Manager
+let primary_stats = actor.get_primary_stats();
+// Ví dụ: strength: 100, intelligence: 150, agility: 80, vitality: 120
+```
+
+**Step 2: Tính Derived Stats (Element-Core)**
+```rust
+// Element-Core tính derived stats từ primary stats
+let omni_stats = element_core.calculate_omni_derived_stats(primary_stats);
+// Formula: omni_attack = (strength + intelligence) * 0.2
+// = (100 + 150) * 0.2 = 50
+
+let fire_element_stats = element_core.calculate_element_derived_stats(primary_stats, "fire");
+// Formula: fire_attack = intelligence * 0.8 + strength * 0.4
+// = 150 * 0.8 + 100 * 0.4 = 120 + 40 = 160
+```
+
+**Step 3: Tính Mastery Stats (Elemental Mastery System)**
+```rust
+// Elemental Mastery System tính mastery stats
+let fire_mastery_stats = mastery_system.calculate_mastery_derived_stats(actor, "fire");
+// Formula: mastery_attack = mastery_level * 1.5 + training_hours * 0.1
+// = 150 * 1.5 + 500 * 0.1 = 225 + 50 = 275
+```
+
+**Step 4: Kết hợp tất cả Stats**
+```rust
+// Tổng hợp tất cả derived stats
+let total_attack = omni_stats.attack + fire_element_stats.attack + fire_mastery_stats.attack;
+// = 50 + 160 + 275 = 485
+
+let total_defense = omni_stats.defense + fire_element_stats.defense + fire_mastery_stats.defense;
+// = 30 + 80 + 200 = 310
+
+let total_crit_rate = omni_stats.crit_rate + fire_element_stats.crit_rate + fire_mastery_stats.crit_rate;
+// = 5 + 8 + 15 = 28
+```
+
+**Step 5: Tính Damage theo công thức**
+```rust
+// Base damage từ skill/action
+let base_damage = 500.0;
+
+// Power points calculation - sử dụng total_attack từ Step 4
+let power_points = total_attack; // 485 (từ Step 4)
+
+// Target defense calculation - tương tự như attacker
+let target_omni_defense = target.get_omni_defense(); // 40
+let target_fire_defense = target.get_fire_element_defense(); // 120
+let target_fire_mastery_defense = target.get_fire_mastery_defense(); // 200
+let target_total_defense = target_omni_defense + target_fire_defense + target_fire_mastery_defense;
+// = 40 + 120 + 200 = 360
+
+// Pre-multiplier damage
+let pre_multiplier_damage = base_damage + (power_points - target_total_defense);
+// = 500 + (485 - 360) = 500 + 125 = 625
+```
+
+**Step 6: Áp dụng Mastery Bonus**
+```rust
+// Tính mastery difference
+let attacker_mastery = fire_mastery_stats.mastery_level; // 150
+let target_mastery = target.get_fire_mastery_level(); // 100
+let mastery_difference = attacker_mastery - target_mastery; // 50
+let mastery_bonus = mastery_difference * 0.01; // 0.5 (50%)
+
+// Áp dụng multipliers
+let total_multiplier = 1.2; // từ skill/equipment
+let critical_multiplier = 2.0; // nếu crit
+
+// Damage với mastery bonus
+let final_damage = pre_multiplier_damage * total_multiplier * critical_multiplier * (1.0 + mastery_bonus);
+// = 675 * 1.2 * 2.0 * (1.0 + 0.5) = 675 * 1.2 * 2.0 * 1.5 = 2430
+```
+
+**Step 7: Tính Final Damage**
+```rust
+let absolute_damage = 100.0; // từ skill
+let final_damage = final_damage + absolute_damage;
+// = 2430 + 100 = 2530
+```
+
+#### **D. Ví Dụ Cụ Thể**
+
+**Scenario**: Fire Mage (Level 50) tấn công Fire Warrior (Level 45)
+
+**Attacker Stats:**
+```
+Primary Stats: strength=100, intelligence=150, agility=80, vitality=120
+Omni Stats: attack=50, defense=30, crit_rate=5
+Fire Element Stats: attack=160, defense=80, crit_rate=8
+Fire Mastery Stats: attack=275, defense=200, crit_rate=15, mastery_level=150
+```
+
+**Target Stats:**
+```
+Primary Stats: strength=120, intelligence=80, agility=100, vitality=140
+Omni Stats: attack=60, defense=40, crit_rate=6
+Fire Element Stats: attack=100, defense=120, crit_rate=6
+Fire Mastery Stats: attack=150, defense=200, crit_rate=10, mastery_level=100
+```
+
+**Damage Calculation:**
+```
+Step 1: Primary Stats ✓
+Step 2: Derived Stats ✓
+Step 3: Mastery Stats ✓
+Step 4: Attacker Stats Combination
+  - Attacker Total Attack: 50 + 160 + 275 = 485
+  - Attacker Total Defense: 30 + 80 + 200 = 310
+Step 4b: Target Stats Combination
+  - Target Omni Defense: 40
+  - Target Fire Defense: 120
+  - Target Fire Mastery Defense: 200
+  - Target Total Defense: 40 + 120 + 200 = 360
+Step 5: Pre-multiplier Damage
+  - Base Damage: 500
+  - Power Points: 485 (total_attack từ Step 4)
+  - Target Defense: 360 (target_total_defense từ Step 4b)
+  - Power Difference: 485 - 360 = 125
+  - Pre-multiplier: 500 + 125 = 625
+Step 6: Mastery Bonus
+  - Mastery Difference: 150 - 100 = 50
+  - Mastery Bonus: 50 * 0.01 = 0.5 (50%)
+Step 7: Final Damage
+  - Multipliers: 1.2 * 2.0 = 2.4
+  - With Mastery: 625 * 2.4 * 1.5 = 2250
+  - Absolute: 2250 + 100 = 2350
+```
+
+### **4. Tóm Tắt Cách Thức Hoạt Động**
+
+#### **A. Luồng Dữ Liệu (Data Flow)**
+
+```
+Primary Stats (Actor Core)
+    ↓
+Derived Stats (Element-Core)
+    ↓
+Mastery Stats (Elemental Mastery System)
+    ↓
+Combined Stats (Combat-Core)
+    ↓
+Damage Calculation
+    ↓
+Mastery Bonus Application
+    ↓
+Final Damage
+```
+
+#### **B. Các Thành Phần Chính**
+
+1. **Primary Stats**: Từ equipment, level, cultivation (strength, intelligence, etc.)
+2. **Omni Stats**: Baseline stats cho tất cả elements (từ Element-Core)
+3. **Element Stats**: Specific stats cho từng element (từ Element-Core)
+4. **Mastery Stats**: Stats từ mastery level và training (từ Elemental Mastery System)
+5. **Combined Stats**: Tổng hợp tất cả stats (Omni + Element + Mastery)
+6. **Mastery Bonus**: Bonus/penalty dựa trên mastery difference
+
+#### **C. Công Thức Tổng Quan**
+
+```
+Final Damage = (BaseDamage + (TotalAttack - TotalDefense)) × Multipliers × (1 + MasteryBonus) + AbsoluteDamage
+
+Trong đó:
+- TotalAttack = OmniAttack + ElementAttack + MasteryAttack
+- TotalDefense = OmniDefense + ElementDefense + MasteryDefense
+- MasteryBonus = (AttackerMastery - TargetMastery) × 0.01
+```
+
+#### **D. Lợi Ích của Hệ Thống**
+
+1. **Flexibility**: Dễ dàng thêm elements và mastery systems mới
+2. **Balance**: Mastery difference tạo ra meta game cân bằng
+3. **Progression**: Mastery tăng dần theo thời gian tu luyện
+4. **Specialization**: Players có thể chuyên sâu vào elements cụ thể
+5. **No Cap**: Mastery bonus không có giới hạn, tạo ra infinite progression
+
+### **5. Công Thức Chi Tiết**
 
 ```go
 // Công thức tính damage cuối cùng
@@ -404,8 +772,11 @@ func CalculateFinalDamage(input *DamageInput, target *Actor) *DamageResult {
         criticalMultiplier = input.CriticalMulti.Min + (input.CriticalMulti.Max - input.CriticalMulti.Min) * randomFactor
     }
     
-    // 10. Tính damage cuối cùng
-    postMultiplierDamage := preMultiplierDamage * totalMultiplier * criticalMultiplier
+    // 10. Tính Mastery Bonus
+    masteryBonus := calculateMasteryBonus(attacker, target, input.ElementType)
+    
+    // 11. Tính damage cuối cùng
+    postMultiplierDamage := preMultiplierDamage * totalMultiplier * criticalMultiplier * (1.0 + masteryBonus)
     absoluteDamage := calculateAbsoluteDamage(input)
     finalDamage := postMultiplierDamage + absoluteDamage
     
@@ -417,9 +788,27 @@ func CalculateFinalDamage(input *DamageInput, target *Actor) *DamageResult {
         TargetDefense: targetDefense,
         Multipliers: totalMultiplier,
         CriticalMultiplier: criticalMultiplier,
+        MasteryBonus: masteryBonus,
         AbsoluteDamage: absoluteDamage,
         IsBlocked: false,
     }
+}
+
+// Tính Mastery Bonus
+func calculateMasteryBonus(attacker *Actor, target *Actor, elementType string) float64 {
+    // Get mastery levels
+    attackerMastery := attacker.getElementMastery(elementType)
+    targetMastery := target.getElementMastery(elementType)
+    
+    // Calculate mastery difference
+    masteryDifference := attackerMastery - targetMastery
+    
+    // Calculate bonus (1% per mastery point difference)
+    masteryBonus := masteryDifference * 0.01
+    
+    // No cap - mastery can provide unlimited bonus/penalty
+    
+    return masteryBonus
 }
 ```
 
@@ -666,28 +1055,31 @@ swordAttack := &DamageInput{
 ### **2. Magical Damage Example**
 
 ```go
-// Fireball Spell
+// Fireball Spell với Fire Mastery
 fireballSpell := &DamageInput{
     BaseDamage: DamageRange{Min: 400, Max: 600},
     PowerPoints: map[string]DamageRange{
         "magical_attack": {Min: 200, Max: 400},
         "fire_attack": {Min: 300, Max: 500},
+        "fire_mastery_attack": {Min: 0, Max: 0}, // Sẽ được tính từ mastery
     },
     Multipliers: map[string]float64{
         "spell_multiplier": 1.3,
         "fire_multiplier": 1.2,
         "intelligence_multiplier": 1.15,
+        "fire_mastery_multiplier": 1.0, // Sẽ được tính từ mastery
     },
     Additions: map[string]DamageRange{
         "spell_bonus": {Min: 100, Max: 150},
     },
-    CriticalChance: 0.20,
-    CriticalMulti: DamageRange{Min: 2.2, Max: 2.8},
+    CriticalChance: 0.20, // Sẽ được tăng bởi fire mastery
+    CriticalMulti: DamageRange{Min: 2.2, Max: 2.8}, // Sẽ được tăng bởi fire mastery
     Penetration: map[string]float64{
         "magic_penetration": 60,
         "fire_penetration": 40,
     },
     DamageTypes: []string{"magical", "fire"},
+    ElementType: "fire", // Để tính mastery bonus
     Impacts: []DamageImpact{
         {
             TargetType: "mixed",
@@ -705,6 +1097,26 @@ fireballSpell := &DamageInput{
             },
         },
     },
+}
+
+// Mastery Integration Example
+func calculateFireballDamageWithMastery(attacker *Actor, target *Actor, spell *DamageInput) *DamageResult {
+    // Get fire mastery stats
+    fireMastery := attacker.getFireMasteryStats()
+    
+    // Apply mastery bonuses
+    spell.PowerPoints["fire_mastery_attack"] = DamageRange{
+        Min: fireMastery.AttackPower * 0.1,
+        Max: fireMastery.AttackPower * 0.1,
+    }
+    
+    spell.Multipliers["fire_mastery_multiplier"] = 1.0 + (fireMastery.AttackPower * 0.001)
+    spell.CriticalChance += fireMastery.CritRate * 0.01
+    spell.CriticalMulti.Min += fireMastery.CritDamage * 0.01
+    spell.CriticalMulti.Max += fireMastery.CritDamage * 0.01
+    
+    // Calculate damage
+    return calculateFinalDamage(spell, target)
 }
 ```
 
@@ -750,33 +1162,43 @@ poisonDoT := &DoTEffect{
 3. **Defense System**: Basic defense calculation
 4. **Critical Hits**: Critical chance và multiplier
 
-### **Phase 2: Advanced Features**
-1. **DoT System**: Damage over time
-2. **Damage Interactions**: Elemental interactions
-3. **Special Damage**: True, Healing, Drain
-4. **Damage Events**: Logging và tracking
+### **Phase 2: Elemental Mastery Integration**
+1. **Mastery Stats Integration**: Tích hợp mastery stats vào damage calculation
+2. **Mastery Bonus System**: Mastery difference bonus calculation
+3. **Element-Core Integration**: Tích hợp với Element-Core system
+4. **Actor Core Integration**: Tích hợp với Actor Core framework
 
-### **Phase 3: Cultivation Integration**
-1. **Cultivation Damage**: Qi, Spiritual, Dao
-2. **Complex Interactions**: Multi-system damage
-3. **Advanced DoT**: Cultivation-specific DoTs
-4. **Performance Optimization**: Caching và optimization
+### **Phase 3: Advanced Features**
+1. **DoT System**: Damage over time với mastery integration
+2. **Damage Interactions**: Elemental interactions với mastery
+3. **Special Damage**: True, Healing, Drain
+4. **Damage Events**: Logging và tracking với mastery data
+
+### **Phase 4: Cultivation Integration**
+1. **Cultivation Damage**: Qi, Spiritual, Dao với mastery
+2. **Complex Interactions**: Multi-system damage với mastery
+3. **Advanced DoT**: Cultivation-specific DoTs với mastery
+4. **Performance Optimization**: Caching và optimization cho mastery calculations
 
 ## ❓ **Questions for Discussion**
 
-1. **Damage Scaling**: Làm thế nào để scale damage theo level?
-2. **Elemental Interactions**: Có nên có elemental rock-paper-scissors?
-3. **DoT Stacking**: Có nên cho phép stack nhiều DoT cùng loại?
-4. **Damage Reflection**: Làm thế nào để xử lý damage reflection?
-5. **Performance**: Làm thế nào để optimize damage calculation cho nhiều targets?
+1. **Damage Scaling**: Làm thế nào để scale damage theo level và mastery?
+2. **Elemental Interactions**: Có nên có elemental rock-paper-scissors với mastery?
+3. **DoT Stacking**: Có nên cho phép stack nhiều DoT cùng loại với mastery?
+4. **Damage Reflection**: Làm thế nào để xử lý damage reflection với mastery?
+5. **Performance**: Làm thế nào để optimize damage calculation cho nhiều targets với mastery?
+6. **Mastery Balance**: Làm thế nào để balance mastery system để tránh overpowered?
+7. **Mastery Decay**: Có nên có mastery decay trong combat để tạo động lực tu luyện?
+8. **Mastery Interactions**: Có nên có mastery interactions giữa các elements?
 
 ## 🎯 **Next Steps**
 
 1. **Implement Core Damage System**: Basic damage calculation
-2. **Create Damage Types**: Define all damage types
-3. **Implement DoT System**: Damage over time
-4. **Create Damage Events**: Logging và tracking
-5. **Performance Testing**: Test với nhiều targets
+2. **Integrate Elemental Mastery**: Tích hợp mastery system vào damage calculation
+3. **Create Damage Types**: Define all damage types với mastery support
+4. **Implement DoT System**: Damage over time với mastery integration
+5. **Create Damage Events**: Logging và tracking với mastery data
+6. **Performance Testing**: Test với nhiều targets và mastery calculations
 
 ---
 

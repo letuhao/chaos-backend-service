@@ -1,0 +1,113 @@
+# fire_element.yaml (stub)
+version: 1
+
+element:
+  id: "fire"
+  name: "Fire"
+  aliases:
+    vi: "hỏa"
+    zh_pinyin: "huo"
+  category: "five_elements"
+  description: "Fire, hot, destructive"
+
+  base_properties:
+    base_damage: 100.0
+    base_defense: 80.0
+    base_crit_rate: 0.15
+    base_crit_damage: 1.5
+    base_accuracy: 0.85
+
+  # Defined centrally in ../../configs/probability_config.yaml
+  # Per-element overrides are optional and should be minimal.
+  probability_overrides: {}
+
+  derived_stats:
+    - "power_point"
+    - "defense_point"
+    - "crit_rate"
+    - "crit_damage"
+    - "accurate_rate"
+    - "dodge_rate"
+    - "status_probability"
+    - "status_duration"
+    - "status_intensity"
+    - "status_resistance"
+    - "status_duration_reduction"
+    - "status_intensity_reduction"
+
+  status_effects:
+    - name: "burning"
+      type: "dot"
+      base_probability: 0.15
+      base_duration: 8.0
+      base_intensity: 1.0
+      tick_interval: 1.0
+      max_stacks: 5
+      stackable: true
+      refresh_duration: true
+      spread_rules:
+        enabled: true
+        spread_chance_base: 0.05     # base chance per tick to spread
+        spread_range: 2.5            # meters
+        spread_max_targets: 2
+      dynamics:
+        intensity_gain: 0.02
+        intensity_damping: 0.01
+        decay_rate: 0.05
+        refractory_gain: 0.5
+        refractory_decay: 0.1
+
+    - name: "fire_regeneration"
+      type: "hot"
+      base_probability: 0.0   # mastery-based only; use probability engine
+      base_duration: 12.0
+      base_intensity: 1.0
+      tick_interval: 2.0
+      max_stacks: 3
+      stackable: true
+      refresh_duration: true
+      hp_heal_per_tick: 0.02
+      stamina_heal_per_tick: 0.03
+      dynamics:
+        intensity_gain: 0.015
+        intensity_damping: 0.012
+        decay_rate: 0.04
+        refractory_gain: 0.6
+        refractory_decay: 0.12
+
+  same_element_effects:
+    - pool_id: "heat_resonance"
+      apply_to: "both"
+    - pool_id: "ember_shield"
+      apply_to: "defender"
+    - pool_id: "overheat"
+      apply_to: "attacker"
+
+  neutral_effects:
+    - pool_id: "burning_fallback"
+      apply_to: "defender"
+      probability:
+        base: "from_element"
+        use_probability_engine: true
+        scaling_factor_key: "status_probability"
+      dynamics_override: {}
+
+  environment_mods:
+    # Optional context-based modifiers; engine may apply by environment tags
+    rain:
+      status_probability_add: -0.05
+      intensity_gain_mod: -0.005
+    dry:
+      status_probability_add: +0.05
+      intensity_gain_mod: +0.005
+    indoors:
+      spread_chance_add: -0.02
+
+references:
+  probability_config_path: "../../configs/probability_config.yaml"
+  interaction_config_path: "../../configs/interaction_config.yaml"
+  status_pool_path: "../../configs/status_pool.yaml"
+  golden_vectors_path: "../golden_vectors/fire_golden_vectors.json"
+  dynamics_design: "../../11_Advanced_Derived_Stats_Design.md"
+
+

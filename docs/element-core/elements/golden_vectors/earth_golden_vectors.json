@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "description": "Golden vectors for earth element calculations (sanity checks)",
+  "probability_engine": {
+    "quagmire_status_probability": {
+      "attacker": { "omni": 65.0, "element": 30.0 },
+      "defender": { "omni": 30.0, "element": 20.0 },
+      "expected_range": [0.3, 0.85]
+    }
+  },
+  "status_effects": {
+    "quagmire_base": {
+      "base_probability": 0.1,
+      "base_duration": 6.0,
+      "base_intensity": 1.0
+    }
+  }
+}
+

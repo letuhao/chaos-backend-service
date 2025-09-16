@@ -1,0 +1,75 @@
+# earth_element.yaml (stub)
+version: 1
+
+element:
+  id: "earth"
+  name: "Earth"
+  aliases:
+    vi: "thổ"
+    zh_pinyin: "tu"
+  category: "five_elements"
+  description: "Earth, stability, fortification, control"
+
+  base_properties:
+    base_damage: 95.0
+    base_defense: 110.0
+    base_crit_rate: 0.1
+    base_crit_damage: 1.4
+    base_accuracy: 0.88
+
+  probability_overrides: {}
+
+  derived_stats:
+    - "power_point"
+    - "defense_point"
+    - "crit_rate"
+    - "crit_damage"
+    - "accurate_rate"
+    - "dodge_rate"
+    - "status_probability"
+    - "status_duration"
+    - "status_intensity"
+    - "status_resistance"
+    - "status_duration_reduction"
+    - "status_intensity_reduction"
+
+  status_effects:
+    - name: "quagmire"
+      type: "debuff"
+      base_probability: 0.1
+      base_duration: 6.0
+      base_intensity: 1.0
+      tick_interval: 1.0
+      max_stacks: 5
+      stackable: true
+      refresh_duration: true
+      effects:
+        move_speed_slow: 0.05
+        accurate_rate_debuff: 0.02
+      dynamics:
+        intensity_gain: 0.015
+        intensity_damping: 0.012
+        decay_rate: 0.05
+        refractory_gain: 0.35
+        refractory_decay: 0.1
+
+  same_element_effects:
+    - pool_id: "stone_resonance"
+      apply_to: "both"
+
+  neutral_effects:
+    - pool_id: "quagmire_fallback"
+      apply_to: "defender"
+      probability:
+        base: "from_element"
+        use_probability_engine: true
+        scaling_factor_key: "status_probability"
+      dynamics_override: {}
+
+references:
+  probability_config_path: "../../configs/probability_config.yaml"
+  interaction_config_path: "../../configs/interaction_config.yaml"
+  status_pool_path: "../../configs/status_pool.yaml"
+  dynamics_design: "../../11_Advanced_Derived_Stats_Design.md"
+  golden_vectors_path: "../golden_vectors/earth_golden_vectors.json"
+

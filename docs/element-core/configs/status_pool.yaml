@@ -1,0 +1,258 @@
+version: 1
+
+# Shared buff/debuff/status pool definitions used by elements.
+# Effects are referenced by id from element configs (from_status_pool: true).
+
+effects:
+  heat_resonance:
+    category: "same_element"
+    applies_to: ["attacker", "defender"]
+    dynamics:
+      intensity_gain: 0.015
+      intensity_damping: 0.012
+      refractory_gain: 0.4
+      refractory_decay: 0.1
+    stat_hooks:
+      skill_execution_speed: { delta_weight: 0.12 }
+      crit_rate: { delta_weight: 0.06 }
+      resource_cost: { delta_weight: 0.05 }
+
+  ember_shield:
+    category: "same_element"
+    applies_to: ["defender"]
+    dynamics:
+      intensity_gain: 0.02
+      intensity_damping: 0.02
+    reflect:
+      type: "burning_thorns"
+      proportion_of_damage: 0.08
+
+  overheat:
+    category: "same_element"
+    applies_to: ["attacker"]
+    dynamics:
+      intensity_gain: 0.018
+      intensity_damping: 0.015
+      refractory_gain: 0.5
+    stat_hooks:
+      crit_damage: { delta_weight: 0.08 }
+      self_dot_risk: { base: "light", scales_with_intensity: true }
+
+  flow_resonance:
+    category: "same_element"
+    applies_to: ["attacker", "defender"]
+    description: "Water same-element flow smoothing"
+    dynamics:
+      intensity_gain: 0.012
+      intensity_damping: 0.012
+      refractory_gain: 0.35
+      refractory_decay: 0.1
+    stat_hooks:
+      skill_execution_speed: { delta_weight: 0.06 }
+      dodge_rate: { delta_weight: 0.03 }
+      resource_efficiency: { delta_weight: -0.02 }
+
+  aqua_veil:
+    category: "same_element"
+    applies_to: ["defender"]
+    description: "Short-lived damage smoothing layer"
+    dynamics:
+      intensity_gain: 0.018
+      intensity_damping: 0.02
+      refractory_gain: 0.4
+      refractory_decay: 0.12
+    damage_smoothing:
+      window_seconds: 2.0
+      smoothing_ratio: 0.15
+
+  soaked_fallback:
+    category: "neutral"
+    applies_to: ["defender"]
+    description: "Fallback Soaked application when no explicit interaction is defined"
+    status_attach:
+      element: "water"
+      element_status_id: "soaked"
+      probability:
+        base: "from_element"
+        use_probability_engine: true
+        scaling_factor_key: "status_probability"
+    dynamics:
+      intensity_gain: 0.015
+      intensity_damping: 0.012
+      decay_rate: 0.04
+      refractory_gain: 0.4
+      refractory_decay: 0.1
+
+  hydration_boost:
+    category: "generating"
+    applies_to: ["defender"]
+    description: "Water nourishes Wood: sustain and resilience"
+    dynamics:
+      intensity_gain: 0.016
+      intensity_damping: 0.012
+      decay_rate: 0.04
+      refractory_gain: 0.35
+      refractory_decay: 0.1
+    stat_hooks:
+      resource_regeneration: { delta_weight: 0.1 }
+      status_resistance: { delta_weight: 0.04 }
+
+  conductivity_damp:
+    category: "neutral"
+    applies_to: ["defender"]
+    description: "Water + Metal: slight control via conductivity damp"
+    dynamics:
+      intensity_gain: 0.012
+      intensity_damping: 0.012
+      decay_rate: 0.04
+      refractory_gain: 0.3
+      refractory_decay: 0.1
+    stat_hooks:
+      crit_rate: { delta_weight: -0.03 }
+      parry_rate: { delta_weight: -0.02 }
+
+  mud_drag:
+    category: "neutral"
+    applies_to: ["defender"]
+    description: "Water + Earth: footing instability causing minor slow"
+    dynamics:
+      intensity_gain: 0.014
+      intensity_damping: 0.012
+      decay_rate: 0.05
+      refractory_gain: 0.3
+      refractory_decay: 0.1
+    stat_hooks:
+      move_speed: { delta_weight: -0.04 }
+      accurate_rate: { delta_weight: -0.015 }
+
+  growth_resonance:
+    category: "same_element"
+    applies_to: ["attacker", "defender"]
+    description: "Wood same-element: growth harmonization"
+    dynamics:
+      intensity_gain: 0.014
+      intensity_damping: 0.012
+      decay_rate: 0.04
+      refractory_gain: 0.35
+      refractory_decay: 0.1
+    stat_hooks:
+      power_point: { delta_weight: 0.08 }
+      resource_regeneration: { delta_weight: 0.05 }
+      resource_cost: { delta_weight: 0.02 }
+
+  bark_ward:
+    category: "same_element"
+    applies_to: ["defender"]
+    description: "Wood bark ward: small damage smoothing"
+    dynamics:
+      intensity_gain: 0.016
+      intensity_damping: 0.014
+      decay_rate: 0.05
+      refractory_gain: 0.4
+      refractory_decay: 0.12
+    damage_smoothing:
+      window_seconds: 1.5
+      smoothing_ratio: 0.12
+
+  entangle_fallback:
+    category: "neutral"
+    applies_to: ["defender"]
+    description: "Fallback Entangled application when no explicit interaction is defined"
+    status_attach:
+      element: "wood"
+      element_status_id: "entangled"
+      probability:
+        base: "from_element"
+        use_probability_engine: true
+        scaling_factor_key: "status_probability"
+    dynamics:
+      intensity_gain: 0.015
+      intensity_damping: 0.012
+      decay_rate: 0.04
+      refractory_gain: 0.35
+      refractory_decay: 0.1
+
+  temper_resonance:
+    category: "same_element"
+    applies_to: ["attacker", "defender"]
+    description: "Metal same-element: tempering edge and plate"
+    dynamics:
+      intensity_gain: 0.016
+      intensity_damping: 0.014
+      decay_rate: 0.05
+      refractory_gain: 0.35
+      refractory_decay: 0.1
+    stat_hooks:
+      crit_damage: { delta_weight: 0.06 }
+      defense_point: { delta_weight: 0.06 }
+      resource_cost: { delta_weight: 0.02 }
+
+  brittle_fallback:
+    category: "neutral"
+    applies_to: ["defender"]
+    description: "Fallback Brittle application when no explicit interaction is defined"
+    status_attach:
+      element: "metal"
+      element_status_id: "brittle"
+      probability:
+        base: "from_element"
+        use_probability_engine: true
+        scaling_factor_key: "status_probability"
+    dynamics:
+      intensity_gain: 0.014
+      intensity_damping: 0.012
+      decay_rate: 0.04
+      refractory_gain: 0.35
+      refractory_decay: 0.1
+
+  stone_resonance:
+    category: "same_element"
+    applies_to: ["attacker", "defender"]
+    description: "Earth same-element: stability and fortification"
+    dynamics:
+      intensity_gain: 0.015
+      intensity_damping: 0.013
+      decay_rate: 0.05
+      refractory_gain: 0.35
+      refractory_decay: 0.1
+    stat_hooks:
+      defense_point: { delta_weight: 0.08 }
+      status_resistance: { delta_weight: 0.05 }
+      move_speed: { delta_weight: -0.02 }
+
+  quagmire_fallback:
+    category: "neutral"
+    applies_to: ["defender"]
+    description: "Fallback Quagmire application when no explicit interaction is defined (Earth)"
+    status_attach:
+      element: "earth"
+      element_status_id: "quagmire"
+      probability:
+        base: "from_element"
+        use_probability_engine: true
+        scaling_factor_key: "status_probability"
+    dynamics:
+      intensity_gain: 0.015
+      intensity_damping: 0.012
+      decay_rate: 0.05
+      refractory_gain: 0.35
+      refractory_decay: 0.1
+  burning_fallback:
+    category: "neutral"
+    applies_to: ["defender"]
+    description: "Fallback Burning application when no explicit interaction is defined"
+    status_attach:
+      element: "fire"
+      element_status_id: "burning"
+      probability:
+        base: "from_element"          # read base_probability from burning
+        use_probability_engine: true
+        scaling_factor_key: "status_probability"
+    dynamics:
+      intensity_gain: 0.02
+      intensity_damping: 0.01
+      decay_rate: 0.05
+      refractory_gain: 0.2
+      refractory_decay: 0.1
+
+

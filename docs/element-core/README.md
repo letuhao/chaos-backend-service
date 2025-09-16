@@ -66,6 +66,84 @@ Element Core là hệ thống trung tâm quản lý tất cả các loại eleme
   - Stats change event system
   - Performance optimization
 
+### **6. [08_Elemental_Mastery_System_Design.md](./08_Elemental_Mastery_System_Design.md)**
+- **Mục đích**: Thiết kế hệ thống Elemental Mastery (cultivation system)
+- **Nội dung**:
+  - Plugin-based architecture cho element mastery
+  - Decay system và training mechanics
+  - Element interactions và tương sinh tương khắc
+  - Integration với Element Core và Actor Core
+  - Configuration system và event handling
+  - Performance optimization và testing strategy
+
+### **7. [09_Actor_Core_Integration_Guide.md](./09_Actor_Core_Integration_Guide.md)**
+- **Mục đích**: Hướng dẫn tích hợp Elemental Mastery System vào Actor Core
+- **Nội dung**:
+  - Step-by-step integration guide
+  - Actor Core framework pattern implementation
+  - Resource management integration
+  - Event system integration
+  - Configuration và deployment guide
+  - Testing và debugging strategies
+
+### **8. [10_Element_Interaction_System_Design.md](./10_Element_Interaction_System_Design.md)**
+- **Mục đích**: Thiết kế hệ thống tương sinh tương khắc với Elemental Mastery integration
+- **Nội dung**:
+  - Tương sinh tương khắc concept và strategic depth
+  - Bảng overview cho các trường hợp cụ thể (cùng hệ, tương khắc, tương sinh, trung tính)
+  - Mastery-based trigger calculation với công thức chi tiết
+  - Buff/debuff effects system
+  - Integration với Elemental Mastery System
+  - Combat integration và event system
+  - Configuration examples và implementation priority
+
+### **9. [11_Advanced_Derived_Stats_Design.md](./11_Advanced_Derived_Stats_Design.md)**
+- **Mục đích**: Các derived stats nâng cao cho Element Core
+- **Nội dung**:
+  - Skill execution speed dựa trên element mastery
+  - Mastery bonuses (experience gain, decay resistance, training speed)
+  - Advanced combat mechanics (penetration, absorption, reflection)
+  - Resource management (mana/stamina/health regeneration)
+  - Implementation strategy với 4 phases
+  - Stat weights và priorities
+  - Game impact và meta game considerations
+
+### **10. [12_Performance_Optimization_Design.md](./12_Performance_Optimization_Design.md)**
+- **Mục đích**: Tối ưu performance cho Element Core
+- **Nội dung**:
+  - Caching strategy với multi-level cache
+  - Memory management và efficient storage
+  - Calculation optimization với batch processing
+  - Concurrency handling với thread-safe operations
+  - Performance metrics và monitoring
+  - Configuration tuning và deployment considerations
+
+### **11. [13_Error_Handling_Logging_Design.md](./13_Error_Handling_Logging_Design.md)**
+- **Mục đích**: Error handling và logging strategy cho Element Core
+- **Nội dung**:
+  - Error categories và recovery strategies
+  - Graceful degradation và circuit breaker pattern
+  - Structured logging với context tracking
+  - Performance logging và memory monitoring
+  - Debugging tools và calculation visualizer
+  - Error reporting và user-friendly messages
+
+### **12. [14_Reuse_Analysis_Actor_Core_Resource_Manager.md](./14_Reuse_Analysis_Actor_Core_Resource_Manager.md)**
+- **Mục đích**: Phân tích khả năng tái sử dụng Actor Core và Resource Manager
+- **Nội dung**:
+  - Mapping Element Core features với existing systems
+  - Tận dụng SystemResourceCalculator trait
+  - Tận dụng string-based formula evaluation
+  - Extensions cần thiết cho Actor Core và Resource Manager
+  - Implementation strategy với 4 phases
+  - Lợi ích tái sử dụng và development speed
+
+## 🔗 **System Consistency**
+- Công thức xác suất/steepness/scaling: tham chiếu duy nhất `01_Probability_Mechanics_Design.md`.
+- Caps/cờ tính năng: tham chiếu `11_Advanced_Derived_Stats_Design.md`.
+- Engine IDs dùng English snake_case; alias dùng cho hiển thị (xem `05_Element_Summary_Comprehensive.md`).
+
+
 ## 🎯 **Hướng Dẫn Đọc**
 
 ### **Cho Developers**
@@ -190,7 +268,7 @@ pub trait ElementSystemInterface {
 elements:
   - id: "fire"
     name: "Fire"
-    category: "fire"
+    category: "five_elements"
     derived_stats:
       - "power_point"
       - "defense_point"
@@ -298,3 +376,66 @@ scaling_factors:
 **Version**: 1.0  
 **Status**: Design Phase  
 **Maintainer**: Chaos World Team
+
+## 📈 **Telemetry & Tests Checklist**
+
+- Probability engine: log (Δ, p) distributions; ensure p ∈ [0,1].
+- Dynamics: log (I, Δ, R) over time; detect oscillation/runaway; verify damping.
+- Golden vectors: validate interactions and probability ranges (`elements/golden_vectors`).
+- Config references:
+  - Probability: `docs/element-core/configs/probability_config.yaml`
+  - Interactions: `docs/element-core/configs/interaction_config.yaml`
+  - Element example: `docs/element-core/elements/configs/fire_element.yaml`
+  - Five Elements Overview: `docs/element-core/elements/overview/five_elements_overview.md`
+
+## ✅ Element Config Validation Checklist
+
+Use this list when adding or reviewing an element config:
+
+- IDs & Aliases
+  - [ ] `element.id` matches engine IDs (english snake_case)
+  - [ ] `aliases.vi` and `aliases.zh_pinyin` present if needed
+- References
+  - [ ] `probability_config_path` points to `configs/probability_config.yaml`
+  - [ ] `interaction_config_path` points to `configs/interaction_config.yaml`
+  - [ ] `status_pool_path` points to `configs/status_pool.yaml`
+  - [ ] `golden_vectors_path` exists if vectors are provided
+- Status Effects
+  - [ ] No hard caps (`max_*`); use `dynamics` (gain, damping, decay, refractory)
+  - [ ] Optional `spread_rules` documented if spread is supported
+  - [ ] Probability fields align with Probability Mechanics doc
+- Interactions
+  - [ ] `same_element_effects` defined in element (from status pool)
+  - [ ] `neutral_effects` defined in element (when not in pairs)
+  - [ ] Cross-element effects live in `configs/interaction_config.yaml` and reference pool by `pool_id`
+- Testing & Telemetry
+  - [ ] Golden vectors updated/added under `elements/golden_vectors`
+  - [ ] Engine logs `(Δ, I, R, p)` for tuning per Implementation Notes
+
+## 🗂️ Where to put what
+
+Use this map to avoid duplication and keep responsibilities clear:
+
+- configs/status_pool.yaml
+  - Reusable, multi-element effect templates (e.g., `heat_resonance`, `ember_shield`, `burning_fallback`).
+  - Contains effect dynamics and stat hooks that many elements can reference by `pool_id`.
+
+- configs/interaction_config.yaml
+  - Relationships and pairs (same/generating/overcoming/neutral) across elements.
+  - Cross-element effects (Fire→Metal, Water→Fire, etc.) that reference `status_pool.yaml` via `pool_id`.
+  - Do not place element-owned same-element or neutral-by-element rules here.
+
+- elements/configs/<element>.yaml (e.g., Fire)
+  - Element-owned statuses (e.g., `burning`, `fire_regeneration`) with dynamics.
+  - same_element_effects (e.g., Fire↔Fire) and neutral_effects (e.g., Fire↔Neutral) referencing the pool.
+  - Optional environment modifiers and spread rules.
+  - References to central configs and golden vectors.
+
+- elements/<element>.md (e.g., `elements/fire_element.md`)
+  - Human-readable spec: intent, mechanics, and YAML excerpts for same-element and neutral sections.
+
+- elements/elemental_interactions.md
+  - Aggregate overview for cross-element interactions; process and examples only (no duplication of numbers).
+
+- configs/probability_config.yaml
+  - Central scaling/steepness for the probability engine; do not duplicate per element.

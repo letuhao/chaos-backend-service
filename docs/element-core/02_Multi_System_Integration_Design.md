@@ -23,6 +23,8 @@ Tài liệu này mô tả chi tiết cách Element Core tích hợp với các h
 - Efficient data passing
 - Caching và optimization
 
+> Consistency: Các công thức xác suất/steepness/scaling được định nghĩa ở `01_Probability_Mechanics_Design.md`. Tài liệu này không lặp công thức; chỉ sử dụng interfaces/adapters và liên kết tới Probability Engine.
+
 ## 🏗️ **Integration Architecture**
 
 ```

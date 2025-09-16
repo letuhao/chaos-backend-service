@@ -43,12 +43,13 @@ pub enum DerivedStatType {
     StatusIntensityReduction,
 }
 
-// Cần thêm clamping
-pub struct StatusClamping {
-    pub max_duration: f64,
-    pub max_intensity: f64,
-    pub min_duration: f64,
-    pub min_intensity: f64,
+// Động lực học trạng thái (không cap, đối trọng âm - dương)
+pub struct StatusDynamics {
+    pub intensity_gain: f64,   // α
+    pub intensity_damping: f64,// β
+    pub decay_rate: f64,       // λ (suy giảm theo thời gian)
+    pub refractory_gain: f64,  // tăng R sau mỗi lần trigger
+    pub refractory_decay: f64, // ρ (suy giảm R theo thời gian)
 }
 ```
 
@@ -134,31 +135,44 @@ if should_apply_status {
 }
 ```
 
-### **6. Configuration & Clamping**
+### **6. Configuration & Dynamics (No Hard Caps)**
 
-#### **Status Effect Caps**
+#### **Status Effect Dynamics**
 ```yaml
-# status_effects.yaml
+# status_effects.yaml (trích)
 fire:
   burning:
-    max_duration: 30.0
-    max_intensity: 100.0
+    base_probability: 0.15
+    base_duration: 8.0
     stackable: true
     max_stacks: 5
     refresh_duration: true
-    requires_hit: true  # Mới thêm
+    requires_hit: true
+    dynamics:
+      intensity_gain: 0.02   # α
+      intensity_damping: 0.01# β
+      decay_rate: 0.05       # λ (giảm dần theo thời gian)
+      refractory_gain: 0.5   # tăng R mỗi lần trigger
+      refractory_decay: 0.1  # ρ giảm R theo thời gian
 ```
 
-#### **Element Interaction Caps**
+#### **Element Interaction Dynamics**
 ```yaml
-# element_interactions.yaml
-fire:
-  vs_wood:
-    damage_multiplier: 1.5
-    status_multiplier: 1.2
-  vs_water:
-    damage_multiplier: 0.7
-    status_multiplier: 0.8
+# element_interactions.yaml (trích)
+relationships:
+  same: 0.0
+  generating: 0.3
+  overcoming: 0.8
+  neutral: 0.1
+
+dynamics:
+  trigger_scale: 50.0
+  steepness: 1.0
+  intensity_gain: 0.02
+  intensity_damping: 0.01
+  decay_rate: 0.05
+  refractory_gain: 0.5
+  refractory_decay: 0.1
 ```
 
 ### **7. Testing Requirements**
@@ -216,10 +230,36 @@ fn test_status_resistance_property() {
 - **BALANCE** interaction multipliers to prevent one-trick builds
 - **TEST** all interaction pairs for proper scaling
 
-### **4. Clamping & Validation**
-- **CLAMP** all duration/intensity values within min/max bounds
-- **VALIDATE** all input values before calculations
-- **LOG** clamping events for balance analysis
+### **4. Numerical Stability & Validation**
+- **PROBABILITY BOUNDS**: Xác suất luôn trong [0,1] do sử dụng sigmoid (ràng buộc toán học, không phải cap gameplay)
+- **VALIDATE** input values trước khi tính toán; chỉ clamp vì lý do số học (tránh NaN/Inf), không dùng cap “thiết kế”
+- **LOG** các sự kiện suy giảm/damping/refractory để phân tích cân bằng
+
+### **Yin-Yang Counterbalance Model (No Hard Caps)**
+```rust
+// Xác suất áp dụng status (đối trọng xác suất - kháng)
+fn p_status(attacker_prob_omni: f64, attacker_prob_elem: f64,
+            defender_res_omni: f64, defender_res_elem: f64,
+            s_status: f64) -> f64 {
+    let delta = (attacker_prob_omni + attacker_prob_elem)
+              - (defender_res_omni + defender_res_elem);
+    sigmoid(delta / s_status)
+}
+
+// Cường độ hiệu ứng (không cap): dI/dt = α·Δ − β·I, kèm suy giảm tự nhiên
+fn evolve_intensity(i: f64, delta: f64, alpha: f64, beta: f64, dt: f64) -> f64 {
+    let di = alpha * delta - beta * i;
+    let i_next = i + di * dt;
+    i_next.max(0.0)
+}
+
+// Refractory: giảm xác suất trigger kế tiếp mà không cần ICD cứng
+fn refractory_p(p_base: f64, delta: f64, r: f64, theta: f64, s: f64) -> f64 {
+    let x = (delta - theta - r) / s;
+    let p = p_base + sigmoid(x);
+    p.clamp(0.0, 1.0) // ràng buộc xác suất
+}
+```
 
 ### **5. Resource Manager Integration**
 

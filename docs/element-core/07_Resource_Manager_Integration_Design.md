@@ -4,7 +4,7 @@
 
 Tài liệu này mô tả chi tiết cách tích hợp Resource Manager với Element-Core, bao gồm cách Resource Manager quản lý primary stats và Element-Core tính toán derived stats từ những primary stats đó.
 
-**⚠️ Critical Implementation Notes**: Xem [Implementation Notes](06_Implementation_Notes.md) để biết các yêu cầu implementation quan trọng, bao gồm Omni additive-only rule và damage composition law.
+**⚠️ Critical Implementation Notes**: Xem [Implementation Notes](06_Implementation_Notes.md) để biết các yêu cầu implementation quan trọng, bao gồm Omni additive-only rule và damage composition law. Xác suất/steepness/scaling tham chiếu `01_Probability_Mechanics_Design.md` (không lặp công thức tại đây).
 
 ## 🎯 **Integration Architecture**
 

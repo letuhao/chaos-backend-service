@@ -1,0 +1,115 @@
+version: 1
+
+relationships:
+  same: 0.0
+  generating: 0.3
+  overcoming: 0.8
+  neutral: 0.1
+
+dynamics:
+  trigger_scale: 50.0
+  steepness: 1.0
+  intensity_gain: 0.02
+  intensity_damping: 0.01
+  decay_rate: 0.05
+  refractory_gain: 0.5
+  refractory_decay: 0.1
+
+pairs:
+  fire:
+    generating: ["earth"]
+    overcoming: ["metal"]
+    neutral: ["water", "wood"]
+  water:
+    generating: ["wood"]
+    overcoming: ["fire"]
+    neutral: ["metal", "earth"]
+  wood:
+    generating: ["fire"]
+    overcoming: ["earth"]
+    neutral: ["metal", "water"]
+  metal:
+    generating: ["water"]
+    overcoming: ["wood"]
+    neutral: ["earth", "fire"]
+  earth:
+    generating: ["metal"]
+    overcoming: ["water"]
+    neutral: ["wood", "fire"]
+
+effects:
+  fire_vs_metal_heat_soften:
+    when:
+      attacker: "fire"
+      defender: "metal"
+      relationship: "overcoming"
+    apply_to: "defender"
+    pool_id: "heat_resonance" # example reuse or define a metal-specific soften in pool
+    dynamics_mod:
+      intensity_gain_mod: +0.02
+      intensity_damping_mod: +0.02
+    stat_hooks:
+      parry_rate: { damping_mod: +0.01 }
+      defense_point: { effective_delta_weight: +0.1 }
+
+  wood_generates_fire_oxygen_surge:
+    when:
+      attacker: "wood"
+      defender: "fire"
+      relationship: "generating"
+    apply_to: "defender"
+    pool_id: "heat_resonance"
+    dynamics_mod:
+      intensity_gain_mod: +0.03
+      refractory_gain_mod: +0.2
+    stat_hooks:
+      power_point: { delta_weight: +0.15 }
+      self_dot_risk: { base: "light", scales_with_intensity: true }
+
+  water_overcomes_fire_quench:
+    when:
+      attacker: "water"
+      defender: "fire"
+      relationship: "overcoming"
+    apply_to: "defender"
+    pool_id: "ember_shield" # or a new quench effect in pool
+    dynamics_mod:
+      intensity_damping_mod: +0.03
+      refractory_gain_mod: +0.3
+    aura:
+      steam_veil:
+        accuracy_mod: -0.08
+        move_speed_mod: +0.06
+
+  water_generates_wood_hydration:
+    when:
+      attacker: "water"
+      defender: "wood"
+      relationship: "generating"
+    apply_to: "defender"
+    pool_id: "hydration_boost"
+    dynamics_mod:
+      intensity_gain_mod: +0.02
+      refractory_gain_mod: +0.1
+    stat_hooks:
+      resource_regeneration: { delta_weight: +0.12 }
+      status_resistance: { delta_weight: +0.05 }
+
+  water_neutral_metal_conductivity:
+    when:
+      attacker: "water"
+      defender: "metal"
+      relationship: "neutral"
+    apply_to: "defender"
+    pool_id: "conductivity_damp"
+    dynamics_mod: {}
+
+  water_neutral_earth_mud_drag:
+    when:
+      attacker: "water"
+      defender: "earth"
+      relationship: "neutral"
+    apply_to: "defender"
+    pool_id: "mud_drag"
+    dynamics_mod: {}
+

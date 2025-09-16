@@ -1,0 +1,27 @@
+version: 1
+
+# Global probability scaling (sigmoid-based). Values are examples.
+scaling_factors:
+  crit_rate:
+    fire: 120.0
+    water: 100.0
+    ice: 110.0
+    lightning: 150.0
+    earth: 80.0
+  accuracy:
+    fire: 100.0
+    water: 120.0
+    ice: 110.0
+    lightning: 80.0
+    earth: 110.0
+  status:
+    fire: 100.0
+    water: 100.0
+    ice: 100.0
+    lightning: 100.0
+    earth: 100.0
+
+steepness_factors:
+  default: 1.0
+
+

@@ -1009,6 +1009,8 @@ mod integration_tests {
 - [Implementation Notes](06_Implementation_Notes.md) - **Critical implementation guidelines and requirements**
 - [Resource Manager Integration Design](07_Resource_Manager_Integration_Design.md) - **Integration with Resource Manager systems**
 
+> System consistency: Xác suất/steepness/scaling tham chiếu duy nhất `01_Probability_Mechanics_Design.md`; caps/cờ tính năng tham chiếu `11_Advanced_Derived_Stats_Design.md`. Tránh lặp công thức ở tài liệu khác.
+
 ## ❓ **Questions for Discussion**
 
 1. **Element Interactions**: Có nên có element rock-paper-scissors system?

@@ -4,6 +4,24 @@
 
 This document provides a comprehensive summary of all element types in the Element Core system, including their properties, status effects, interactions, and game mechanics. This serves as a quick reference for developers, game designers, and system architects.
 
+## 🆔 **Engine IDs & Aliases**
+
+- Engine sử dụng English snake_case IDs thống nhất (vd: `fire, water, wood, metal, earth`).
+- Aliases dùng cho hiển thị/ngôn ngữ (vd: `vi`, `zh_pinyin`) và không tham gia vào logic.
+- Ví dụ cấu hình:
+
+```yaml
+# element_registry.yaml (trích)
+elements:
+  - id: "fire"
+    name: "Fire"
+    aliases:
+      vi: "hỏa"
+      zh_pinyin: "huo"
+    category: "five_elements"
+    is_active: true
+```
+
 ## 🎯 **Element Categories**
 
 ### **1. Universal Elements**
@@ -16,18 +34,18 @@ This document provides a comprehensive summary of all element types in the Eleme
 
 | Element | ID | Category | Status Effect | Damage Type | Defense Type | Special |
 |---------|----|---------|---------------|-------------|--------------|---------|
-| **Kim (Metal)** | `kim` | Ngũ Hành | Bleeding | Physical | High Defense | Penetration |
-| **Mộc (Wood)** | `moc` | Ngũ Hành | Poison | Nature | Medium Defense | Growth |
-| **Thủy (Water)** | `thuy` | Ngũ Hành | Slow | Water | Medium Defense | Flexibility |
-| **Hỏa (Fire)** | `hoa` | Ngũ Hành | Burning | Fire | Low Defense | Destruction |
-| **Thổ (Earth)** | `tho` | Ngũ Hành | Petrification | Earth | High Defense | Stability |
+| **Kim (Metal)** | `metal` | Five Elements | Bleeding | Physical | High Defense | Penetration |
+| **Mộc (Wood)** | `wood` | Five Elements | Poison | Nature | Medium Defense | Growth |
+| **Thủy (Water)** | `water` | Five Elements | Slow | Water | Medium Defense | Flexibility |
+| **Hỏa (Fire)** | `fire` | Five Elements | Burning | Fire | Low Defense | Destruction |
+| **Thổ (Earth)** | `earth` | Five Elements | Petrification | Earth | High Defense | Stability |
 
 ### **2. Yin-Yang Elements**
 
 | Element | ID | Category | Status Effect | Damage Type | Defense Type | Special |
 |---------|----|---------|---------------|-------------|--------------|---------|
-| **Âm (Yin)** | `am` | Yin-Yang | Chill | Cold | High Defense | Passive |
-| **Dương (Yang)** | `duong` | Yin-Yang | Frenzy | Heat | Low Defense | Active |
+| **Âm (Yin)** | `yin` | Yin-Yang | Chill | Cold | High Defense | Passive |
+| **Dương (Yang)** | `yang` | Yin-Yang | Frenzy | Heat | Low Defense | Active |
 
 ### **3. Light & Dark Elements**
 
@@ -263,9 +281,12 @@ Kim → Mộc → Thổ → Thủy → Hỏa → Kim
 version: 1
 elements:
   # Five Elements
-  - id: "kim"
+  - id: "metal"
     name: "Metal"
-    category: "nguhang"
+    aliases:
+      vi: "kim"
+      zh_pinyin: "jin"
+    category: "five_elements"
     description: "Sharp, hard, penetrating"
     derived_stats:
       - "power_point"
@@ -276,9 +297,12 @@ elements:
       - "bleeding"
     is_active: true
     
-  - id: "moc"
+  - id: "wood"
     name: "Wood"
-    category: "nguhang"
+    aliases:
+      vi: "mộc"
+      zh_pinyin: "mu"
+    category: "five_elements"
     description: "Growing, flexible, nurturing"
     derived_stats:
       - "power_point"
@@ -292,7 +316,7 @@ elements:
   # Light & Dark
   - id: "light"
     name: "Light"
-    category: "lightdark"
+    category: "light_dark"
     description: "Holy, healing, purifying"
     derived_stats:
       - "power_point"
@@ -305,7 +329,7 @@ elements:
     
   - id: "dark"
     name: "Dark"
-    category: "lightdark"
+    category: "light_dark"
     description: "Evil, corrupting, destructive"
     derived_stats:
       - "power_point"
@@ -324,7 +348,7 @@ elements:
 version: 1
 status_effects:
   # Fire - Burning
-  - element: "hoa"
+  - element: "fire"
     name: "burning"
     type: "dot"
     base_probability: 0.15
@@ -338,7 +362,7 @@ status_effects:
     refresh_duration: true
     
   # Water - Slow
-  - element: "thuy"
+  - element: "water"
     name: "slow"
     type: "movement"
     base_probability: 0.20
@@ -352,7 +376,7 @@ status_effects:
     refresh_duration: true
     
   # Earth - Petrification
-  - element: "tho"
+  - element: "earth"
     name: "petrification"
     type: "control"
     base_probability: 0.10
@@ -373,27 +397,27 @@ status_effects:
 version: 1
 interactions:
   # Five Elements - Generating Cycle
-  - attacker: "kim"
-    defender: "thuy"
+  - attacker: "metal"
+    defender: "water"
     multiplier: 1.2
     type: "generating"
     description: "Metal generates Water"
     
-  - attacker: "thuy"
-    defender: "moc"
+  - attacker: "water"
+    defender: "wood"
     multiplier: 1.2
     type: "generating"
     description: "Water generates Wood"
     
   # Five Elements - Overcoming Cycle
-  - attacker: "kim"
-    defender: "moc"
+  - attacker: "metal"
+    defender: "wood"
     multiplier: 1.5
     type: "overcoming"
     description: "Metal overcomes Wood"
     
-  - attacker: "moc"
-    defender: "tho"
+  - attacker: "wood"
+    defender: "earth"
     multiplier: 1.5
     type: "overcoming"
     description: "Wood overcomes Earth"

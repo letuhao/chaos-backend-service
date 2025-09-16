@@ -17,56 +17,70 @@ Thư mục này chứa tài liệu chi tiết cho từng loại element trong El
 - [Omni](./omni_element.md) - Toàn năng, thuộc tính cơ bản cho tất cả nhân vật
 
 ### **🌿 Ngũ Hành (Five Elements)**
-- [Kim (Metal)](./kim_metal.md) - Kim loại, sắc bén, cứng rắn
-- [Mộc (Wood)](./moc_wood.md) - Gỗ, sinh trưởng, mềm mại
-- [Thủy (Water)](./thuy_water.md) - Nước, linh hoạt, thấm nhuần
+- [Metal (Kim)](./metal_element.md) - Kim loại, sắc bén, cứng rắn
+- [Wood (Mộc)](./wood_element.md) - Gỗ, sinh trưởng, mềm mại
+- [Water (Thủy)](./water_element.md) - Nước, linh hoạt, thấm nhuần
 - [Fire (Hỏa)](./fire_element.md) - Lửa, nóng bỏng, phá hủy
-- [Thổ (Earth)](./tho_earth.md) - Đất, ổn định, nuôi dưỡng
+- [Earth (Thổ)](./earth_element.md) - Đất, ổn định, nuôi dưỡng
 
 ### **☯️ Âm Dương (Yin-Yang)**
-- [Âm (Yin)](./am_yin.md) - Tối, lạnh, thụ động
-- [Dương (Yang)](./duong_yang.md) - Sáng, nóng, chủ động
+- [Yin (Âm)](./yin_element.md) - Tối, lạnh, thụ động
+- [Yang (Dương)](./yang_element.md) - Sáng, nóng, chủ động
 
 ### **🌟 Light & Dark**
-- [Light](./light.md) - Ánh sáng, thánh thiện, chữa lành
-- [Dark](./dark.md) - Bóng tối, tà ác, phá hủy
+- [Light](./light_element.md) - Ánh sáng, thánh thiện, chữa lành
+- [Dark](./dark_element.md) - Bóng tối, tà ác, phá hủy
 
 ### **💚 Life & Death**
-- [Life](./life.md) - Sự sống, hồi phục, tăng trưởng
-- [Death](./death.md) - Cái chết, phá hủy, suy tàn
+- [Life](./life_element.md) - Sự sống, hồi phục, tăng trưởng
+- [Death](./death_element.md) - Cái chết, phá hủy, suy tàn
 
 ### **⏰ Time & Space**
-- [Time](./time.md) - Thời gian, tốc độ, thời lượng
-- [Space](./space.md) - Không gian, vị trí, khoảng cách
+- [Time](./time_element.md) - Thời gian, tốc độ, thời lượng
+- [Space](./space_element.md) - Không gian, vị trí, khoảng cách
 
 ### **🧠 Mental & Psychic**
-- [Mental](./mental.md) - Tâm trí, tấn công tinh thần
-- [Psychic](./psychic.md) - Tâm linh, năng lượng tâm linh
+- [Mental](./mental_element.md) - Tâm trí, tấn công tinh thần
+- [Psychic](./psychic_element.md) - Tâm linh, năng lượng tâm linh
 
 ### **🌌 Advanced Elements**
-- [Void](./void.md) - Hư không, trống rỗng, hấp thụ
-- [Chaos](./chaos.md) - Hỗn mang, ngẫu nhiên, không kiểm soát
-- [Reality](./reality.md) - Thực tại, thực tế, hiện thực
-- [Conceptual](./conceptual.md) - Khái niệm, trừu tượng
+- [Void](./void_element.md) - Hư không, trống rỗng, hấp thụ
+- [Chaos](./chaos_element.md) - Hỗn mang, ngẫu nhiên, không kiểm soát
+- [Reality](./reality_element.md) - Thực tại, thực tế, hiện thực
+- [Conceptual](./conceptual_element.md) - Khái niệm, trừu tượng
 
 ### **⚔️ Physical Elements**
-- [Physical](./physical.md) - Vật lý, tấn công cơ bản
-- [Slashing](./slashing.md) - Chém, kiếm, dao
-- [Piercing](./piercing.md) - Đâm, thương, mũi tên
-- [Blunt](./blunt.md) - Đập, búa, gậy
-- [Crushing](./crushing.md) - Nghiền, sức mạnh lớn
+- [Physical](./physical_element.md) - Vật lý, tấn công cơ bản
+- [Slashing](./slashing_element.md) - Chém, kiếm, dao
+- [Piercing](./piercing_element.md) - Đâm, thương, mũi tên
+- [Blunt](./blunt_element.md) - Đập, búa, gậy
+- [Crushing](./crushing_element.md) - Nghiền, sức mạnh lớn
 
 ### **🔮 Magical Elements**
-- [Arcane](./arcane.md) - Huyền bí, ma thuật thuần túy
-- [Mystical](./mystical.md) - Thần bí, ma thuật bí ẩn
-- [Spiritual](./spiritual.md) - Tinh thần, năng lượng tinh thần
+- [Arcane](./arcane_element.md) - Huyền bí, ma thuật thuần túy
+- [Mystical](./mystical_element.md) - Thần bí, ma thuật bí ẩn
+- [Spiritual](./spiritual_element.md) - Tinh thần, năng lượng tinh thần
 
 ### **🌱 Cultivation Elements**
-- [Qi](./qi.md) - Khí, năng lượng tu luyện cơ bản
-- [Dao](./dao.md) - Đạo, con đường tu luyện
-- [Profound](./profound.md) - Áo nghĩa, ý nghĩa sâu sắc
-- [Karma](./karma.md) - Nghiệp, nghiệp lực
-- [Fate](./fate.md) - Số mệnh, định mệnh
+- [Qi](./qi_element.md) - Khí, năng lượng tu luyện cơ bản
+- [Dao](./dao_element.md) - Đạo, con đường tu luyện
+- [Profound](./profound_element.md) - Áo nghĩa, ý nghĩa sâu sắc
+- [Karma](./karma_element.md) - Nghiệp, nghiệp lực
+- [Fate](./fate_element.md) - Số mệnh, định mệnh
+
+## 🔗 **Element Interaction System**
+
+### **Tương Sinh Tương Khắc (Element Interactions)**
+- [Element Interaction System Design](../10_Element_Interaction_System_Design.md) - Hệ thống tương sinh tương khắc với Elemental Mastery integration
+- **Bảng Overview**: Chi tiết trigger probability và buff/debuff effects cho tất cả element combinations
+- **Mastery-Based**: Trigger dựa trên mastery difference giữa attacker và defender
+- **Strategic Depth**: Tạo ra meta game cân bằng và thú vị
+
+### **Elemental Mastery Integration**
+- [Elemental Mastery System Design](../08_Elemental_Mastery_System_Design.md) - Plugin-based cultivation system
+- [Actor Core Integration Guide](../09_Actor_Core_Integration_Guide.md) - Hướng dẫn tích hợp vào Actor Core
+- **Mastery Progression**: Experience-based progression với decay system
+- **Plugin Architecture**: Mỗi element là một plugin riêng biệt
 
 ## 🎯 **Cấu Trúc Tài Liệu**
 
@@ -145,28 +159,51 @@ Mỗi file element sẽ chứa:
 
 ## 📊 **Element Summary Matrix**
 
-| Element | Category | Status Effect | Damage Type | Defense Type | Special |
-|---------|----------|---------------|-------------|--------------|---------|
-| Omni | Universal | None | Universal | Balanced | Baseline |
-| Kim | Ngũ Hành | Bleeding | Physical | High Defense | Penetration |
-| Mộc | Ngũ Hành | Poison | Nature | Medium Defense | Growth |
-| Thủy | Ngũ Hành | Slow | Water | Medium Defense | Flexibility |
-| Hỏa | Ngũ Hành | Burning | Fire | Low Defense | Destruction |
-| Thổ | Ngũ Hành | Petrification | Earth | High Defense | Stability |
-| Light | Light/Dark | Purification | Holy | High Defense | Healing |
-| Dark | Light/Dark | Corruption | Shadow | Low Defense | Destruction |
-| Life | Life/Death | Regeneration | Nature | Medium Defense | Healing |
-| Death | Life/Death | Decay | Shadow | Low Defense | Destruction |
-| Time | Time/Space | Temporal Distortion | Arcane | Medium Defense | Speed |
-| Space | Time/Space | Spatial Lock | Arcane | High Defense | Control |
+| Element | Category | Status Effect | Damage Type | Defense Type | Special | Mastery Integration |
+|---------|----------|---------------|-------------|--------------|---------|-------------------|
+| **Omni** | Universal | None | Universal | Balanced | Baseline | ✅ Yes |
+| **Metal** | Ngũ Hành | Bleeding | Physical | High Defense | Penetration | ✅ Yes |
+| **Wood** | Ngũ Hành | Poison | Nature | Medium Defense | Growth | ✅ Yes |
+| **Water** | Ngũ Hành | Slow | Water | Medium Defense | Flexibility | ✅ Yes |
+| **Fire** | Ngũ Hành | Burning | Fire | Low Defense | Destruction | ✅ Yes |
+| **Earth** | Ngũ Hành | Petrification | Earth | High Defense | Stability | ✅ Yes |
+| **Yin** | Âm Dương | Chill | Cold | Medium Defense | Passive | ✅ Yes |
+| **Yang** | Âm Dương | Heat | Fire | Medium Defense | Active | ✅ Yes |
+| **Light** | Light/Dark | Purification | Holy | High Defense | Healing | ✅ Yes |
+| **Dark** | Light/Dark | Corruption | Shadow | Low Defense | Destruction | ✅ Yes |
+| **Life** | Life/Death | Regeneration | Nature | Medium Defense | Healing | ✅ Yes |
+| **Death** | Life/Death | Decay | Shadow | Low Defense | Destruction | ✅ Yes |
+| **Time** | Time/Space | Temporal Distortion | Arcane | Medium Defense | Speed | ✅ Yes |
+| **Space** | Time/Space | Spatial Lock | Arcane | High Defense | Control | ✅ Yes |
+| **Mental** | Mental/Psychic | Confusion | Psychic | Low Defense | Mind Control | ✅ Yes |
+| **Psychic** | Mental/Psychic | Telepathy | Psychic | Medium Defense | ESP | ✅ Yes |
+| **Void** | Advanced | Absorption | Void | High Defense | Nullify | ✅ Yes |
+| **Chaos** | Advanced | Random | Chaos | Low Defense | Unpredictable | ✅ Yes |
+| **Reality** | Advanced | Manifestation | Reality | High Defense | Materialize | ✅ Yes |
+| **Conceptual** | Advanced | Conceptual | Abstract | Medium Defense | Abstract | ✅ Yes |
+| **Physical** | Physical | Stun | Physical | High Defense | Raw Power | ✅ Yes |
+| **Slashing** | Physical | Bleeding | Physical | Medium Defense | Sharp | ✅ Yes |
+| **Piercing** | Physical | Penetration | Physical | Low Defense | Precise | ✅ Yes |
+| **Blunt** | Physical | Concussion | Physical | High Defense | Crushing | ✅ Yes |
+| **Crushing** | Physical | Shatter | Physical | High Defense | Overwhelming | ✅ Yes |
+| **Arcane** | Magical | Mana Burn | Arcane | Medium Defense | Pure Magic | ✅ Yes |
+| **Mystical** | Magical | Mystification | Mystical | Medium Defense | Enigmatic | ✅ Yes |
+| **Spiritual** | Magical | Soul Drain | Spiritual | Medium Defense | Ethereal | ✅ Yes |
+| **Qi** | Cultivation | Qi Disruption | Qi | High Defense | Energy | ✅ Yes |
+| **Dao** | Cultivation | Dao Insight | Dao | High Defense | Enlightenment | ✅ Yes |
+| **Profound** | Cultivation | Profound Understanding | Profound | High Defense | Wisdom | ✅ Yes |
+| **Karma** | Cultivation | Karmic Debt | Karma | Medium Defense | Fate | ✅ Yes |
+| **Fate** | Cultivation | Destiny | Fate | High Defense | Predetermined | ✅ Yes |
 
 ## 🎯 **Next Steps**
 
-1. **Create Individual Element Docs**: Tạo tài liệu chi tiết cho từng element
-2. **Add Status Effect Details**: Thêm chi tiết status effects
-3. **Create Interaction Matrix**: Tạo ma trận tương tác
-4. **Add Game Examples**: Thêm ví dụ game cụ thể
-5. **Create Test Vectors**: Tạo test vectors cho testing
+1. **Create Individual Element Docs**: Tạo tài liệu chi tiết cho từng element với tên file chuẩn hóa
+2. **Implement Element Interaction System**: Implement hệ thống tương sinh tương khắc
+3. **Add Elemental Mastery Integration**: Tích hợp Elemental Mastery System cho tất cả elements
+4. **Create Interaction Matrix**: Tạo ma trận tương tác chi tiết cho tất cả element combinations
+5. **Add Game Examples**: Thêm ví dụ game cụ thể với mastery calculations
+6. **Create Test Vectors**: Tạo test vectors cho testing với mastery scenarios
+7. **Performance Optimization**: Tối ưu performance cho large-scale element interactions
 
 ---
 
