@@ -1,0 +1,43 @@
+version: 1
+
+tag_definitions:
+  undead:
+    conditions:
+      - field: "race"
+        operator: "in"
+        values: ["undead", "zombie", "skeleton"]
+      - field: "cultivation.realm"
+        operator: "contains"
+        values: ["corruption", "necromancy"]
+    priority: 100
+
+  ghost:
+    conditions:
+      - field: "race"
+        operator: "equals"
+        values: ["ghost", "spirit", "wraith"]
+      - field: "state"
+        operator: "equals"
+        values: ["ethereal", "incorporeal"]
+    priority: 90
+
+  holy:
+    conditions:
+      - field: "equipment.weapon"
+        operator: "contains"
+        values: ["holy", "blessed", "divine"]
+      - field: "cultivation.realm"
+        operator: "contains"
+        values: ["divine", "light", "purification"]
+    priority: 80
+
+  life:
+    conditions:
+      - field: "race"
+        operator: "in"
+        values: ["human", "elf", "dwarf", "halfling"]
+      - field: "state"
+        operator: "not_equals"
+        values: ["undead", "ghost"]
+    priority: 70
+

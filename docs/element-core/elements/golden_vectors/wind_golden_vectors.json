@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "description": "Golden vectors for wind element calculations (sanity checks)",
+  "probability_engine": {
+    "shear_status_probability": {
+      "attacker": { "omni": 75.0, "element": 40.0 },
+      "defender": { "omni": 25.0, "element": 15.0 },
+      "expected_range": [0.35, 0.95]
+    }
+  },
+  "status_effects": {
+    "shear_base": {
+      "base_probability": 0.12,
+      "base_duration": 5.0,
+      "base_intensity": 1.0
+    }
+  }
+}
+

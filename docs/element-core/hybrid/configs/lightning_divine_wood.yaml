@@ -1,0 +1,33 @@
+# lightning_divine_wood.yaml (hybrid)
+version: 1
+
+hybrid:
+  id: "lightning_divine_wood"
+  name: "Mộc Thần Lôi"
+  parents: ["lightning", "wood"]
+  tags: ["holy", "exorcism"]
+  description: "Divine wood-aspected lightning for exorcism and banishment"
+
+  activation:
+    requires_any:
+      - item: "kim_lei_truc"
+      - cultivation_talent: "divine_thunder_wood"
+
+  core_effects:
+    - pool_id: "divine_shock"
+      apply_to: "defender"
+      category_mods:
+        defender:
+          undead|ghost|corpse:
+            intensity_gain_mod: +0.012
+            damage_taken_amp_add: +0.06
+            purge_corruption: true
+          life:
+            intensity_gain_mod: -0.004
+
+references:
+  probability_config_path: "../../configs/probability_config.yaml"
+  interaction_config_path: "../../configs/interaction_config.yaml"
+  status_pool_path: "../../configs/status_pool.yaml"
+  dynamics_design: "../../11_Advanced_Derived_Stats_Design.md"
+

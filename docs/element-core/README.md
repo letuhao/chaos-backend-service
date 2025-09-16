@@ -138,6 +138,17 @@ Element Core là hệ thống trung tâm quản lý tất cả các loại eleme
   - Implementation strategy với 4 phases
   - Lợi ích tái sử dụng và development speed
 
+### **13. [16_Hybrid_Subsystem_Design.md](./16_Hybrid_Subsystem_Design.md)**
+- **Mục đích**: Thiết kế Hybrid Subsystem cho các nguyên tố lai
+- **Nội dung**:
+  - Consistency với Actor Core ModifierPack system
+  - Configuration-driven tag detection và modifier rules
+  - Hybrid Element structure với conditional activation
+  - Extended ModifierPack với conditional và tag-based modifiers
+  - Tag detection system với flexible operators
+  - YAML configuration examples và implementation details
+  - Integration với SystemResourceCalculator và Status Pool
+
 ## 🔗 **System Consistency**
 - Công thức xác suất/steepness/scaling: tham chiếu duy nhất `01_Probability_Mechanics_Design.md`.
 - Caps/cờ tính năng: tham chiếu `11_Advanced_Derived_Stats_Design.md`.
@@ -387,6 +398,8 @@ scaling_factors:
   - Interactions: `docs/element-core/configs/interaction_config.yaml`
   - Element example: `docs/element-core/elements/configs/fire_element.yaml`
   - Five Elements Overview: `docs/element-core/elements/overview/five_elements_overview.md`
+  - Extended Elements Overview: `docs/element-core/elements/overview/five_elements_extensions_overview.md`
+  - Hybrid Subsystem: `docs/element-core/hybrid/README.md`
 
 ## ✅ Element Config Validation Checklist
 

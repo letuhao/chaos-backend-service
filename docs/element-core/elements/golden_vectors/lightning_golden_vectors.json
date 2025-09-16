@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "description": "Golden vectors for lightning element calculations (sanity checks)",
+  "probability_engine": {
+    "shocked_status_probability": {
+      "attacker": { "omni": 80.0, "element": 45.0 },
+      "defender": { "omni": 25.0, "element": 10.0 },
+      "expected_range": [0.4, 0.97]
+    }
+  },
+  "status_effects": {
+    "shocked_base": {
+      "base_probability": 0.14,
+      "base_duration": 5.0,
+      "base_intensity": 1.0
+    }
+  }
+}
+

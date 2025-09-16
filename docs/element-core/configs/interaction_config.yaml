@@ -113,3 +113,26 @@ effects:
     pool_id: "mud_drag"
     dynamics_mod: {}
 
+  # Minimal examples demonstrating parry/block stat_hooks in cross-element effects
+  lightning_vs_metal_overload_parry_break:
+    when:
+      attacker: "lightning"
+      defender: "metal"
+      relationship: "overcoming"
+    apply_to: "defender"
+    pool_id: "arc_resonance"
+    dynamics_mod: {}
+    stat_hooks:
+      parry_break: { delta_weight: 0.03 }
+
+  wind_vs_earth_grounded_block_strength:
+    when:
+      attacker: "wind"
+      defender: "earth"
+      relationship: "neutral"
+    apply_to: "defender"
+    pool_id: "stone_resonance"
+    dynamics_mod: {}
+    stat_hooks:
+      block_strength: { delta_weight: 0.04 }
+

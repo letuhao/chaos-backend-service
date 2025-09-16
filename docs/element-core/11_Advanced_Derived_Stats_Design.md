@@ -187,6 +187,31 @@ fn calculate_block_rate(
 }
 ```
 
+#### Parry/Block Counter-Stats and Strength/Shred
+
+- Parry/Block checks are passive and do not scale with any `skill_*_effectiveness`.
+- Use yin–yang deltas with sigmoid for triggers; use deltas for mitigation magnitude.
+
+```text
+Parry trigger (defender vs attacker):
+  p_parry = sigmoid( s × (parry_rate_defender − parry_break_attacker) )
+
+Block trigger (defender vs attacker):
+  p_block = sigmoid( s × (block_rate_defender − block_break_attacker) )
+
+Block mitigation value (applied on pre-shield damage):
+  block_value = f(block_strength_defender − block_shred_attacker)
+  // f can be linear or bounded-sigmoid per balance; recommended linear→clamped at engine bounds
+
+Parry outcome scaling (optional, engine-defined):
+  parry_outcome_scale ∝ max(0, parry_strength_defender − parry_shred_attacker)
+  // e.g., affects counter-window length, stagger time, or converted damage share
+```
+
+Implementation notes:
+- Order in Damage Composition: resolve Hit→Parry→Block before penetration/defense. If Parry succeeds, short-circuit damage (engine-defined outcome). If Block succeeds, reduce incoming damage by `block_value` before further mitigation and before shields.
+- Telemetry: log `(parry_rate_def, parry_break_att, p_parry)` and `(block_rate_def, block_break_att, p_block, block_value)` alongside existing `(Δ, I, R, p)`.
+
 ### **3. Element Mastery Bonuses**
 
 #### **MasteryExperienceGain**

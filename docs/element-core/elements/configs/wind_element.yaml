@@ -1,21 +1,21 @@
-# water_element.yaml (stub)
+# wind_element.yaml (stub)
 version: 1
 
 element:
-  id: "water"
-  name: "Water"
+  id: "wind"
+  name: "Wind"
   aliases:
-    vi: "thủy"
-    zh_pinyin: "shui"
-  category: "five_elements"
-  description: "Water, fluid, adaptable, control"
+    vi: "phong"
+    zh_pinyin: "feng"
+  category: "extended_elements"
+  description: "Wind, mobility, displacement, turbulence"
 
   base_properties:
-    base_damage: 90.0
-    base_defense: 90.0
-    base_crit_rate: 0.12
-    base_crit_damage: 1.4
-    base_accuracy: 0.90
+    base_damage: 95.0
+    base_defense: 85.0
+    base_crit_rate: 0.14
+    base_crit_damage: 1.45
+    base_accuracy: 0.92
 
   probability_overrides: {}
 
@@ -66,38 +66,33 @@ element:
     - "element_sensitivity"
 
   status_effects:
-    - name: "soaked"
+    - name: "shear"
       type: "debuff"
       base_probability: 0.12
-      base_duration: 6.0
+      base_duration: 5.0
       base_intensity: 1.0
       tick_interval: 1.0
       max_stacks: 5
       stackable: true
       refresh_duration: true
-      spread_rules:
-        enabled: true
-        spread_chance_base: 0.04
-        spread_range: 2.5
-        spread_max_targets: 2
       effects:
-        move_speed_slow: 0.08      # 8% per intensity unit (subject to engine hook)
-        accurate_rate_debuff: 0.04 # 4% per intensity unit
+        accurate_rate_debuff: 0.04
+        defense_point_debuff: 0.03
       dynamics:
-        intensity_gain: 0.015
+        intensity_gain: 0.014
         intensity_damping: 0.012
-        decay_rate: 0.04
-        refractory_gain: 0.4
-        refractory_decay: 0.1
+        decay_rate: 0.05
+        refractory_gain: 0.35
+        refractory_decay: 0.12
 
   same_element_effects:
-    - pool_id: "flow_resonance"
+    - pool_id: "gale_guard"
       apply_to: "both"
-    - pool_id: "aqua_veil"
+    - pool_id: "turbulence_aura"
       apply_to: "defender"
 
   neutral_effects:
-    - pool_id: "soaked_fallback"
+    - pool_id: "shear_fallback"
       apply_to: "defender"
       probability:
         base: "from_element"
@@ -105,18 +100,10 @@ element:
         scaling_factor_key: "status_probability"
       dynamics_override: {}
 
-  environment_mods:
-    rain:
-      status_probability_add: +0.05
-      intensity_gain_mod: +0.005
-    dry:
-      status_probability_add: -0.05
-      intensity_gain_mod: -0.005
-
 references:
   probability_config_path: "../../configs/probability_config.yaml"
   interaction_config_path: "../../configs/interaction_config.yaml"
   status_pool_path: "../../configs/status_pool.yaml"
   dynamics_design: "../../11_Advanced_Derived_Stats_Design.md"
-  golden_vectors_path: "../golden_vectors/water_golden_vectors.json"
+  golden_vectors_path: "../golden_vectors/wind_golden_vectors.json"
 

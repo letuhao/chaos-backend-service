@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "description": "Golden vectors for Mộc Thần Lôi hybrid (sanity checks)",
+  "probability_engine": {
+    "divine_shock_probability": {
+      "attacker": { "omni": 85.0, "element": 50.0 },
+      "defender": { "omni": 30.0, "element": 10.0 },
+      "expected_range": [0.45, 0.98]
+    }
+  },
+  "modifiers_vs_tags": {
+    "undead_ghost_corpse": {
+      "intensity_gain_mod": 0.012,
+      "damage_taken_amp_add": 0.06
+    },
+    "life": {
+      "intensity_gain_mod": -0.004
+    }
+  }
+}
+

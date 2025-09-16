@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "description": "Golden vectors for ice element calculations (sanity checks)",
+  "probability_engine": {
+    "chill_status_probability": {
+      "attacker": { "omni": 75.0, "element": 45.0 },
+      "defender": { "omni": 25.0, "element": 15.0 },
+      "expected_range": [0.4, 0.96]
+    }
+  },
+  "status_effects": {
+    "chill_base": {
+      "base_probability": 0.13,
+      "base_duration": 6.0,
+      "base_intensity": 1.0
+    },
+    "freeze_base": {
+      "base_probability": 0.0,
+      "base_duration": 2.0,
+      "base_intensity": 1.0
+    }
+  }
+}
+

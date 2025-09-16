@@ -255,4 +255,179 @@ effects:
       refractory_gain: 0.2
       refractory_decay: 0.1
 
+  arc_resonance:
+    category: "same_element"
+    applies_to: ["attacker", "defender"]
+    description: "Lightning same-element: arc flow stabilization"
+    dynamics:
+      intensity_gain: 0.016
+      intensity_damping: 0.014
+      decay_rate: 0.05
+      refractory_gain: 0.4
+      refractory_decay: 0.12
+    stat_hooks:
+      crit_rate: { delta_weight: 0.06 }
+      chain_lightning_chance: { delta_weight: 0.08 }
+
+  overcharge_boost:
+    category: "same_element"
+    applies_to: ["attacker"]
+    description: "Risk-reward overcharge for lightning attackers"
+    dynamics:
+      intensity_gain: 0.02
+      intensity_damping: 0.016
+      decay_rate: 0.05
+      refractory_gain: 0.5
+      refractory_decay: 0.15
+    stat_hooks:
+      crit_damage: { delta_weight: 0.08 }
+      self_short_risk: { base: "light", scales_with_intensity: true }
+
+  shocked_fallback:
+    category: "neutral"
+    applies_to: ["defender"]
+    description: "Fallback Shocked application when no explicit interaction is defined"
+    status_attach:
+      element: "lightning"
+      element_status_id: "shocked"
+      probability:
+        base: "from_element"
+        use_probability_engine: true
+        scaling_factor_key: "status_probability"
+    dynamics:
+      intensity_gain: 0.016
+      intensity_damping: 0.013
+      decay_rate: 0.05
+      refractory_gain: 0.4
+      refractory_decay: 0.12
+
+
+  divine_conduit_aspect:
+    category: "aspect"
+    applies_to: ["attacker"]
+    description: "Grants divine lightning aspect with wood bias"
+    grants_tags: ["lightning_divine", "holy", "wood_bias"]
+    dynamics:
+      intensity_gain: 0.0
+      intensity_damping: 0.0
+      decay_rate: 0.0
+      refractory_gain: 0.0
+      refractory_decay: 0.0
+
+  divine_shock:
+    category: "hybrid_lightning"
+    applies_to: ["defender"]
+    description: "Shocked variant with exorcism scaling vs undead/ghost/corpse"
+    status_attach:
+      element: "lightning"
+      element_status_id: "shocked"
+      probability:
+        base: "from_element"
+        use_probability_engine: true
+        scaling_factor_key: "status_probability"
+    dynamics:
+      intensity_gain: 0.018
+      intensity_damping: 0.013
+      decay_rate: 0.05
+      refractory_gain: 0.5
+      refractory_decay: 0.14
+    category_mods:
+      defender:
+        undead|ghost|corpse:
+          intensity_gain_mod: 0.012
+          damage_taken_amp_add: 0.06
+          purge_corruption: true
+        life:
+          intensity_gain_mod: -0.004
+
+  gale_guard:
+    category: "same_element"
+    applies_to: ["attacker", "defender"]
+    description: "Wind same-element: speed smoothing and dodge stabilization"
+    dynamics:
+      intensity_gain: 0.012
+      intensity_damping: 0.012
+      decay_rate: 0.04
+      refractory_gain: 0.35
+      refractory_decay: 0.1
+    stat_hooks:
+      skill_execution_speed: { delta_weight: 0.06 }
+      dodge_rate: { delta_weight: 0.04 }
+      resource_cost: { delta_weight: 0.02 }
+      block_strength: { delta_weight: 0.03 }
+
+  turbulence_aura:
+    category: "same_element"
+    applies_to: ["defender"]
+    description: "Wind aura: increase miss chance / movement cooldown"
+    dynamics:
+      intensity_gain: 0.014
+      intensity_damping: 0.014
+      decay_rate: 0.05
+      refractory_gain: 0.4
+      refractory_decay: 0.12
+    stat_hooks:
+      accurate_rate: { delta_weight: -0.04 }
+      movement_cooldown: { delta_weight: 0.03 }
+      parry_break: { delta_weight: 0.02 }
+
+  shear_fallback:
+    category: "neutral"
+    applies_to: ["defender"]
+    description: "Fallback Shear application when no explicit interaction is defined (Wind)"
+    status_attach:
+      element: "wind"
+      element_status_id: "shear"
+      probability:
+        base: "from_element"
+        use_probability_engine: true
+        scaling_factor_key: "status_probability"
+    dynamics:
+      intensity_gain: 0.014
+      intensity_damping: 0.012
+      decay_rate: 0.05
+      refractory_gain: 0.35
+      refractory_decay: 0.12
+
+  frost_resonance:
+    category: "same_element"
+    applies_to: ["attacker", "defender"]
+    description: "Ice same-element: chill coherence"
+    dynamics:
+      intensity_gain: 0.013
+      intensity_damping: 0.012
+      decay_rate: 0.05
+      refractory_gain: 0.35
+      refractory_decay: 0.12
+    stat_hooks:
+      status_probability: { delta_weight: 0.05 }
+      move_speed: { delta_weight: -0.02 }
+
+  chilled_fallback:
+    category: "neutral"
+    applies_to: ["defender"]
+    description: "Fallback Chill application when no explicit interaction is defined (Ice)"
+    status_attach:
+      element: "ice"
+      element_status_id: "chill"
+      probability:
+        base: "from_element"
+        use_probability_engine: true
+        scaling_factor_key: "status_probability"
+    dynamics:
+      intensity_gain: 0.013
+      intensity_damping: 0.012
+      decay_rate: 0.05
+      refractory_gain: 0.35
+      refractory_decay: 0.12
+
+  freeze_conversion:
+    category: "conversion"
+    applies_to: ["defender"]
+    description: "Converts high Chill intensity to short Freeze, then decays"
+    conversion:
+      from_status: "chill"
+      to_status: "freeze"
+      threshold_intensity: 2.5
+      decay_on_convert: 0.5
 

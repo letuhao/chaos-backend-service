@@ -116,6 +116,28 @@ if status_prob > random_threshold {
 }
 ```
 
+### Parry/Block Placement (Passive, pre-mitigation)
+
+- Resolve in this order for each hit: `HitCheck → Parry → Block → Penetration/Defense → Reflection → Shields → Resources`.
+- Parry trigger:
+
+```rust
+let p_parry = sigmoid(scale * (parry_rate_def - parry_break_att));
+if rng.next() < p_parry { return apply_parry_outcome(attacker, target); }
+```
+
+- Block trigger and magnitude:
+
+```rust
+let p_block = sigmoid(scale * (block_rate_def - block_break_att));
+if rng.next() < p_block {
+    let block_value = compute_block_value(block_strength_def - block_shred_att);
+    damage.final_damage = (damage.final_damage - block_value).max(0.0);
+}
+```
+
+- Do not apply any `skill_*_effectiveness` to these checks. They are passive.
+
 ## 🔗 **Element-Core Integration**
 
 ### **1. Hybrid Architecture với Elemental Mastery**

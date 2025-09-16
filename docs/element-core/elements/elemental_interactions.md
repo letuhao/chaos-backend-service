@@ -159,6 +159,11 @@ effects:
 > VI: Không dùng cooldown cứng; dùng refractory để giảm xác suất tạm thời sau khi kích hoạt.  
 > 中文: 不使用固定冷却；通过不应期降低短时触发概率。
 
+### Damage Composition (Order)
+
+- For damage resolution order with parry/block, see `docs/combat-core/02_Damage_System_Design.md`.
+- Short order reference: `Hit → Parry → Block → Penetration/Defense → Reflection → Shields → Resources`.
+
 ## How to Add a New Interaction
 
 1) Add or reuse a pool effect in `status_pool.yaml` (id, dynamics, hooks).  
