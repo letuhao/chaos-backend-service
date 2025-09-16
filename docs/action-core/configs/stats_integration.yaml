@@ -1,0 +1,365 @@
+version: 1
+
+# Stats Integration Configuration
+stats_integration:
+  enabled: true
+  debug_mode: false
+  
+  # Element Core Integration
+  element_core:
+    enabled: true
+    client_timeout: 5000  # milliseconds
+    retry_attempts: 3
+    batch_requests: true
+    cache_responses: true
+    
+    # Stats Provider Configuration
+    stats_provider:
+      enabled: true
+      cache_duration: 300000  # milliseconds
+      batch_size: 100
+      parallel_requests: true
+      
+  # Stats Aggregation
+  stats_aggregation:
+    enabled: true
+    aggregation_rules: true
+    stat_dependencies: true
+    performance_monitoring: true
+    
+    # Aggregation Rules
+    aggregation_rules:
+      # Combat Stats Aggregation
+      combat_stats:
+        enabled: true
+        rules:
+          - stat: "total_damage"
+            formula: "base_damage * damage_multiplier"
+            dependencies: ["base_damage", "damage_multiplier"]
+            
+          - stat: "total_critical_chance"
+            formula: "omni_critical_chance + element_critical_chance"
+            dependencies: ["omni_critical_chance", "element_critical_chance"]
+            
+          - stat: "total_accuracy"
+            formula: "omni_accuracy + element_accuracy"
+            dependencies: ["omni_accuracy", "element_accuracy"]
+            
+      # Element Stats Aggregation
+      element_stats:
+        enabled: true
+        rules:
+          - stat: "fire_total_damage"
+            formula: "fire_base_damage + fire_mastery_bonus"
+            dependencies: ["fire_base_damage", "fire_mastery_bonus"]
+            
+          - stat: "ice_total_damage"
+            formula: "ice_base_damage + ice_mastery_bonus"
+            dependencies: ["ice_base_damage", "ice_mastery_bonus"]
+            
+          - stat: "lightning_total_damage"
+            formula: "lightning_base_damage + lightning_mastery_bonus"
+            dependencies: ["lightning_base_damage", "lightning_mastery_bonus"]
+            
+      # Mastery Stats Aggregation
+      mastery_stats:
+        enabled: true
+        rules:
+          - stat: "mastery_synergy_bonus"
+            formula: "sum(all_element_mastery) * 0.01"
+            dependencies: ["fire_mastery", "ice_mastery", "lightning_mastery", "earth_mastery", "water_mastery", "wind_mastery", "metal_mastery", "wood_mastery"]
+            
+  # Multi-level Cache Configuration
+  cache:
+    enabled: true
+    multi_level: true
+    
+    # L1 Cache (Hot Stats)
+    l1_cache:
+      enabled: true
+      size: 1000
+      ttl: 300000  # milliseconds
+      eviction_policy: "lru"
+      stats:
+        - "base_damage"
+        - "damage_multiplier"
+        - "critical_chance"
+        - "critical_damage"
+        - "accuracy"
+        - "dodge_rate"
+        - "parry_rate"
+        - "block_rate"
+        - "fire_damage"
+        - "ice_damage"
+        - "lightning_damage"
+        
+    # L2 Cache (Warm Stats)
+    l2_cache:
+      enabled: true
+      size: 5000
+      ttl: 600000  # milliseconds
+      eviction_policy: "lru"
+      stats:
+        - "earth_damage"
+        - "water_damage"
+        - "wind_damage"
+        - "metal_damage"
+        - "wood_damage"
+        - "light_damage"
+        - "dark_damage"
+        - "life_damage"
+        - "death_damage"
+        - "penetration"
+        - "absorption"
+        - "reflection"
+        
+    # L3 Cache (Cold Stats)
+    l3_cache:
+      enabled: true
+      size: 20000
+      ttl: 1800000  # milliseconds
+      eviction_policy: "lru"
+      stats:
+        - "skill_execution_speed"
+        - "skill_cooldown_reduction"
+        - "skill_power"
+        - "fire_mastery"
+        - "ice_mastery"
+        - "lightning_mastery"
+        - "earth_mastery"
+        - "water_mastery"
+        - "wind_mastery"
+        - "metal_mastery"
+        - "wood_mastery"
+        - "mastery_synergy_bonus"
+        - "health_regeneration"
+        - "mana_regeneration"
+        - "stamina_regeneration"
+        - "qi_regeneration"
+        - "health_efficiency"
+        - "mana_efficiency"
+        - "stamina_efficiency"
+        - "qi_efficiency"
+        
+  # Stats Categories
+  stats_categories:
+    # Combat Stats (Hot Path)
+    combat_stats:
+      enabled: true
+      priority: "high"
+      cache_level: "l1"
+      stats:
+        - "base_damage"
+        - "damage_multiplier"
+        - "critical_chance"
+        - "critical_damage"
+        - "accuracy"
+        - "dodge_rate"
+        - "parry_rate"
+        - "block_rate"
+        - "penetration"
+        - "absorption"
+        - "reflection"
+        
+    # Element Stats (Hot Path)
+    element_stats:
+      enabled: true
+      priority: "high"
+      cache_level: "l1"
+      stats:
+        - "fire_damage"
+        - "ice_damage"
+        - "lightning_damage"
+        - "earth_damage"
+        - "water_damage"
+        - "wind_damage"
+        - "metal_damage"
+        - "wood_damage"
+        - "light_damage"
+        - "dark_damage"
+        - "life_damage"
+        - "death_damage"
+        
+    # Skill Stats (Warm Path)
+    skill_stats:
+      enabled: true
+      priority: "medium"
+      cache_level: "l2"
+      stats:
+        - "skill_execution_speed"
+        - "skill_cooldown_reduction"
+        - "skill_power"
+        - "fire_mastery"
+        - "ice_mastery"
+        - "lightning_mastery"
+        - "earth_mastery"
+        - "water_mastery"
+        - "wind_mastery"
+        - "metal_mastery"
+        - "wood_mastery"
+        - "mastery_synergy_bonus"
+        
+    # Resource Stats (Cold Path)
+    resource_stats:
+      enabled: true
+      priority: "low"
+      cache_level: "l3"
+      stats:
+        - "health_regeneration"
+        - "mana_regeneration"
+        - "stamina_regeneration"
+        - "qi_regeneration"
+        - "health_efficiency"
+        - "mana_efficiency"
+        - "stamina_efficiency"
+        - "qi_efficiency"
+        - "health_capacity"
+        - "mana_capacity"
+        - "stamina_capacity"
+        - "qi_capacity"
+        
+  # Stats Calculation
+  stats_calculation:
+    enabled: true
+    formula_engine: true
+    validation: true
+    performance_monitoring: true
+    
+    # Calculation Rules
+    calculation_rules:
+      # Base Damage Calculation
+      base_damage:
+        formula: "strength * 2.0 + weapon_damage"
+        dependencies: ["strength", "weapon_damage"]
+        bounds:
+          min: 0.0
+          max: 10000.0
+          
+      # Critical Chance Calculation
+      critical_chance:
+        formula: "omni_critical_chance + element_critical_chance"
+        dependencies: ["omni_critical_chance", "element_critical_chance"]
+        bounds:
+          min: 0.0
+          max: 1.0
+          
+      # Accuracy Calculation
+      accuracy:
+        formula: "omni_accuracy + element_accuracy"
+        dependencies: ["omni_accuracy", "element_accuracy"]
+        bounds:
+          min: 0.0
+          max: 1.0
+          
+      # Element Damage Calculation
+      fire_damage:
+        formula: "fire_base_damage + fire_mastery * 0.1"
+        dependencies: ["fire_base_damage", "fire_mastery"]
+        bounds:
+          min: 0.0
+          max: 5000.0
+          
+      # Mastery Synergy Bonus
+      mastery_synergy_bonus:
+        formula: "sum(all_element_mastery) * 0.01"
+        dependencies: ["fire_mastery", "ice_mastery", "lightning_mastery", "earth_mastery", "water_mastery", "wind_mastery", "metal_mastery", "wood_mastery"]
+        bounds:
+          min: 0.0
+          max: 1.0
+          
+  # Performance Optimization
+  performance:
+    hot_path_optimization: true
+    batch_processing: true
+    memory_pool: true
+    
+    # Hot Path Configuration
+    hot_path:
+      enabled: true
+      stats:
+        - "base_damage"
+        - "damage_multiplier"
+        - "critical_chance"
+        - "critical_damage"
+        - "accuracy"
+        - "fire_damage"
+        - "ice_damage"
+        - "lightning_damage"
+        
+    # Batch Processing Configuration
+    batch_processing:
+      enabled: true
+      batch_size: 100
+      max_threads: 8
+      timeout: 1000  # milliseconds
+      
+    # Memory Pool Configuration
+    memory_pool:
+      enabled: true
+      stats_snapshots: 1000
+      damage_stats: 500
+      combat_stats: 500
+      skill_stats: 500
+      resource_stats: 500
+      
+  # Monitoring and Logging
+  monitoring:
+    enabled: true
+    metrics_collection: true
+    performance_alerts: true
+    
+    # Performance Thresholds
+    thresholds:
+      stats_access_time: 0.01  # milliseconds
+      stats_calculation_time: 0.05  # milliseconds
+      cache_hit_rate: 95.0  # percentage
+      memory_usage: 50.0  # MB
+      
+    # Alert Configuration
+    alerts:
+      slow_stats_access: true
+      slow_stats_calculation: true
+      low_cache_hit_rate: true
+      high_memory_usage: true
+      stats_validation_error: true
+      
+  # Error Handling
+  error_handling:
+    enabled: true
+    log_errors: true
+    retry_on_error: true
+    fallback_values: true
+    
+    # Error Types
+    error_types:
+      stats_not_found: true
+      calculation_error: true
+      validation_error: true
+      cache_error: true
+      integration_error: true
+      
+  # Security
+  security:
+    enabled: true
+    validate_inputs: true
+    sanitize_outputs: true
+    rate_limiting: true
+    
+    # Rate Limiting
+    rate_limiting:
+      enabled: true
+      max_stats_requests_per_second: 1000
+      max_stats_requests_per_actor: 100
+      window_size: 60  # seconds
+      
+  # Development and Testing
+  development:
+    debug_logging: false
+    performance_profiling: false
+    test_mode: false
+    
+    # Test Configuration
+    testing:
+      mock_element_core: false
+      deterministic_calculations: false
+      performance_benchmarks: false

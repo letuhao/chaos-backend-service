@@ -1,0 +1,438 @@
+# Cấm Chú Ma Pháp Đa Thuộc Tính - Forbidden Spell Multi-Element
+# Lấy ý tưởng từ Toàn Chức Pháp Sư
+# Ví dụ: "Hủy Diệt Nguyên Tố" - Elemental Destruction
+
+action_id: "elemental_destruction_forbidden_spell"
+action_name: "Hủy Diệt Nguyên Tố"
+action_name_en: "Elemental Destruction"
+action_category: "forbidden_spell"
+action_type: "forbidden_spell"
+action_subtype: "multi_element_destruction"
+
+# Metadata
+metadata:
+  id: "elemental_destruction_forbidden_spell"
+  name: "Hủy Diệt Nguyên Tố"
+  name_en: "Elemental Destruction"
+  description: "Cấm chú ma pháp đa thuộc tính, tạo ra sát thương diện rộng và khu vực tàn phá"
+  description_en: "Multi-element forbidden spell that creates massive area damage and destruction zones"
+  icon_id: "elemental_destruction_icon"
+  animation_id: "elemental_destruction_cast"
+  sound_effect_id: "elemental_destruction_sound"
+  visual_effects: ["elemental_storm", "reality_distortion", "destruction_zone", "elemental_chaos"]
+  
+  # System requirements
+  level_requirement: 50
+  class_requirements: ["forbidden_spell_master", "multi_element_mage"]
+  race_requirements: []
+  cultivation_requirements:
+    forbidden_spell_level: 3  # Cấm chú cấp 3
+    multi_element_mastery: 80  # Tinh thông đa thuộc tính
+
+# Multi-element requirements
+multi_element_requirement:
+  required_elements:
+    - element_name: "fire"
+      min_mastery: 60.0
+      max_mastery: 100.0
+      weight: 1.0
+      required: true
+      
+    - element_name: "water"
+      min_mastery: 60.0
+      max_mastery: 100.0
+      weight: 1.0
+      required: true
+      
+    - element_name: "earth"
+      min_mastery: 50.0
+      max_mastery: 100.0
+      weight: 0.8
+      required: true
+      
+    - element_name: "wood"
+      min_mastery: 40.0
+      max_mastery: 100.0
+      weight: 0.6
+      required: false
+      
+    - element_name: "metal"
+      min_mastery: 40.0
+      max_mastery: 100.0
+      weight: 0.6
+      required: false
+      
+    - element_name: "lightning"
+      min_mastery: 30.0
+      max_mastery: 100.0
+      weight: 0.4
+      required: false
+      
+    - element_name: "ice"
+      min_mastery: 30.0
+      max_mastery: 100.0
+      weight: 0.4
+      required: false
+      
+    - element_name: "wind"
+      min_mastery: 30.0
+      max_mastery: 100.0
+      weight: 0.4
+      required: false
+  
+  element_synergy:
+    synergy_type: "multiplicative"  # Nhân với nhau
+    synergy_formula: "product(elements) * synergy_bonus"
+    synergy_bonus: 1.5
+    synergy_penalty: 0.2
+    synergy_threshold: 0.7
+  
+  min_elements: 3  # Tối thiểu 3 thuộc tính
+  max_elements: 8  # Tối đa 8 thuộc tính
+
+# Domain activation requirement
+domain_activation_requirement:
+  domain_element: "fire"  # Phải kích hoạt lĩnh vực hỏa
+  domain_level: 5
+  domain_duration: 300.0  # 5 phút
+  domain_effects:
+    - effect_type: "buff"
+      magnitude: 1.5
+      duration: 300.0
+      target_type: "self"
+      
+    - effect_type: "debuff"
+      magnitude: 0.8
+      duration: 300.0
+      target_type: "enemies"
+  
+  domain_radius: 50.0
+  domain_power: 100.0
+
+# Life force consumption
+life_force_consumption:
+  life_force_amount: 100.0  # Thọ nguyên
+  vitality_amount: 80.0     # Sinh mệnh
+  energy_amount: 120.0      # Sinh lực
+  
+  consumption_formula: "base_consumption * (1 + synergy_bonus * 0.1) * (1 - efficiency_bonus * 0.2)"
+  
+  recovery_rate: 0.01  # 1% per second
+  recovery_conditions:
+    - condition: "time > 3600"  # 1 giờ
+      recovery_rate: 0.05
+      condition_type: "time"
+      
+    - condition: "meditation"
+      recovery_rate: 0.1
+      condition_type: "meditation"
+      
+    - condition: "consumable"
+      recovery_rate: 0.3
+      condition_type: "consumable"
+
+# Action properties
+properties:
+  target_count: 0  # Không cần target cụ thể
+  area_size: 100.0  # Bán kính 100m
+  projectile_speed: 0.0  # Không phải projectile
+  projectile_range: 0.0
+  
+  # Execution timing
+  min_execution_duration: 10000  # 10 giây
+  max_execution_duration: 30000  # 30 giây
+  base_execution_duration: 20000  # 20 giây
+  
+  # Cooldown timing
+  min_cooldown_duration: 3600000  # 1 giờ
+  max_cooldown_duration: 7200000  # 2 giờ
+  base_cooldown_duration: 5400000  # 1.5 giờ
+  
+  # Interrupt conditions
+  interrupt_conditions:
+    - condition: "self.life_force < 0.1"
+      interrupt_type: "life_force_critical"
+      message: "Thọ nguyên quá yếu, không thể thi triển cấm chú"
+    - condition: "self.vitality < 0.1"
+      interrupt_type: "vitality_critical"
+      message: "Sinh mệnh quá yếu, không thể thi triển cấm chú"
+    - condition: "self.energy < 0.1"
+      interrupt_type: "energy_critical"
+      message: "Sinh lực quá yếu, không thể thi triển cấm chú"
+    - condition: "domain_not_active"
+      interrupt_type: "domain_lost"
+      message: "Lĩnh vực đã mất, không thể thi triển cấm chú"
+
+# Execution conditions
+execution_conditions:
+  - condition: "self.life_force >= 100"
+    condition_type: "life_force_available"
+    required: true
+    error_message: "Cần ít nhất 100 thọ nguyên để thi triển cấm chú"
+    condition_value: 100.0
+    
+  - condition: "self.vitality >= 80"
+    condition_type: "vitality_available"
+    required: true
+    error_message: "Cần ít nhất 80 sinh mệnh để thi triển cấm chú"
+    condition_value: 80.0
+    
+  - condition: "self.energy >= 120"
+    condition_type: "energy_available"
+    required: true
+    error_message: "Cần ít nhất 120 sinh lực để thi triển cấm chú"
+    condition_value: 120.0
+    
+  - condition: "self.forbidden_spell_level >= 3"
+    condition_type: "forbidden_spell_level"
+    required: true
+    error_message: "Cần đạt cấm chú cấp 3 để thi triển kỹ thuật này"
+    condition_value: 3.0
+    
+  - condition: "self.multi_element_mastery >= 80"
+    condition_type: "multi_element_mastery"
+    required: true
+    error_message: "Cần tinh thông đa thuộc tính ít nhất 80"
+    condition_value: 80.0
+    
+  - condition: "domain_active('fire')"
+    condition_type: "domain_active"
+    required: true
+    error_message: "Cần kích hoạt lĩnh vực hỏa để thi triển cấm chú"
+    condition_value: 1.0
+
+# Target requirements
+target_requirements:
+  target_type: "area"  # Khu vực
+  max_range: 100.0
+  line_of_sight: false  # Không cần tầm nhìn
+  target_count: 0
+  target_selection: "area"
+  
+  # Target validation
+  target_conditions:
+    - condition: "area_clear"
+      condition_type: "area_clear"
+      required: false
+      error_message: "Khu vực không an toàn"
+
+# Effects
+effects:
+  - effect_id: "elemental_storm_damage"
+    effect_type: "damage"
+    element: "multi_element"
+    base_magnitude: 1000.0
+    min_magnitude: 800.0
+    max_magnitude: 1200.0
+    magnitude_formula: "base_magnitude * (1 + synergy_bonus * 0.5) * (1 + forbidden_spell_level * 0.2)"
+    trigger_probability: 1.0
+    duration: 0.0  # Instant damage
+    
+  - effect_id: "elemental_chaos"
+    effect_type: "status_effect"
+    status_name: "elemental_chaos"
+    base_magnitude: 1.0
+    min_magnitude: 0.8
+    max_magnitude: 1.2
+    magnitude_formula: "base_magnitude * (1 + synergy_bonus * 0.3)"
+    trigger_probability: 0.8
+    duration: 60.0  # 1 phút
+    
+  - effect_id: "reality_distortion"
+    effect_type: "area_effect"
+    area_radius: 100.0
+    base_magnitude: 500.0
+    min_magnitude: 400.0
+    max_magnitude: 600.0
+    magnitude_formula: "base_magnitude * (1 + synergy_bonus * 0.4)"
+    trigger_probability: 1.0
+    duration: 300.0  # 5 phút
+
+# World area spawning
+world_area_spawning:
+  area_id: "elemental_destruction_zone"
+  area_type: "destruction_zone"
+  area_size: 100.0
+  area_duration: 3600.0  # 1 giờ
+  area_effects:
+    - effect_type: "continuous_damage"
+      magnitude: 100.0
+      duration: 3600.0
+      target_type: "enemies"
+      area_modifier: 1.0
+      
+    - effect_type: "status_effect"
+      magnitude: 0.5
+      duration: 3600.0
+      target_type: "enemies"
+      area_modifier: 1.0
+      
+    - effect_type: "resource_drain"
+      magnitude: 10.0
+      duration: 3600.0
+      target_type: "enemies"
+      area_modifier: 1.0
+      
+    - effect_type: "movement_restriction"
+      magnitude: 0.5
+      duration: 3600.0
+      target_type: "enemies"
+      area_modifier: 1.0
+  
+  world_core_integration:
+    world_core_client: "world_core_v1"
+    area_registry: "destruction_zones"
+    area_manager: "elemental_areas"
+  
+  spawn_conditions:
+    - condition: "area_clear"
+      condition_type: "area_clear"
+      required: true
+      error_message: "Khu vực không an toàn để tạo vùng tàn phá"
+
+# Forbidden spell effects
+forbidden_spell_effects:
+  - effect_type: "massive_damage"
+    magnitude: 1000.0
+    duration: 0.0
+    target_type: "all_enemies"
+    element_combination: ["fire", "water", "earth"]
+    synergy_multiplier: 1.5
+    
+  - effect_type: "elemental_storm"
+    magnitude: 500.0
+    duration: 60.0
+    target_type: "area"
+    element_combination: ["fire", "water", "earth", "wood", "metal"]
+    synergy_multiplier: 1.2
+    
+  - effect_type: "reality_distortion"
+    magnitude: 300.0
+    duration: 300.0
+    target_type: "world"
+    element_combination: ["fire", "water", "earth", "lightning", "ice", "wind"]
+    synergy_multiplier: 1.0
+
+# Damage calculation
+damage_calculation:
+  base_damage: 1000.0
+  damage_type: "multi_element"
+  critical_chance: 0.3
+  critical_damage: 2.0
+  
+  # Damage formulas
+  damage_formula: "base_damage * (1 + synergy_bonus * 0.5) * (1 + forbidden_spell_level * 0.2) * (1 + domain_power * 0.1)"
+  critical_chance_formula: "base_critical_chance + synergy_bonus * 0.01"
+  critical_damage_formula: "base_critical_damage + synergy_bonus * 0.05"
+
+# Status effects
+status_effects:
+  - status_name: "elemental_chaos"
+    base_probability: 0.8
+    base_duration: 60.0
+    base_intensity: 1.0
+    max_stacks: 5
+    stackable: true
+    refresh_duration: true
+    
+    # Status formulas
+    probability_formula: "base_probability + synergy_bonus * 0.01"
+    duration_formula: "base_duration * (1 + synergy_bonus * 0.1)"
+    intensity_formula: "base_intensity * (1 + synergy_bonus * 0.05)"
+
+# Element interactions
+element_interactions:
+  - interaction_type: "synergy"
+    target_elements: ["fire", "water"]
+    damage_multiplier: 1.5
+    status_probability_bonus: 0.3
+    
+  - interaction_type: "synergy"
+    target_elements: ["earth", "wood"]
+    damage_multiplier: 1.3
+    status_probability_bonus: 0.2
+    
+  - interaction_type: "synergy"
+    target_elements: ["metal", "lightning"]
+    damage_multiplier: 1.4
+    status_probability_bonus: 0.25
+    
+  - interaction_type: "synergy"
+    target_elements: ["ice", "wind"]
+    damage_multiplier: 1.2
+    status_probability_bonus: 0.15
+
+# Cultivation system integration
+cultivation_integration:
+  system: "forbidden_spell"
+  level_requirement: 3
+  level_bonus: 0.2  # 20% bonus per level
+  
+  # Cultivation stats
+  cultivation_stats:
+    - stat_name: "forbidden_spell_mastery"
+      base_value: 80.0
+      required: true
+      
+    - stat_name: "multi_element_affinity"
+      base_value: 70.0
+      required: true
+      
+    - stat_name: "domain_control"
+      base_value: 60.0
+      required: true
+      
+    - stat_name: "life_force_control"
+      base_value: 50.0
+      required: true
+
+# Performance optimization
+performance:
+  cache_enabled: true
+  hot_path_optimization: true
+  batch_processing: true
+  
+  # Caching settings
+  cache_settings:
+    execution_duration_cache: true
+    cooldown_duration_cache: true
+    resource_consumption_cache: true
+    damage_calculation_cache: true
+    synergy_calculation_cache: true
+    domain_validation_cache: true
+
+# Localization
+localization:
+  vi:
+    name: "Hủy Diệt Nguyên Tố"
+    description: "Cấm chú ma pháp đa thuộc tính, tạo ra sát thương diện rộng và khu vực tàn phá"
+    error_messages:
+      insufficient_life_force: "Thọ nguyên không đủ, không thể thi triển cấm chú"
+      insufficient_vitality: "Sinh mệnh không đủ, không thể thi triển cấm chú"
+      insufficient_energy: "Sinh lực không đủ, không thể thi triển cấm chú"
+      forbidden_spell_level_insufficient: "Cần đạt cấm chú cấp 3 để thi triển kỹ thuật này"
+      multi_element_mastery_low: "Cần tinh thông đa thuộc tính ít nhất 80"
+      domain_not_active: "Cần kích hoạt lĩnh vực hỏa để thi triển cấm chú"
+      area_not_clear: "Khu vực không an toàn để tạo vùng tàn phá"
+      
+  en:
+    name: "Elemental Destruction"
+    description: "Multi-element forbidden spell that creates massive area damage and destruction zones"
+    error_messages:
+      insufficient_life_force: "Insufficient Life Force to cast forbidden spell"
+      insufficient_vitality: "Insufficient Vitality to cast forbidden spell"
+      insufficient_energy: "Insufficient Energy to cast forbidden spell"
+      forbidden_spell_level_insufficient: "Need Forbidden Spell Level 3 to cast this technique"
+      multi_element_mastery_low: "Need at least 80 multi-element mastery"
+      domain_not_active: "Need to activate Fire Domain to cast forbidden spell"
+      area_not_clear: "Area not safe to create destruction zone"
+
+# References
+references:
+  action_definition_system: "../04_Action_Definition_System.md"
+  derived_stats_integration: "../02_Derived_Stats_Integration.md"
+  damage_calculation_bridge: "../03_Damage_Calculation_Bridge.md"
+  execution_conditions: "../08_Execution_Conditions_Integration.md"
+  element_core: "../../element-core/README.md"
+  cultivation_core: "../../cultivation-core/README.md"
+  world_core: "../../world-core/README.md"

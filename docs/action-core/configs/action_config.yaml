@@ -1,0 +1,395 @@
+version: 1
+
+# Action Core Configuration
+action_core:
+  enabled: true
+  debug_mode: false
+  performance_monitoring: true
+  
+  # Action Engine Configuration
+  action_engine:
+    enabled: true
+    batch_size: 100
+    max_concurrent: 1000
+    execution_timeout: 5000  # milliseconds
+    retry_attempts: 3
+    retry_delay: 100  # milliseconds
+    
+    # Scheduler Configuration
+    scheduler:
+      priority_queue_size: 10000
+      execution_queue_size: 1000
+      batch_processing: true
+      parallel_execution: true
+      max_threads: 8
+      
+    # Validator Configuration
+    validator:
+      strict_validation: true
+      validate_stats: true
+      validate_resources: true
+      validate_prerequisites: true
+      validate_execution_conditions: true
+      
+    # Execution Conditions Configuration
+    execution_conditions:
+      enabled: true
+      cache_enabled: true
+      batch_processing: true
+      
+      # Condition Types
+      condition_types:
+        self_health: true
+        self_mana: true
+        self_stamina: true
+        self_status: true
+        target_health: true
+        target_status: true
+        environment: true
+        resource_available: true
+        cooldown_ready: true
+        level_requirement: true
+        class_requirement: true
+        race_requirement: true
+        equipment_requirement: true
+        location_requirement: true
+        time_requirement: true
+        weather_requirement: true
+        custom: true
+      
+      # Performance Configuration
+      performance:
+        hot_path_optimization: true
+        condition_caching: true
+        batch_evaluation: true
+        parallel_evaluation: true
+        max_evaluation_time: 100  # milliseconds
+      
+  # Stats Integration Configuration
+  stats_integration:
+    enabled: true
+    cache_enabled: true
+    batch_processing: true
+    
+    # Multi-level Cache Configuration
+    cache:
+      l1_cache:
+        enabled: true
+        size: 1000
+        ttl: 300000  # milliseconds
+        eviction_policy: "lru"
+        
+      l2_cache:
+        enabled: true
+        size: 5000
+        ttl: 600000  # milliseconds
+        eviction_policy: "lru"
+        
+      l3_cache:
+        enabled: true
+        size: 20000
+        ttl: 1800000  # milliseconds
+        eviction_policy: "lru"
+        
+    # Stats Categories
+    stats_categories:
+      combat_stats:
+        enabled: true
+        priority: "high"
+        cache_level: "l1"
+        
+      skill_stats:
+        enabled: true
+        priority: "medium"
+        cache_level: "l2"
+        
+      resource_stats:
+        enabled: true
+        priority: "low"
+        cache_level: "l3"
+        
+  # Damage Calculation Bridge Configuration
+  damage_bridge:
+    enabled: true
+    hot_path_cache: true
+    batch_processing: true
+    
+    # Stats Formatting
+    stats_formatting:
+      enabled: true
+      validation: true
+      optimization: true
+      
+    # Damage Input Building
+    damage_input:
+      enabled: true
+      validation: true
+      caching: true
+      
+    # Damage Output Processing
+    damage_output:
+      enabled: true
+      status_effects: true
+      resource_damage: true
+      event_triggering: true
+      
+  # Performance Optimization
+  performance:
+    hot_path_optimization: true
+    memory_pool: true
+    batch_processing: true
+    
+    # Memory Pool Configuration
+    memory_pool:
+      stats_snapshots: 1000
+      damage_inputs: 500
+      damage_results: 500
+      action_contexts: 1000
+      
+    # Batch Processing Configuration
+    batch_processing:
+      enabled: true
+      batch_size: 100
+      max_threads: 8
+      timeout: 1000  # milliseconds
+      
+  # Monitoring and Logging
+  monitoring:
+    enabled: true
+    metrics_collection: true
+    performance_alerts: true
+    
+    # Performance Thresholds
+    thresholds:
+      action_execution_time: 1.0  # milliseconds
+      stats_access_time: 0.01  # milliseconds
+      damage_calculation_time: 0.05  # milliseconds
+      cache_hit_rate: 95.0  # percentage
+      
+    # Alert Configuration
+    alerts:
+      slow_action_execution: true
+      slow_stats_access: true
+      slow_damage_calculation: true
+      low_cache_hit_rate: true
+      memory_usage_high: true
+      
+  # Integration Configuration
+  integration:
+    element_core:
+      enabled: true
+      client_timeout: 5000  # milliseconds
+      retry_attempts: 3
+      batch_requests: true
+      
+    combat_core:
+      enabled: true
+      client_timeout: 5000  # milliseconds
+      retry_attempts: 3
+      batch_requests: true
+      
+    actor_core:
+      enabled: true
+      client_timeout: 5000  # milliseconds
+      retry_attempts: 3
+      batch_requests: true
+      
+  # Action Types Configuration
+  action_types:
+    attack:
+      enabled: true
+      priority: "high"
+      hot_path: true
+      
+    skill:
+      enabled: true
+      priority: "high"
+      hot_path: true
+      
+    movement:
+      enabled: true
+      priority: "medium"
+      hot_path: false
+      
+    interaction:
+      enabled: true
+      priority: "low"
+      hot_path: false
+      
+    special:
+      enabled: true
+      priority: "medium"
+      hot_path: false
+      
+  # Error Handling
+  error_handling:
+    enabled: true
+    log_errors: true
+    retry_on_error: true
+    fallback_actions: true
+    
+    # Error Types
+    error_types:
+      validation_error: true
+      stats_error: true
+      damage_calculation_error: true
+      integration_error: true
+      performance_error: true
+      
+  # Security
+  security:
+    enabled: true
+    validate_inputs: true
+    sanitize_outputs: true
+    rate_limiting: true
+    
+    # Rate Limiting
+    rate_limiting:
+      enabled: true
+      max_actions_per_second: 1000
+      max_actions_per_actor: 100
+      window_size: 60  # seconds
+      
+  # Development and Testing
+  development:
+    debug_logging: false
+    performance_profiling: false
+    test_mode: false
+    
+    # Test Configuration
+    testing:
+      mock_external_services: false
+      deterministic_random: false
+      performance_benchmarks: false
+
+# Example Actions with Execution Conditions
+example_actions:
+  fireball:
+    action_id: "fireball"
+    action_type: "attack"
+    action_category: "combat"
+    action_name: "Fireball"
+    description: "Launch a fireball at the target"
+    icon_id: "fireball_icon"
+    animation_id: "fireball_cast"
+    sound_effect_id: "fireball_cast_sound"
+    visual_effects: ["fire_particles", "explosion"]
+    level_requirement: 5
+    class_requirements: ["mage", "wizard"]
+    race_requirements: []
+    
+    # Action properties
+    target_count: 1
+    area_size: 0.0
+    min_execution_duration: 1000  # milliseconds
+    max_execution_duration: 2000
+    min_cooldown_duration: 3000
+    max_cooldown_duration: 5000
+    
+    # Execution conditions
+    execution_conditions:
+      - condition: "self.hp < 0.5"
+        condition_type: "self_health"
+        required: true
+        error_message: "Fireball requires HP below 50%"
+        condition_value: 0.5
+      - condition: "self.mana >= 50"
+        condition_type: "self_mana"
+        required: true
+        error_message: "Fireball requires at least 50 mana"
+        condition_value: 50.0
+      - condition: "self.has_status('berserk')"
+        condition_type: "self_status"
+        required: false
+        error_message: "Fireball is more effective when berserk"
+        condition_value: null
+  
+  berserker_rage:
+    action_id: "berserker_rage"
+    action_type: "skill"
+    action_category: "combat"
+    action_name: "Berserker Rage"
+    description: "Enter a berserker state with increased damage"
+    icon_id: "berserker_rage_icon"
+    animation_id: "berserker_rage_cast"
+    sound_effect_id: "berserker_rage_sound"
+    visual_effects: ["red_aura", "muscle_swell"]
+    level_requirement: 10
+    class_requirements: ["warrior", "barbarian"]
+    race_requirements: []
+    
+    # Action properties
+    target_count: 0  # Self-target
+    area_size: 0.0
+    min_execution_duration: 500
+    max_execution_duration: 1000
+    min_cooldown_duration: 30000
+    max_cooldown_duration: 60000
+    
+    # Execution conditions
+    execution_conditions:
+      - condition: "self.hp < 0.3"
+        condition_type: "self_health"
+        required: true
+        error_message: "Berserker Rage requires HP below 30%"
+        condition_value: 0.3
+      - condition: "self.stamina >= 80"
+        condition_type: "self_stamina"
+        required: true
+        error_message: "Berserker Rage requires at least 80 stamina"
+        condition_value: 80.0
+      - condition: "self.level >= 10"
+        condition_type: "level_requirement"
+        required: true
+        error_message: "Berserker Rage requires level 10 or higher"
+        condition_value: 10.0
+      - condition: "environment.is_night"
+        condition_type: "environment"
+        required: false
+        error_message: "Berserker Rage is more effective at night"
+        condition_value: null
+  
+  divine_heal:
+    action_id: "divine_heal"
+    action_type: "skill"
+    action_category: "combat"
+    action_name: "Divine Heal"
+    description: "Heal target with divine energy"
+    icon_id: "divine_heal_icon"
+    animation_id: "divine_heal_cast"
+    sound_effect_id: "divine_heal_sound"
+    visual_effects: ["golden_light", "healing_particles"]
+    level_requirement: 8
+    class_requirements: ["priest", "paladin"]
+    race_requirements: []
+    
+    # Action properties
+    target_count: 1
+    area_size: 0.0
+    min_execution_duration: 2000
+    max_execution_duration: 3000
+    min_cooldown_duration: 10000
+    max_cooldown_duration: 15000
+    
+    # Execution conditions
+    execution_conditions:
+      - condition: "target.hp < 0.5"
+        condition_type: "target_health"
+        required: true
+        error_message: "Divine Heal can only target allies below 50% HP"
+        condition_value: 0.5
+      - condition: "self.mana >= 100"
+        condition_type: "self_mana"
+        required: true
+        error_message: "Divine Heal requires at least 100 mana"
+        condition_value: 100.0
+      - condition: "self.has_status('divine_blessing')"
+        condition_type: "self_status"
+        required: false
+        error_message: "Divine Heal is more effective with divine blessing"
+        condition_value: null
+      - condition: "environment.is_day"
+        condition_type: "environment"
+        required: false
+        error_message: "Divine Heal is more effective during the day"
+        condition_value: null

@@ -1,0 +1,261 @@
+# Hỏa Cầu Thuật - Fireball Technique
+# Kim Đan hệ thống - Golden Pill System
+# Combat Action Definition
+
+action_id: "fireball_technique"
+action_name: "Hỏa Cầu Thuật"
+action_name_en: "Fireball Technique"
+action_category: "combat"
+action_type: "attack"
+action_subtype: "elemental_spell"
+
+# Metadata
+metadata:
+  id: "fireball_technique"
+  name: "Hỏa Cầu Thuật"
+  name_en: "Fireball Technique"
+  description: "Tạo ra một quả cầu lửa mạnh mẽ, tấn công kẻ thù với sát thương hỏa nguyên tố"
+  description_en: "Creates a powerful fireball that attacks enemies with fire elemental damage"
+  icon_id: "fireball_technique_icon"
+  animation_id: "fireball_technique_cast"
+  sound_effect_id: "fireball_technique_sound"
+  visual_effects: ["fire_particles", "explosion", "heat_wave"]
+  
+  # System requirements
+  level_requirement: 5
+  class_requirements: ["golden_pill_cultivator", "fire_mage"]
+  race_requirements: []
+  cultivation_requirements:
+    golden_pill_realm: 1  # Kim Đan kỳ 1
+    fire_affinity: 30     # Độ tương thích hỏa nguyên tố
+
+# Action properties
+properties:
+  target_count: 1
+  area_size: 0.0
+  projectile_speed: 15.0  # m/s
+  projectile_range: 20.0  # meters
+  
+  # Execution timing
+  min_execution_duration: 1500  # milliseconds
+  max_execution_duration: 2500
+  base_execution_duration: 2000
+  
+  # Cooldown timing
+  min_cooldown_duration: 3000  # milliseconds
+  max_cooldown_duration: 5000
+  base_cooldown_duration: 4000
+  
+  # Interrupt conditions
+  interrupt_conditions:
+    - condition: "self.hp < 0.1"  # Bị interrupt nếu HP < 10%
+      interrupt_type: "health_critical"
+      message: "Sức khỏe quá yếu, không thể thi triển kỹ thuật"
+    - condition: "self.qi < 20"   # Bị interrupt nếu linh khí < 20
+      interrupt_type: "insufficient_qi"
+      message: "Linh khí không đủ, không thể thi triển kỹ thuật"
+
+# Resource requirements
+resource_requirements:
+  - resource_type: "qi"           # Linh khí
+    base_consumption: 50.0
+    min_consumption: 40.0
+    max_consumption: 60.0
+    consumption_formula: "base_consumption * (1 + mastery_bonus * 0.1)"
+    required: true
+    
+  - resource_type: "stamina"      # Thể lực
+    base_consumption: 20.0
+    min_consumption: 15.0
+    max_consumption: 25.0
+    consumption_formula: "base_consumption * (1 - efficiency_bonus * 0.2)"
+    required: true
+
+# Execution conditions
+execution_conditions:
+  - condition: "self.qi >= 50"
+    condition_type: "resource_available"
+    required: true
+    error_message: "Cần ít nhất 50 linh khí để thi triển Hỏa Cầu Thuật"
+    condition_value: 50.0
+    
+  - condition: "self.hp > 0.2"
+    condition_type: "self_health"
+    required: true
+    error_message: "Sức khỏe quá yếu, không thể thi triển kỹ thuật"
+    condition_value: 0.2
+    
+  - condition: "self.cultivation_realm >= 1"
+    condition_type: "cultivation_requirement"
+    required: true
+    error_message: "Cần đạt Kim Đan kỳ 1 để thi triển kỹ thuật này"
+    condition_value: 1.0
+    
+  - condition: "self.fire_affinity >= 30"
+    condition_type: "element_affinity"
+    required: true
+    error_message: "Cần độ tương thích hỏa nguyên tố ít nhất 30"
+    condition_value: 30.0
+
+# Target requirements
+target_requirements:
+  target_type: "enemy"
+  max_range: 20.0
+  line_of_sight: true
+  target_count: 1
+  target_selection: "single"
+  
+  # Target validation
+  target_conditions:
+    - condition: "target.hp > 0"
+      condition_type: "target_alive"
+      required: true
+      error_message: "Mục tiêu đã chết"
+      
+    - condition: "distance(self, target) <= 20.0"
+      condition_type: "target_range"
+      required: true
+      error_message: "Mục tiêu quá xa"
+
+# Effects
+effects:
+  - effect_id: "fire_damage"
+    effect_type: "damage"
+    element: "fire"
+    base_magnitude: 120.0
+    min_magnitude: 100.0
+    max_magnitude: 140.0
+    magnitude_formula: "base_magnitude * (1 + fire_mastery * 0.02) * (1 + cultivation_bonus * 0.1)"
+    trigger_probability: 1.0
+    duration: 0.0  # Instant damage
+    
+  - effect_id: "burning_status"
+    effect_type: "status_effect"
+    status_name: "burning"
+    base_magnitude: 1.0
+    min_magnitude: 0.8
+    max_magnitude: 1.2
+    magnitude_formula: "base_magnitude * (1 + fire_mastery * 0.01)"
+    trigger_probability: 0.3
+    duration: 8.0  # seconds
+    duration_formula: "base_duration * (1 + fire_mastery * 0.05)"
+    
+  - effect_id: "heat_wave"
+    effect_type: "area_effect"
+    area_radius: 3.0
+    base_magnitude: 30.0
+    min_magnitude: 25.0
+    max_magnitude: 35.0
+    magnitude_formula: "base_magnitude * (1 + fire_mastery * 0.01)"
+    trigger_probability: 0.8
+    duration: 2.0  # seconds
+
+# Damage calculation
+damage_calculation:
+  base_damage: 120.0
+  damage_type: "fire"
+  critical_chance: 0.15
+  critical_damage: 1.5
+  
+  # Damage formulas
+  damage_formula: "base_damage * (1 + fire_mastery * 0.02) * (1 + cultivation_bonus * 0.1) * (1 + element_amplification * 0.05)"
+  critical_chance_formula: "base_critical_chance + fire_mastery * 0.001"
+  critical_damage_formula: "base_critical_damage + fire_mastery * 0.002"
+
+# Status effects
+status_effects:
+  - status_name: "burning"
+    base_probability: 0.3
+    base_duration: 8.0
+    base_intensity: 1.0
+    max_stacks: 3
+    stackable: true
+    refresh_duration: true
+    
+    # Status formulas
+    probability_formula: "base_probability + fire_mastery * 0.005"
+    duration_formula: "base_duration * (1 + fire_mastery * 0.05)"
+    intensity_formula: "base_intensity * (1 + fire_mastery * 0.02)"
+
+# Element interactions
+element_interactions:
+  - interaction_type: "overcoming"
+    target_element: "wood"
+    damage_multiplier: 1.5
+    status_probability_bonus: 0.2
+    
+  - interaction_type: "generating"
+    target_element: "earth"
+    damage_multiplier: 1.2
+    status_probability_bonus: 0.1
+    
+  - interaction_type: "overcome_by"
+    target_element: "water"
+    damage_multiplier: 0.7
+    status_probability_bonus: -0.3
+
+# Cultivation system integration
+cultivation_integration:
+  system: "golden_pill"
+  realm_requirement: 1
+  realm_bonus: 0.1  # 10% bonus per realm level
+  
+  # Cultivation stats
+  cultivation_stats:
+    - stat_name: "fire_affinity"
+      base_value: 30.0
+      required: true
+      
+    - stat_name: "qi_control"
+      base_value: 20.0
+      required: true
+      
+    - stat_name: "spiritual_power"
+      base_value: 15.0
+      required: true
+
+# Performance optimization
+performance:
+  cache_enabled: true
+  hot_path_optimization: true
+  batch_processing: false
+  
+  # Caching settings
+  cache_settings:
+    execution_duration_cache: true
+    cooldown_duration_cache: true
+    resource_consumption_cache: true
+    damage_calculation_cache: true
+
+# Localization
+localization:
+  vi:
+    name: "Hỏa Cầu Thuật"
+    description: "Tạo ra một quả cầu lửa mạnh mẽ, tấn công kẻ thù với sát thương hỏa nguyên tố"
+    error_messages:
+      insufficient_qi: "Linh khí không đủ, không thể thi triển kỹ thuật"
+      health_too_low: "Sức khỏe quá yếu, không thể thi triển kỹ thuật"
+      cultivation_insufficient: "Cần đạt Kim Đan kỳ 1 để thi triển kỹ thuật này"
+      fire_affinity_low: "Cần độ tương thích hỏa nguyên tố ít nhất 30"
+      target_too_far: "Mục tiêu quá xa"
+      target_dead: "Mục tiêu đã chết"
+      
+  en:
+    name: "Fireball Technique"
+    description: "Creates a powerful fireball that attacks enemies with fire elemental damage"
+    error_messages:
+      insufficient_qi: "Insufficient Qi to cast this technique"
+      health_too_low: "Health too low to cast this technique"
+      cultivation_insufficient: "Need Golden Pill Realm 1 to cast this technique"
+      fire_affinity_low: "Need at least 30 fire affinity"
+      target_too_far: "Target too far away"
+      target_dead: "Target is already dead"
+
+# References
+references:
+  action_definition_system: "../04_Action_Definition_System.md"
+  derived_stats_integration: "../02_Derived_Stats_Integration.md"
+  damage_calculation_bridge: "../03_Damage_Calculation_Bridge.md"
+  execution_conditions: "../08_Execution_Conditions_Integration.md"
+  element_core: "../../element-core/README.md"
+  cultivation_system: "../../cultivation-core/README.md"
