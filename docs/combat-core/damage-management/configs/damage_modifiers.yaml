@@ -1,0 +1,253 @@
+# Damage Modifiers Configuration
+version: 1.0
+damage_modifiers:
+  # Basic Modifier Types
+  multiplier:
+    id: "multiplier"
+    name: "Damage Multiplier"
+    description: "Multiply damage by a value"
+    formula: "damage * value"
+    properties:
+      can_stack: true
+      stack_type: "multiplicative"
+      max_value: 10.0
+      min_value: 0.0
+    validation:
+      value_range: [0.0, 10.0]
+      required_properties: []
+  
+  addition:
+    id: "addition"
+    name: "Damage Addition"
+    description: "Add a value to damage"
+    formula: "damage + value"
+    properties:
+      can_stack: true
+      stack_type: "additive"
+      max_value: 999999.0
+      min_value: -999999.0
+    validation:
+      value_range: [-999999.0, 999999.0]
+      required_properties: []
+  
+  reduction:
+    id: "reduction"
+    name: "Damage Reduction"
+    description: "Reduce damage by a value"
+    formula: "max(0, damage - value)"
+    properties:
+      can_stack: true
+      stack_type: "additive"
+      max_value: 999999.0
+      min_value: 0.0
+    validation:
+      value_range: [0.0, 999999.0]
+      required_properties: []
+  
+  resistance:
+    id: "resistance"
+    name: "Damage Resistance"
+    description: "Resist damage by a percentage"
+    formula: "damage * (1 - min(1.0, value))"
+    properties:
+      can_stack: true
+      stack_type: "multiplicative"
+      max_value: 1.0
+      min_value: 0.0
+    validation:
+      value_range: [0.0, 1.0]
+      required_properties: []
+  
+  immunity:
+    id: "immunity"
+    name: "Damage Immunity"
+    description: "Complete immunity to damage"
+    formula: "0"
+    properties:
+      can_stack: false
+      stack_type: "none"
+      max_value: 1.0
+      min_value: 0.0
+    validation:
+      value_range: [0.0, 1.0]
+      required_properties: []
+  
+  absorption:
+    id: "absorption"
+    name: "Damage Absorption"
+    description: "Convert damage to healing"
+    formula: "-damage"
+    properties:
+      can_stack: true
+      stack_type: "multiplicative"
+      max_value: 1.0
+      min_value: 0.0
+    validation:
+      value_range: [0.0, 1.0]
+      required_properties: []
+  
+  reflection:
+    id: "reflection"
+    name: "Damage Reflection"
+    description: "Reflect damage back to source"
+    formula: "damage"
+    properties:
+      can_stack: true
+      stack_type: "multiplicative"
+      max_value: 1.0
+      min_value: 0.0
+    validation:
+      value_range: [0.0, 1.0]
+      required_properties: []
+  
+  # Elemental Modifier Types
+  elemental_mastery_bonus:
+    id: "elemental_mastery_bonus"
+    name: "Elemental Mastery Bonus"
+    description: "Bonus damage from elemental mastery"
+    formula: "damage * (1 + mastery_level * 0.1)"
+    properties:
+      can_stack: false
+      stack_type: "none"
+      max_value: 10.0
+      min_value: 0.0
+      requires_element: true
+    validation:
+      value_range: [0.0, 10.0]
+      required_properties: ["element_id", "mastery_level"]
+  
+  elemental_resistance:
+    id: "elemental_resistance"
+    name: "Elemental Resistance"
+    description: "Resistance to elemental damage"
+    formula: "damage * (1 - min(1.0, resistance_value))"
+    properties:
+      can_stack: true
+      stack_type: "multiplicative"
+      max_value: 1.0
+      min_value: 0.0
+      requires_element: true
+    validation:
+      value_range: [0.0, 1.0]
+      required_properties: ["element_id", "resistance_value"]
+  
+  # Status Effect Modifier Types
+  status_effect_bonus:
+    id: "status_effect_bonus"
+    name: "Status Effect Bonus"
+    description: "Bonus damage from status effects"
+    formula: "damage * (1 + status_intensity * 0.05)"
+    properties:
+      can_stack: true
+      stack_type: "multiplicative"
+      max_value: 5.0
+      min_value: 0.0
+      requires_status: true
+    validation:
+      value_range: [0.0, 5.0]
+      required_properties: ["status_effect_id", "status_intensity"]
+  
+  status_effect_resistance:
+    id: "status_effect_resistance"
+    name: "Status Effect Resistance"
+    description: "Resistance to status effect damage"
+    formula: "damage * (1 - min(1.0, resistance_value))"
+    properties:
+      can_stack: true
+      stack_type: "multiplicative"
+      max_value: 1.0
+      min_value: 0.0
+      requires_status: true
+    validation:
+      value_range: [0.0, 1.0]
+      required_properties: ["status_effect_id", "resistance_value"]
+  
+  # Action Modifier Types
+  action_effectiveness:
+    id: "action_effectiveness"
+    name: "Action Effectiveness"
+    description: "Effectiveness of action damage"
+    formula: "damage * effectiveness_value"
+    properties:
+      can_stack: true
+      stack_type: "multiplicative"
+      max_value: 5.0
+      min_value: 0.0
+      requires_action: true
+    validation:
+      value_range: [0.0, 5.0]
+      required_properties: ["action_id", "effectiveness_value"]
+  
+  action_cooldown_bonus:
+    id: "action_cooldown_bonus"
+    name: "Action Cooldown Bonus"
+    description: "Bonus damage from cooldown reduction"
+    formula: "damage * (1 + cooldown_reduction * 0.1)"
+    properties:
+      can_stack: true
+      stack_type: "multiplicative"
+      max_value: 2.0
+      min_value: 0.0
+      requires_action: true
+    validation:
+      value_range: [0.0, 2.0]
+      required_properties: ["action_id", "cooldown_reduction"]
+  
+  # Custom Modifier Types
+  custom_critical_hit:
+    id: "custom_critical_hit"
+    name: "Critical Hit"
+    description: "Critical hit damage multiplier"
+    formula: "damage * critical_multiplier"
+    properties:
+      can_stack: false
+      stack_type: "none"
+      max_value: 10.0
+      min_value: 1.0
+      is_critical: true
+    validation:
+      value_range: [1.0, 10.0]
+      required_properties: ["critical_multiplier"]
+  
+  custom_penetration:
+    id: "custom_penetration"
+    name: "Damage Penetration"
+    description: "Penetrate through resistance"
+    formula: "damage * (1 + penetration_value)"
+    properties:
+      can_stack: true
+      stack_type: "additive"
+      max_value: 1.0
+      min_value: 0.0
+      penetrates_resistance: true
+    validation:
+      value_range: [0.0, 1.0]
+      required_properties: ["penetration_value"]
+
+# Modifier Stacking Rules
+stacking_rules:
+  multiplicative:
+    - "multiplier"
+    - "elemental_mastery_bonus"
+    - "status_effect_bonus"
+    - "action_effectiveness"
+    - "custom_critical_hit"
+  
+  additive:
+    - "addition"
+    - "reduction"
+    - "custom_penetration"
+  
+  none:
+    - "immunity"
+    - "elemental_mastery_bonus"
+    - "custom_critical_hit"
+
+# Global Settings
+global_settings:
+  max_modifiers_per_request: 50
+  max_modifier_value: 999999.0
+  min_modifier_value: -999999.0
+  cache_modifier_calculations: true
+  cache_ttl_seconds: 300
+  validate_modifier_conditions: true

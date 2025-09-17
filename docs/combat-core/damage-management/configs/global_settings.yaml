@@ -1,0 +1,253 @@
+# Global Damage Management Settings
+version: 1.0
+global_settings:
+  # Performance Settings
+  performance:
+    max_concurrent_requests: 1000
+    max_batch_size: 100
+    max_calculation_time_ms: 100
+    max_memory_usage_mb: 512
+    cache_size_mb: 128
+    cache_ttl_seconds: 300
+    enable_async_processing: true
+    enable_batch_processing: true
+    enable_caching: true
+  
+  # Validation Settings
+  validation:
+    validate_damage_requests: true
+    validate_damage_types: true
+    validate_damage_sources: true
+    validate_damage_modifiers: true
+    validate_damage_conditions: true
+    validate_formula_syntax: true
+    require_actor_validation: true
+    require_resource_validation: true
+    max_validation_depth: 10
+  
+  # Calculation Settings
+  calculations:
+    precision: 2
+    max_formula_complexity: 100
+    max_nested_calculations: 10
+    max_modifiers_per_request: 50
+    max_conditions_per_modifier: 10
+    max_condition_depth: 5
+    enable_formula_caching: true
+    enable_modifier_caching: true
+    enable_condition_caching: true
+  
+  # Integration Settings
+  integration:
+    enable_resource_manager_integration: true
+    enable_element_core_integration: true
+    enable_status_core_integration: true
+    enable_action_core_integration: true
+    enable_actor_core_integration: true
+    integration_timeout_ms: 5000
+    integration_retry_attempts: 3
+    integration_retry_delay_ms: 1000
+  
+  # Event Settings
+  events:
+    enable_damage_events: true
+    enable_modifier_events: true
+    enable_condition_events: true
+    enable_calculation_events: true
+    max_event_queue_size: 10000
+    event_processing_timeout_ms: 1000
+    enable_event_caching: true
+    event_cache_ttl_seconds: 60
+  
+  # Logging Settings
+  logging:
+    log_level: "info"
+    log_damage_calculations: true
+    log_damage_modifiers: true
+    log_damage_conditions: true
+    log_damage_events: true
+    log_performance_metrics: true
+    log_integration_calls: true
+    max_log_entries: 100000
+    log_rotation_size_mb: 100
+  
+  # Security Settings
+  security:
+    validate_damage_sources: true
+    validate_damage_targets: true
+    validate_damage_permissions: true
+    max_damage_value: 999999.0
+    min_damage_value: 0.0
+    max_modifier_value: 999999.0
+    min_modifier_value: -999999.0
+    enable_damage_audit: true
+    audit_log_retention_days: 30
+  
+  # Debug Settings
+  debug:
+    enable_debug_mode: false
+    enable_detailed_logging: false
+    enable_performance_profiling: false
+    enable_memory_profiling: false
+    enable_calculation_tracing: false
+    enable_integration_tracing: false
+    debug_output_file: "damage_debug.log"
+    max_debug_entries: 10000
+  
+  # Feature Flags
+  features:
+    enable_damage_manager: true
+    enable_damage_calculator: true
+    enable_modifier_processor: true
+    enable_damage_validator: true
+    enable_event_dispatcher: true
+    enable_damage_cache: true
+    enable_batch_processor: true
+    enable_metrics_collector: true
+    enable_configuration_hot_reload: true
+    enable_plugin_system: true
+  
+  # Resource Limits
+  resource_limits:
+    max_damage_requests_per_second: 50000
+    max_damage_requests_per_minute: 3000000
+    max_damage_requests_per_hour: 180000000
+    max_memory_usage_per_request: 1024
+    max_cpu_usage_percent: 80
+    max_disk_usage_mb: 1024
+    max_network_bandwidth_mbps: 100
+  
+  # Error Handling
+  error_handling:
+    max_error_retries: 3
+    error_retry_delay_ms: 1000
+    error_timeout_ms: 5000
+    enable_error_recovery: true
+    enable_error_notifications: true
+    error_notification_threshold: 10
+    error_notification_cooldown_ms: 60000
+  
+  # Monitoring
+  monitoring:
+    enable_health_checks: true
+    health_check_interval_ms: 5000
+    enable_metrics_collection: true
+    metrics_collection_interval_ms: 1000
+    enable_alerting: true
+    alert_threshold_error_rate: 0.05
+    alert_threshold_latency_ms: 1000
+    alert_threshold_memory_usage: 0.8
+  
+  # Configuration Management
+  configuration:
+    enable_hot_reload: true
+    hot_reload_check_interval_ms: 1000
+    configuration_validation: true
+    configuration_backup: true
+    configuration_versioning: true
+    max_configuration_versions: 10
+    configuration_rollback_enabled: true
+  
+  # Development Settings
+  development:
+    enable_mock_integrations: false
+    enable_test_mode: false
+    enable_development_logging: false
+    enable_api_documentation: true
+    enable_swagger_ui: true
+    enable_graphql_playground: true
+    development_port: 8080
+  
+  # Production Settings
+  production:
+    enable_production_mode: true
+    enable_security_headers: true
+    enable_rate_limiting: true
+    enable_cors: true
+    enable_compression: true
+    enable_ssl: true
+    ssl_certificate_path: "/etc/ssl/certs/damage_manager.crt"
+    ssl_private_key_path: "/etc/ssl/private/damage_manager.key"
+  
+  # Backup and Recovery
+  backup:
+    enable_automatic_backup: true
+    backup_interval_hours: 24
+    backup_retention_days: 30
+    backup_compression: true
+    backup_encryption: true
+    backup_location: "/var/backups/damage_manager"
+  
+  # Scaling Settings
+  scaling:
+    enable_auto_scaling: true
+    min_instances: 1
+    max_instances: 10
+    scale_up_threshold: 0.8
+    scale_down_threshold: 0.2
+    scale_up_cooldown_ms: 300000
+    scale_down_cooldown_ms: 600000
+  
+  # Load Balancing
+  load_balancing:
+    enable_load_balancing: true
+    load_balancing_algorithm: "round_robin"
+    health_check_path: "/health"
+    health_check_interval_ms: 5000
+    health_check_timeout_ms: 1000
+    max_retries: 3
+  
+  # Database Settings
+  database:
+    enable_database_caching: true
+    database_cache_size_mb: 64
+    database_cache_ttl_seconds: 600
+    enable_connection_pooling: true
+    max_connections: 100
+    connection_timeout_ms: 5000
+    query_timeout_ms: 10000
+  
+  # Cache Settings
+  cache:
+    enable_redis_cache: true
+    redis_host: "localhost"
+    redis_port: 6379
+    redis_password: ""
+    redis_database: 0
+    redis_connection_pool_size: 10
+    redis_connection_timeout_ms: 5000
+    redis_command_timeout_ms: 1000
+  
+  # Message Queue Settings
+  message_queue:
+    enable_message_queue: true
+    queue_type: "rabbitmq"
+    queue_host: "localhost"
+    queue_port: 5672
+    queue_username: "guest"
+    queue_password: "guest"
+    queue_vhost: "/"
+    queue_exchange: "damage_events"
+    queue_routing_key: "damage.calculation"
+  
+  # API Settings
+  api:
+    enable_rest_api: true
+    enable_graphql_api: true
+    enable_grpc_api: true
+    api_version: "v1"
+    api_base_path: "/api/v1"
+    api_timeout_ms: 30000
+    api_rate_limit: 1000
+    api_rate_limit_window_ms: 60000
+  
+  # Documentation Settings
+  documentation:
+    enable_api_documentation: true
+    enable_swagger_ui: true
+    enable_redoc: true
+    enable_graphql_playground: true
+    documentation_path: "/docs"
+    swagger_ui_path: "/swagger-ui"
+    redoc_path: "/redoc"
+    graphql_playground_path: "/graphql-playground"

@@ -1,0 +1,253 @@
+# Damage Sources Configuration
+version: 1.0
+damage_sources:
+  # Basic Damage Sources
+  direct:
+    id: "direct"
+    name: "Direct Damage"
+    description: "Direct damage from weapons, spells, or abilities"
+    category: "combat"
+    properties:
+      can_crit: true
+      can_block: true
+      can_dodge: true
+      can_parry: true
+      can_resist: true
+      requires_accuracy: true
+    modifiers:
+      - "multiplier"
+      - "addition"
+      - "reduction"
+      - "resistance"
+      - "custom_critical_hit"
+    visual_effects:
+      particle_effect: "damage_direct"
+      sound_effect: "damage_direct"
+  
+  status:
+    id: "status"
+    name: "Status Effect Damage"
+    description: "Damage from status effects over time"
+    category: "status"
+    properties:
+      can_crit: false
+      can_block: false
+      can_dodge: false
+      can_parry: false
+      can_resist: true
+      requires_accuracy: false
+      is_dot: true
+    modifiers:
+      - "multiplier"
+      - "addition"
+      - "reduction"
+      - "resistance"
+      - "status_effect_bonus"
+      - "status_effect_resistance"
+    visual_effects:
+      particle_effect: "damage_status"
+      sound_effect: "damage_status"
+  
+  elemental:
+    id: "elemental"
+    name: "Elemental Damage"
+    description: "Damage from elemental sources"
+    category: "elemental"
+    properties:
+      can_crit: true
+      can_block: true
+      can_dodge: true
+      can_parry: false
+      can_resist: true
+      requires_accuracy: true
+      requires_element: true
+    modifiers:
+      - "multiplier"
+      - "addition"
+      - "reduction"
+      - "resistance"
+      - "elemental_mastery_bonus"
+      - "elemental_resistance"
+      - "custom_critical_hit"
+    visual_effects:
+      particle_effect: "damage_elemental"
+      sound_effect: "damage_elemental"
+  
+  action:
+    id: "action"
+    name: "Action Damage"
+    description: "Damage from actions or abilities"
+    category: "action"
+    properties:
+      can_crit: true
+      can_block: true
+      can_dodge: true
+      can_parry: true
+      can_resist: true
+      requires_accuracy: true
+      requires_action: true
+    modifiers:
+      - "multiplier"
+      - "addition"
+      - "reduction"
+      - "resistance"
+      - "action_effectiveness"
+      - "action_cooldown_bonus"
+      - "custom_critical_hit"
+    visual_effects:
+      particle_effect: "damage_action"
+      sound_effect: "damage_action"
+  
+  environmental:
+    id: "environmental"
+    name: "Environmental Damage"
+    description: "Damage from environmental hazards"
+    category: "environmental"
+    properties:
+      can_crit: false
+      can_block: false
+      can_dodge: true
+      can_parry: false
+      can_resist: true
+      requires_accuracy: false
+      is_environmental: true
+    modifiers:
+      - "multiplier"
+      - "addition"
+      - "reduction"
+      - "resistance"
+    visual_effects:
+      particle_effect: "damage_environmental"
+      sound_effect: "damage_environmental"
+  
+  fall:
+    id: "fall"
+    name: "Fall Damage"
+    description: "Damage from falling"
+    category: "environmental"
+    properties:
+      can_crit: false
+      can_block: false
+      can_dodge: false
+      can_parry: false
+      can_resist: false
+      requires_accuracy: false
+      is_fall_damage: true
+    modifiers:
+      - "multiplier"
+      - "addition"
+      - "reduction"
+    visual_effects:
+      particle_effect: "damage_fall"
+      sound_effect: "damage_fall"
+  
+  poison:
+    id: "poison"
+    name: "Poison Damage"
+    description: "Damage from poison effects"
+    category: "status"
+    properties:
+      can_crit: false
+      can_block: false
+      can_dodge: false
+      can_parry: false
+      can_resist: true
+      requires_accuracy: false
+      is_poison: true
+      is_dot: true
+    modifiers:
+      - "multiplier"
+      - "addition"
+      - "reduction"
+      - "resistance"
+      - "status_effect_bonus"
+      - "status_effect_resistance"
+    visual_effects:
+      particle_effect: "damage_poison"
+      sound_effect: "damage_poison"
+  
+  # Custom Damage Sources
+  custom_bleeding:
+    id: "custom_bleeding"
+    name: "Bleeding Damage"
+    description: "Damage from bleeding effects"
+    category: "status"
+    properties:
+      can_crit: false
+      can_block: false
+      can_dodge: false
+      can_parry: false
+      can_resist: true
+      requires_accuracy: false
+      is_bleeding: true
+      is_dot: true
+    modifiers:
+      - "multiplier"
+      - "addition"
+      - "reduction"
+      - "resistance"
+      - "status_effect_bonus"
+      - "status_effect_resistance"
+    visual_effects:
+      particle_effect: "damage_bleeding"
+      sound_effect: "damage_bleeding"
+  
+  custom_burning:
+    id: "custom_burning"
+    name: "Burning Damage"
+    description: "Damage from burning effects"
+    category: "elemental"
+    properties:
+      can_crit: false
+      can_block: false
+      can_dodge: false
+      can_parry: false
+      can_resist: true
+      requires_accuracy: false
+      is_burning: true
+      is_dot: true
+      requires_element: true
+    modifiers:
+      - "multiplier"
+      - "addition"
+      - "reduction"
+      - "resistance"
+      - "elemental_mastery_bonus"
+      - "elemental_resistance"
+      - "status_effect_bonus"
+      - "status_effect_resistance"
+    visual_effects:
+      particle_effect: "damage_burning"
+      sound_effect: "damage_burning"
+
+# Source Categories
+source_categories:
+  combat:
+    - "direct"
+    - "action"
+  
+  status:
+    - "status"
+    - "poison"
+    - "custom_bleeding"
+    - "custom_burning"
+  
+  elemental:
+    - "elemental"
+    - "custom_burning"
+  
+  environmental:
+    - "environmental"
+    - "fall"
+  
+  custom:
+    - "custom_bleeding"
+    - "custom_burning"
+
+# Global Settings
+global_settings:
+  max_sources_per_request: 10
+  validate_source_properties: true
+  cache_source_calculations: true
+  cache_ttl_seconds: 300
+  require_source_validation: true

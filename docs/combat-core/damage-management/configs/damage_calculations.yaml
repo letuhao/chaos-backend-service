@@ -1,0 +1,348 @@
+# Damage Calculations Configuration
+version: 1.0
+damulas:
+  # Basic Damage Calculation Formulas
+  base_damage:
+    id: "base_damage"
+    name: "Base Damage Calculation"
+    description: "Calculate base damage from stats"
+    formula: "base_attack + (level * level_scaling) + (mastery * mastery_scaling)"
+    variables:
+      base_attack: "float"
+      level: "int"
+      level_scaling: "float"
+      mastery: "float"
+      mastery_scaling: "float"
+    properties:
+      requires_stats: true
+      can_crit: true
+      can_block: true
+      can_resist: true
+    examples:
+      - description: "Basic physical damage"
+        formula: "base_attack + (level * 2.0) + (strength * 0.5)"
+      - description: "Elemental damage"
+        formula: "base_attack + (level * 1.5) + (element_mastery * 0.3)"
+  
+  power_points:
+    id: "power_points"
+    name: "Power Points Calculation"
+    description: "Calculate power points from stats"
+    formula: "base_power + (level * level_scaling) + (mastery * mastery_scaling) + (equipment * equipment_scaling)"
+    variables:
+      base_power: "float"
+      level: "int"
+      level_scaling: "float"
+      mastery: "float"
+      mastery_scaling: "float"
+      equipment: "float"
+      equipment_scaling: "float"
+    properties:
+      requires_stats: true
+      can_crit: true
+      can_block: true
+      can_resist: true
+    examples:
+      - description: "Physical power points"
+        formula: "strength + (level * 1.0) + (weapon_damage * 0.8)"
+      - description: "Elemental power points"
+        formula: "element_mastery + (level * 0.5) + (element_equipment * 0.6)"
+  
+  defense_calculation:
+    id: "defense_calculation"
+    name: "Defense Calculation"
+    description: "Calculate defense from stats"
+    formula: "base_defense + (level * level_scaling) + (mastery * mastery_scaling) + (equipment * equipment_scaling)"
+    variables:
+      base_defense: "float"
+      level: "int"
+      level_scaling: "float"
+      mastery: "float"
+      mastery_scaling: "float"
+      equipment: "float"
+      equipment_scaling: "float"
+    properties:
+      requires_stats: true
+      can_block: true
+      can_resist: true
+    examples:
+      - description: "Physical defense"
+        formula: "constitution + (level * 0.8) + (armor_defense * 0.9)"
+      - description: "Elemental defense"
+        formula: "element_resistance + (level * 0.3) + (element_armor * 0.7)"
+  
+  # Elemental Damage Calculations
+  elemental_damage:
+    id: "elemental_damage"
+    name: "Elemental Damage Calculation"
+    description: "Calculate elemental damage with mastery bonuses"
+    formula: "base_damage * (1 + element_mastery_bonus) * element_interaction_multiplier"
+    variables:
+      base_damage: "float"
+      element_mastery_bonus: "float"
+      element_interaction_multiplier: "float"
+    properties:
+      requires_element: true
+      requires_mastery: true
+      can_crit: true
+      can_block: true
+      can_resist: true
+    examples:
+      - description: "Fire damage with mastery"
+        formula: "base_damage * (1 + fire_mastery * 0.1) * fire_interaction_multiplier"
+      - description: "Water damage with mastery"
+        formula: "base_damage * (1 + water_mastery * 0.1) * water_interaction_multiplier"
+  
+  element_interaction:
+    id: "element_interaction"
+    name: "Element Interaction Calculation"
+    description: "Calculate element interaction multipliers"
+    formula: "base_multiplier + (mastery_difference * interaction_scaling)"
+    variables:
+      base_multiplier: "float"
+      mastery_difference: "float"
+      interaction_scaling: "float"
+    properties:
+      requires_element: true
+      requires_mastery: true
+      can_be_negative: true
+    examples:
+      - description: "Fire vs Water (overcoming)"
+        formula: "1.2 + (fire_mastery - water_mastery) * 0.01"
+      - description: "Water vs Fire (overcoming)"
+        formula: "1.2 + (water_mastery - fire_mastery) * 0.01"
+  
+  # Status Effect Damage Calculations
+  status_damage:
+    id: "status_damage"
+    name: "Status Effect Damage Calculation"
+    description: "Calculate damage from status effects"
+    formula: "base_magnitude * (1 + status_intensity) * duration_multiplier"
+    variables:
+      base_magnitude: "float"
+      status_intensity: "float"
+      duration_multiplier: "float"
+    properties:
+      requires_status: true
+      is_dot: true
+      can_resist: true
+    examples:
+      - description: "Burning damage"
+        formula: "base_magnitude * (1 + burning_intensity * 0.2) * burning_duration_multiplier"
+      - description: "Poison damage"
+        formula: "base_magnitude * (1 + poison_intensity * 0.15) * poison_duration_multiplier"
+  
+  status_intensity:
+    id: "status_intensity"
+    name: "Status Intensity Calculation"
+    description: "Calculate status effect intensity"
+    formula: "base_intensity + (level * level_scaling) + (mastery * mastery_scaling)"
+    variables:
+      base_intensity: "float"
+      level: "int"
+      level_scaling: "float"
+      mastery: "float"
+      mastery_scaling: "float"
+    properties:
+      requires_status: true
+      requires_mastery: true
+    examples:
+      - description: "Fire status intensity"
+        formula: "1.0 + (level * 0.1) + (fire_mastery * 0.05)"
+      - description: "Water status intensity"
+        formula: "1.0 + (level * 0.1) + (water_mastery * 0.05)"
+  
+  # Action Damage Calculations
+  action_damage:
+    id: "action_damage"
+    name: "Action Damage Calculation"
+    description: "Calculate damage from actions"
+    formula: "base_damage * action_effectiveness * (1 + skill_bonus) * cooldown_bonus"
+    variables:
+      base_damage: "float"
+      action_effectiveness: "float"
+      skill_bonus: "float"
+      cooldown_bonus: "float"
+    properties:
+      requires_action: true
+      can_crit: true
+      can_block: true
+      can_resist: true
+    examples:
+      - description: "Fireball action damage"
+        formula: "base_damage * fireball_effectiveness * (1 + fire_skill_bonus) * cooldown_bonus"
+      - description: "Heal action damage"
+        formula: "base_damage * heal_effectiveness * (1 + healing_skill_bonus) * cooldown_bonus"
+  
+  action_effectiveness:
+    id: "action_effectiveness"
+    name: "Action Effectiveness Calculation"
+    description: "Calculate action effectiveness"
+    formula: "base_effectiveness + (level * level_scaling) + (mastery * mastery_scaling) + (equipment * equipment_scaling)"
+    variables:
+      base_effectiveness: "float"
+      level: "int"
+      level_scaling: "float"
+      mastery: "float"
+      mastery_scaling: "float"
+      equipment: "float"
+      equipment_scaling: "float"
+    properties:
+      requires_action: true
+      requires_mastery: true
+    examples:
+      - description: "Fireball effectiveness"
+        formula: "1.0 + (level * 0.05) + (fire_mastery * 0.02) + (staff_power * 0.01)"
+      - description: "Heal effectiveness"
+        formula: "1.0 + (level * 0.05) + (healing_mastery * 0.02) + (healing_staff * 0.01)"
+  
+  # Critical Hit Calculations
+  critical_hit_chance:
+    id: "critical_hit_chance"
+    name: "Critical Hit Chance Calculation"
+    description: "Calculate critical hit chance"
+    formula: "base_crit_chance + (level * level_scaling) + (mastery * mastery_scaling) + (equipment * equipment_scaling)"
+    variables:
+      base_crit_chance: "float"
+      level: "int"
+      level_scaling: "float"
+      mastery: "float"
+      mastery_scaling: "float"
+      equipment: "float"
+      equipment_scaling: "float"
+    properties:
+      requires_stats: true
+      max_value: 1.0
+      min_value: 0.0
+    examples:
+      - description: "Physical critical hit chance"
+        formula: "0.05 + (level * 0.001) + (dexterity * 0.002) + (weapon_crit * 0.01)"
+      - description: "Elemental critical hit chance"
+        formula: "0.05 + (level * 0.001) + (element_mastery * 0.001) + (element_weapon_crit * 0.01)"
+  
+  critical_hit_multiplier:
+    id: "critical_hit_multiplier"
+    name: "Critical Hit Multiplier Calculation"
+    description: "Calculate critical hit damage multiplier"
+    formula: "base_crit_multiplier + (level * level_scaling) + (mastery * mastery_scaling) + (equipment * equipment_scaling)"
+    variables:
+      base_crit_multiplier: "float"
+      level: "int"
+      level_scaling: "float"
+      mastery: "float"
+      mastery_scaling: "float"
+      equipment: "float"
+      equipment_scaling: "float"
+    properties:
+      requires_stats: true
+      min_value: 1.0
+    examples:
+      - description: "Physical critical hit multiplier"
+        formula: "2.0 + (level * 0.01) + (strength * 0.005) + (weapon_crit_damage * 0.01)"
+      - description: "Elemental critical hit multiplier"
+        formula: "2.0 + (level * 0.01) + (element_mastery * 0.005) + (element_weapon_crit_damage * 0.01)"
+  
+  # Resistance Calculations
+  damage_resistance:
+    id: "damage_resistance"
+    name: "Damage Resistance Calculation"
+    description: "Calculate damage resistance"
+    formula: "base_resistance + (level * level_scaling) + (mastery * mastery_scaling) + (equipment * equipment_scaling)"
+    variables:
+      base_resistance: "float"
+      level: "int"
+      level_scaling: "float"
+      mastery: "float"
+      mastery_scaling: "float"
+      equipment: "float"
+      equipment_scaling: "float"
+    properties:
+      requires_stats: true
+      max_value: 1.0
+      min_value: 0.0
+    examples:
+      - description: "Physical resistance"
+        formula: "0.0 + (level * 0.001) + (constitution * 0.002) + (armor_resistance * 0.01)"
+      - description: "Elemental resistance"
+        formula: "0.0 + (level * 0.001) + (element_resistance * 0.002) + (element_armor_resistance * 0.01)"
+  
+  # Multi-Element Calculations
+  multi_element_damage:
+    id: "multi_element_damage"
+    name: "Multi-Element Damage Calculation"
+    description: "Calculate damage from multiple elements"
+    formula: "base_damage * element_synergy_multiplier * (1 + average_mastery_bonus)"
+    variables:
+      base_damage: "float"
+      element_synergy_multiplier: "float"
+      average_mastery_bonus: "float"
+    properties:
+      requires_multiple_elements: true
+      requires_synergy: true
+      can_crit: true
+      can_block: true
+      can_resist: true
+    examples:
+      - description: "Fire + Water synergy"
+        formula: "base_damage * 1.5 * (1 + (fire_mastery + water_mastery) / 2 * 0.1)"
+      - description: "Earth + Metal synergy"
+        formula: "base_damage * 1.3 * (1 + (earth_mastery + metal_mastery) / 2 * 0.1)"
+  
+  element_synergy:
+    id: "element_synergy"
+    name: "Element Synergy Calculation"
+    description: "Calculate synergy between elements"
+    formula: "base_synergy + (mastery_difference * synergy_scaling) + (element_affinity * affinity_scaling)"
+    variables:
+      base_synergy: "float"
+      mastery_difference: "float"
+      synergy_scaling: "float"
+      element_affinity: "float"
+      affinity_scaling: "float"
+    properties:
+      requires_multiple_elements: true
+      can_be_negative: true
+    examples:
+      - description: "Fire + Water synergy"
+        formula: "1.2 + (fire_mastery - water_mastery) * 0.01 + (fire_water_affinity * 0.05)"
+      - description: "Earth + Metal synergy"
+        formula: "1.1 + (earth_mastery - metal_mastery) * 0.01 + (earth_metal_affinity * 0.05)"
+
+# Formula Categories
+formula_categories:
+  basic:
+    - "base_damage"
+    - "power_points"
+    - "defense_calculation"
+  
+  elemental:
+    - "elemental_damage"
+    - "element_interaction"
+    - "multi_element_damage"
+    - "element_synergy"
+  
+  status:
+    - "status_damage"
+    - "status_intensity"
+  
+  action:
+    - "action_damage"
+    - "action_effectiveness"
+  
+  critical:
+    - "critical_hit_chance"
+    - "critical_hit_multiplier"
+  
+  resistance:
+    - "damage_resistance"
+
+# Global Settings
+global_settings:
+  max_formula_complexity: 100
+  max_nested_calculations: 10
+  validate_formula_syntax: true
+  cache_formula_results: true
+  cache_ttl_seconds: 300
+  require_formula_validation: true
+  precision: 2
+  max_calculation_time_ms: 100

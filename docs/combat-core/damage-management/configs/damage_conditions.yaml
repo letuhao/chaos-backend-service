@@ -1,0 +1,297 @@
+# Damage Conditions Configuration
+version: 1.0
+damage_conditions:
+  # Basic Conditions
+  health_threshold:
+    id: "health_threshold"
+    name: "Health Threshold"
+    description: "Condition based on health percentage"
+    formula: "current_hp / max_hp"
+    properties:
+      requires_hp: true
+      threshold_type: "percentage"
+      comparison_operators: ["<", "<=", ">", ">=", "==", "!="]
+    validation:
+      value_range: [0.0, 1.0]
+      required_properties: ["threshold_value", "comparison_operator"]
+    examples:
+      - condition: "health_threshold < 0.5"
+        description: "Only when health is below 50%"
+      - condition: "health_threshold >= 0.8"
+        description: "Only when health is above 80%"
+  
+  mana_threshold:
+    id: "mana_threshold"
+    name: "Mana Threshold"
+    description: "Condition based on mana percentage"
+    formula: "current_mp / max_mp"
+    properties:
+      requires_mp: true
+      threshold_type: "percentage"
+      comparison_operators: ["<", "<=", ">", ">=", "==", "!="]
+    validation:
+      value_range: [0.0, 1.0]
+      required_properties: ["threshold_value", "comparison_operator"]
+    examples:
+      - condition: "mana_threshold < 0.3"
+        description: "Only when mana is below 30%"
+      - condition: "mana_threshold >= 0.9"
+        description: "Only when mana is above 90%"
+  
+  stamina_threshold:
+    id: "stamina_threshold"
+    name: "Stamina Threshold"
+    description: "Condition based on stamina percentage"
+    formula: "current_stamina / max_stamina"
+    properties:
+      requires_stamina: true
+      threshold_type: "percentage"
+      comparison_operators: ["<", "<=", ">", ">=", "==", "!="]
+    validation:
+      value_range: [0.0, 1.0]
+      required_properties: ["threshold_value", "comparison_operator"]
+    examples:
+      - condition: "stamina_threshold < 0.2"
+        description: "Only when stamina is below 20%"
+      - condition: "stamina_threshold >= 0.7"
+        description: "Only when stamina is above 70%"
+  
+  qi_threshold:
+    id: "qi_threshold"
+    name: "Qi Threshold"
+    description: "Condition based on qi percentage"
+    formula: "current_qi / max_qi"
+    properties:
+      requires_qi: true
+      threshold_type: "percentage"
+      comparison_operators: ["<", "<=", ">", ">=", "==", "!="]
+    validation:
+      value_range: [0.0, 1.0]
+      required_properties: ["threshold_value", "comparison_operator"]
+    examples:
+      - condition: "qi_threshold < 0.4"
+        description: "Only when qi is below 40%"
+      - condition: "qi_threshold >= 0.6"
+        description: "Only when qi is above 60%"
+  
+  # Elemental Conditions
+  element_mastery_level:
+    id: "element_mastery_level"
+    name: "Element Mastery Level"
+    description: "Condition based on element mastery level"
+    formula: "element_mastery_level"
+    properties:
+      requires_element: true
+      threshold_type: "level"
+      comparison_operators: ["<", "<=", ">", ">=", "==", "!="]
+    validation:
+      value_range: [0, 24]
+      required_properties: ["element_id", "threshold_value", "comparison_operator"]
+    examples:
+      - condition: "element_mastery_level(fire) >= 5"
+        description: "Only when fire mastery is level 5 or higher"
+      - condition: "element_mastery_level(water) < 10"
+        description: "Only when water mastery is below level 10"
+  
+  element_mastery_power:
+    id: "element_mastery_power"
+    name: "Element Mastery Power"
+    description: "Condition based on element mastery power scale"
+    formula: "element_mastery_power"
+    properties:
+      requires_element: true
+      threshold_type: "power_scale"
+      comparison_operators: ["<", "<=", ">", ">=", "==", "!="]
+    validation:
+      value_range: [0.0, 1000000.0]
+      required_properties: ["element_id", "threshold_value", "comparison_operator"]
+    examples:
+      - condition: "element_mastery_power(fire) >= 1000.0"
+        description: "Only when fire mastery power is 1000 or higher"
+      - condition: "element_mastery_power(earth) < 500.0"
+        description: "Only when earth mastery power is below 500"
+  
+  # Status Effect Conditions
+  status_effect_active:
+    id: "status_effect_active"
+    name: "Status Effect Active"
+    description: "Condition based on active status effects"
+    formula: "has_status_effect(status_effect_id)"
+    properties:
+      requires_status: true
+      threshold_type: "boolean"
+      comparison_operators: ["==", "!="]
+    validation:
+      value_range: [true, false]
+      required_properties: ["status_effect_id", "comparison_operator"]
+    examples:
+      - condition: "status_effect_active(burning) == true"
+        description: "Only when burning status is active"
+      - condition: "status_effect_active(poison) == false"
+        description: "Only when poison status is not active"
+  
+  status_effect_intensity:
+    id: "status_effect_intensity"
+    name: "Status Effect Intensity"
+    description: "Condition based on status effect intensity"
+    formula: "status_effect_intensity(status_effect_id)"
+    properties:
+      requires_status: true
+      threshold_type: "intensity"
+      comparison_operators: ["<", "<=", ">", ">=", "==", "!="]
+    validation:
+      value_range: [0.0, 10.0]
+      required_properties: ["status_effect_id", "threshold_value", "comparison_operator"]
+    examples:
+      - condition: "status_effect_intensity(burning) >= 2.0"
+        description: "Only when burning intensity is 2.0 or higher"
+      - condition: "status_effect_intensity(poison) < 1.5"
+        description: "Only when poison intensity is below 1.5"
+  
+  # Action Conditions
+  action_cooldown_remaining:
+    id: "action_cooldown_remaining"
+    name: "Action Cooldown Remaining"
+    description: "Condition based on action cooldown remaining time"
+    formula: "action_cooldown_remaining(action_id)"
+    properties:
+      requires_action: true
+      threshold_type: "time_seconds"
+      comparison_operators: ["<", "<=", ">", ">=", "==", "!="]
+    validation:
+      value_range: [0.0, 3600.0]
+      required_properties: ["action_id", "threshold_value", "comparison_operator"]
+    examples:
+      - condition: "action_cooldown_remaining(fireball) <= 5.0"
+        description: "Only when fireball cooldown is 5 seconds or less"
+      - condition: "action_cooldown_remaining(heal) == 0.0"
+        description: "Only when heal is not on cooldown"
+  
+  action_execution_time:
+    id: "action_execution_time"
+    name: "Action Execution Time"
+    description: "Condition based on action execution time"
+    formula: "action_execution_time(action_id)"
+    properties:
+      requires_action: true
+      threshold_type: "time_seconds"
+      comparison_operators: ["<", "<=", ">", ">=", "==", "!="]
+    validation:
+      value_range: [0.0, 60.0]
+      required_properties: ["action_id", "threshold_value", "comparison_operator"]
+    examples:
+      - condition: "action_execution_time(fireball) >= 2.0"
+        description: "Only when fireball execution time is 2 seconds or more"
+      - condition: "action_execution_time(heal) < 1.0"
+        description: "Only when heal execution time is less than 1 second"
+  
+  # Environmental Conditions
+  environment_type:
+    id: "environment_type"
+    name: "Environment Type"
+    description: "Condition based on environment type"
+    formula: "environment_type"
+    properties:
+      requires_environment: true
+      threshold_type: "string"
+      comparison_operators: ["==", "!=", "in", "not_in"]
+    validation:
+      value_range: ["forest", "desert", "mountain", "ocean", "city", "dungeon"]
+      required_properties: ["environment_type", "comparison_operator"]
+    examples:
+      - condition: "environment_type == 'forest'"
+        description: "Only in forest environment"
+      - condition: "environment_type in ['desert', 'mountain']"
+        description: "Only in desert or mountain environment"
+  
+  time_of_day:
+    id: "time_of_day"
+    name: "Time of Day"
+    description: "Condition based on time of day"
+    formula: "time_of_day"
+    properties:
+      requires_time: true
+      threshold_type: "time_period"
+      comparison_operators: ["==", "!=", "in", "not_in"]
+    validation:
+      value_range: ["dawn", "morning", "noon", "afternoon", "evening", "night", "midnight"]
+      required_properties: ["time_period", "comparison_operator"]
+    examples:
+      - condition: "time_of_day == 'night'"
+        description: "Only during night time"
+      - condition: "time_of_day in ['dawn', 'dusk']"
+        description: "Only during dawn or dusk"
+  
+  # Custom Conditions
+  custom_stat_value:
+    id: "custom_stat_value"
+    name: "Custom Stat Value"
+    description: "Condition based on custom stat value"
+    formula: "custom_stat_value(stat_name)"
+    properties:
+      requires_custom_stat: true
+      threshold_type: "value"
+      comparison_operators: ["<", "<=", ">", ">=", "==", "!="]
+    validation:
+      value_range: [-999999.0, 999999.0]
+      required_properties: ["stat_name", "threshold_value", "comparison_operator"]
+    examples:
+      - condition: "custom_stat_value(rage) >= 50.0"
+        description: "Only when rage stat is 50 or higher"
+      - condition: "custom_stat_value(fear) < 25.0"
+        description: "Only when fear stat is below 25"
+  
+  custom_tag_present:
+    id: "custom_tag_present"
+    name: "Custom Tag Present"
+    description: "Condition based on custom tag presence"
+    formula: "has_tag(tag_name)"
+    properties:
+      requires_custom_tag: true
+      threshold_type: "boolean"
+      comparison_operators: ["==", "!="]
+    validation:
+      value_range: [true, false]
+      required_properties: ["tag_name", "comparison_operator"]
+    examples:
+      - condition: "custom_tag_present(undead) == true"
+        description: "Only when undead tag is present"
+      - condition: "custom_tag_present(holy) == false"
+        description: "Only when holy tag is not present"
+
+# Condition Categories
+condition_categories:
+  resource:
+    - "health_threshold"
+    - "mana_threshold"
+    - "stamina_threshold"
+    - "qi_threshold"
+  
+  elemental:
+    - "element_mastery_level"
+    - "element_mastery_power"
+  
+  status:
+    - "status_effect_active"
+    - "status_effect_intensity"
+  
+  action:
+    - "action_cooldown_remaining"
+    - "action_execution_time"
+  
+  environmental:
+    - "environment_type"
+    - "time_of_day"
+  
+  custom:
+    - "custom_stat_value"
+    - "custom_tag_present"
+
+# Global Settings
+global_settings:
+  max_conditions_per_modifier: 10
+  max_condition_depth: 5
+  validate_condition_syntax: true
+  cache_condition_evaluations: true
+  cache_ttl_seconds: 300
+  require_condition_validation: true

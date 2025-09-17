@@ -4,7 +4,9 @@
 
 Damage System là trung tâm của Combat Core, xử lý tất cả các loại sát thương trong game. Hệ thống được thiết kế để hỗ trợ nhiều loại damage khác nhau, từ vật lý cơ bản đến các loại damage phức tạp trong cultivation systems.
 
-**Integration với Element-Core**: Damage System sử dụng hybrid approach, trong đó Element-Core cung cấp element stats (bao gồm Omni stats và Elemental Mastery stats) và Combat-Core thực hiện damage calculation dựa trên những stats này.
+**🔄 Updated Architecture**: Damage System hiện sử dụng Damage Manager để xử lý tất cả damage calculations và applications. Xem [Damage Manager Overview](./damage-management/00_Damage_Manager_Overview.md) để hiểu architecture mới.
+
+**Integration với Element-Core**: Damage System sử dụng hybrid approach, trong đó Element-Core cung cấp element stats (bao gồm Omni stats và Elemental Mastery stats) và Damage Manager thực hiện damage calculation dựa trên những stats này.
 
 **⚠️ Critical Implementation Notes**: Xem [Element Core Implementation Notes](../element-core/06_Implementation_Notes.md) để biết các yêu cầu implementation quan trọng, bao gồm damage composition law, Omni additive-only rule, và status hit dependency.
 
@@ -29,10 +31,36 @@ Damage System là trung tâm của Combat Core, xử lý tất cả các loại 
 
 ## 🏗️ **Kiến Trúc Damage System**
 
-### **Core Components**
+### **Updated Architecture with Damage Manager**
 
 ```
 Damage System
+├── Damage Manager
+│   ├── Damage Calculator
+│   ├── Damage Modifier Processor
+│   ├── Damage Validator
+│   ├── Damage Event Dispatcher
+│   └── Damage Cache
+├── Integration Bridges
+│   ├── Element-Core Bridge
+│   ├── Status-Core Bridge
+│   ├── Action-Core Bridge
+│   └── Resource Manager Bridge
+├── Configuration System
+│   ├── Damage Type Registry
+│   ├── Damage Modifier Registry
+│   ├── Damage Source Registry
+│   └── Damage Condition Registry
+└── Performance Layer
+    ├── Damage Batch Processor
+    ├── Damage Cache
+    └── Damage Metrics
+```
+
+### **Legacy Components (Deprecated)**
+
+```
+Damage System (Legacy)
 ├── Element-Core Integration
 │   ├── Element Stats Provider
 │   ├── Omni Stats Integration

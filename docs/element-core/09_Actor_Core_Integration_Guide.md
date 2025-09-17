@@ -4,6 +4,8 @@
 
 Tài liệu này hướng dẫn chi tiết cách tích hợp Elemental Mastery System vào Actor Core framework. Elemental Mastery System được thiết kế như một cultivation system độc lập, kế thừa từ `SystemResourceCalculator` trait của Actor Core.
 
+**🔄 Updated Integration**: Elemental Mastery System hiện tích hợp với Damage Manager để cung cấp elemental damage data và modifiers. Xem [Damage Manager Overview](../combat-core/damage-management/00_Damage_Manager_Overview.md) để hiểu integration mới.
+
 ## 🏗️ **Kiến Trúc Tích Hợp (Integration Architecture)**
 
 ### 1. Actor Core Framework Pattern

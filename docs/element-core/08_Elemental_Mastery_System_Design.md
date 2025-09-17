@@ -11,6 +11,7 @@ Elemental Mastery System là một hệ thống tu luyện độc lập trong Ch
 3. **Decay System**: Mastery sẽ giảm dần theo thời gian nếu không được sử dụng, tạo ra động lực tu luyện liên tục
 4. **Element Interactions**: Hệ thống tương sinh tương khắc ảnh hưởng đến việc tu luyện và sử dụng elements
 5. **Integration với Element Core**: Cung cấp derived stats cho Element Core system
+6. **Integration với Damage Manager**: Cung cấp elemental damage data và modifiers cho Damage Manager
 
 ## Kiến Trúc Hệ Thống (System Architecture)
 
@@ -45,6 +46,15 @@ pub trait ElementPlugin: Send + Sync {
     
     /// Get element interactions
     fn get_element_interactions(&self) -> HashMap<String, ElementInteraction>;
+    
+    /// Get elemental damage modifiers for Damage Manager
+    fn get_damage_modifiers(&self, actor: &Actor, damage_type: &str) -> Vec<DamageModifier>;
+    
+    /// Get elemental damage data for Damage Manager
+    fn get_damage_data(&self, actor: &Actor, damage_type: &str) -> ElementDamageData;
+    
+    /// Check elemental damage immunity
+    fn check_damage_immunity(&self, actor: &Actor, damage_type: &str) -> bool;
 }
 ```
 

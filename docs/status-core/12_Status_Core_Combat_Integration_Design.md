@@ -143,24 +143,42 @@ impl CombatCoreStatusIntegration {
         damage_requests: Vec<StatusDamageRequest>,
         context: &CombatContext
     ) -> Result<Vec<DamageResult>, CombatError> {
-        let mut damage_results = Vec::new();
+        // Convert status damage requests to damage manager requests
+        let damage_manager_requests: Vec<DamageRequest> = damage_requests
+            .into_iter()
+            .map(|status_request| self.convert_to_damage_manager_request(status_request, context))
+            .collect();
         
-        // Group damage requests by actor for efficient processing
-        let mut grouped_requests: HashMap<String, Vec<StatusDamageRequest>> = HashMap::new();
-        for request in damage_requests {
-            grouped_requests
-                .entry(request.actor_id.clone())
-                .or_insert_with(Vec::new)
-                .push(request);
-        }
-        
-        // Process each actor's damage requests
-        for (actor_id, requests) in grouped_requests {
-            let actor_damage_results = self.process_actor_damage_requests(actor_id, requests, context).await?;
-            damage_results.extend(actor_damage_results);
-        }
+        // Process damage requests through Damage Manager
+        let damage_results = self.damage_manager.apply_damage_batch(damage_manager_requests).await?;
         
         Ok(damage_results)
+    }
+    
+    /// Convert status damage request to damage manager request
+    fn convert_to_damage_manager_request(
+        &self,
+        status_request: StatusDamageRequest,
+        context: &CombatContext
+    ) -> DamageRequest {
+        DamageRequest {
+            actor_id: status_request.actor_id,
+            damage_type: self.map_status_damage_type_to_damage_type(&status_request.damage_type),
+            base_damage: status_request.base_magnitude,
+            damage_source: DamageSource::Status,
+            element_id: Some(status_request.element_id),
+            source_id: None,
+            modifiers: Vec::new(), // Will be populated by Damage Manager
+            properties: status_request.properties,
+            context: DamageContext {
+                combat_id: context.combat_id.clone(),
+                attacker_id: None,
+                target_id: Some(status_request.actor_id.clone()),
+                environment: context.environment.clone(),
+                time: SystemTime::now(),
+                additional_data: HashMap::new(),
+            },
+        }
     }
     
     /// Process damage requests for a single actor

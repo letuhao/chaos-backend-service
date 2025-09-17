@@ -48,6 +48,9 @@ pub struct ActionDefinitionSystem {
     
     // Multi-element support (NEW)
     multi_element_validator: MultiElementActionValidator,
+    
+    // Damage Manager integration (NEW)
+    damage_manager: Arc<dyn DamageManagerInterface>,
     element_synergy_calculator: MultiElementSynergyCalculator,
     domain_activation_validator: DomainActivationValidator,
     

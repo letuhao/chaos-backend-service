@@ -1,0 +1,231 @@
+# Damage Types Configuration
+version: 1.0
+damage_types:
+  # Basic Resource Damage Types
+  hp:
+    id: "hp"
+    name: "Health Points"
+    resource_type: "hp"
+    category: "resource"
+    description: "Damage to health points"
+    properties:
+      can_be_healed: true
+      can_be_blocked: true
+      can_be_resisted: true
+      affects_combat: true
+      death_threshold: 0.0
+    scaling:
+      base_multiplier: 1.0
+      level_scaling: 0.1
+      mastery_scaling: 0.05
+    visual_effects:
+      color: "#FF0000"
+      particle_effect: "damage_red"
+      sound_effect: "damage_hp"
+  
+  mp:
+    id: "mp"
+    name: "Mana Points"
+    resource_type: "mp"
+    category: "resource"
+    description: "Damage to mana points"
+    properties:
+      can_be_healed: true
+      can_be_blocked: true
+      can_be_resisted: true
+      affects_combat: false
+      death_threshold: null
+    scaling:
+      base_multiplier: 1.0
+      level_scaling: 0.1
+      mastery_scaling: 0.05
+    visual_effects:
+      color: "#0000FF"
+      particle_effect: "damage_blue"
+      sound_effect: "damage_mp"
+  
+  stamina:
+    id: "stamina"
+    name: "Stamina"
+    resource_type: "stamina"
+    category: "resource"
+    description: "Damage to stamina"
+    properties:
+      can_be_healed: true
+      can_be_blocked: true
+      can_be_resisted: true
+      affects_combat: true
+      death_threshold: null
+    scaling:
+      base_multiplier: 1.0
+      level_scaling: 0.1
+      mastery_scaling: 0.05
+    visual_effects:
+      color: "#FFFF00"
+      particle_effect: "damage_yellow"
+      sound_effect: "damage_stamina"
+  
+  qi:
+    id: "qi"
+    name: "Qi/Energy"
+    resource_type: "qi"
+    category: "resource"
+    description: "Damage to qi/energy"
+    properties:
+      can_be_healed: true
+      can_be_blocked: true
+      can_be_resisted: true
+      affects_combat: true
+      death_threshold: null
+    scaling:
+      base_multiplier: 1.0
+      level_scaling: 0.1
+      mastery_scaling: 0.05
+    visual_effects:
+      color: "#00FF00"
+      particle_effect: "damage_green"
+      sound_effect: "damage_qi"
+  
+  # Equipment Damage Types
+  armor:
+    id: "armor"
+    name: "Armor Durability"
+    resource_type: "armor_durability"
+    category: "equipment"
+    description: "Damage to armor durability"
+    properties:
+      can_be_healed: false
+      can_be_blocked: true
+      can_be_resisted: true
+      affects_combat: false
+      death_threshold: null
+    scaling:
+      base_multiplier: 1.0
+      level_scaling: 0.05
+      mastery_scaling: 0.02
+    visual_effects:
+      color: "#808080"
+      particle_effect: "damage_gray"
+      sound_effect: "damage_armor"
+  
+  weapon:
+    id: "weapon"
+    name: "Weapon Durability"
+    resource_type: "weapon_durability"
+    category: "equipment"
+    description: "Damage to weapon durability"
+    properties:
+      can_be_healed: false
+      can_be_blocked: true
+      can_be_resisted: true
+      affects_combat: false
+      death_threshold: null
+    scaling:
+      base_multiplier: 1.0
+      level_scaling: 0.05
+      mastery_scaling: 0.02
+    visual_effects:
+      color: "#C0C0C0"
+      particle_effect: "damage_silver"
+      sound_effect: "damage_weapon"
+  
+  # Special Damage Types
+  true_damage:
+    id: "true_damage"
+    name: "True Damage"
+    resource_type: "hp"
+    category: "special"
+    description: "Damage that cannot be blocked or resisted"
+    properties:
+      can_be_healed: true
+      can_be_blocked: false
+      can_be_resisted: false
+      affects_combat: true
+      death_threshold: 0.0
+    scaling:
+      base_multiplier: 1.0
+      level_scaling: 0.1
+      mastery_scaling: 0.05
+    visual_effects:
+      color: "#FFFFFF"
+      particle_effect: "damage_white"
+      sound_effect: "damage_true"
+  
+  # Elemental Damage Types (will be populated by Element Core)
+  fire_damage:
+    id: "fire_damage"
+    name: "Fire Damage"
+    resource_type: "hp"
+    category: "elemental"
+    element_id: "fire"
+    description: "Damage from fire element"
+    properties:
+      can_be_healed: true
+      can_be_blocked: true
+      can_be_resisted: true
+      affects_combat: true
+      death_threshold: 0.0
+      can_ignite: true
+    scaling:
+      base_multiplier: 1.0
+      level_scaling: 0.1
+      mastery_scaling: 0.05
+    visual_effects:
+      color: "#FF4500"
+      particle_effect: "damage_fire"
+      sound_effect: "damage_fire"
+  
+  water_damage:
+    id: "water_damage"
+    name: "Water Damage"
+    resource_type: "hp"
+    category: "elemental"
+    element_id: "water"
+    description: "Damage from water element"
+    properties:
+      can_be_healed: true
+      can_be_blocked: true
+      can_be_resisted: true
+      affects_combat: true
+      death_threshold: 0.0
+      can_freeze: true
+    scaling:
+      base_multiplier: 1.0
+      level_scaling: 0.1
+      mastery_scaling: 0.05
+    visual_effects:
+      color: "#00BFFF"
+      particle_effect: "damage_water"
+      sound_effect: "damage_water"
+  
+  # Custom Damage Types (can be added dynamically)
+  custom_poison:
+    id: "custom_poison"
+    name: "Poison Damage"
+    resource_type: "hp"
+    category: "custom"
+    description: "Damage from poison effects"
+    properties:
+      can_be_healed: true
+      can_be_blocked: false
+      can_be_resisted: true
+      affects_combat: true
+      death_threshold: 0.0
+      is_poison: true
+    scaling:
+      base_multiplier: 1.0
+      level_scaling: 0.1
+      mastery_scaling: 0.05
+    visual_effects:
+      color: "#800080"
+      particle_effect: "damage_poison"
+      sound_effect: "damage_poison"
+
+# Global Settings
+global_settings:
+  default_damage_type: "hp"
+  max_damage_value: 999999.0
+  min_damage_value: 0.0
+  damage_precision: 2
+  cache_damage_calculations: true
+  cache_ttl_seconds: 300
