@@ -1,0 +1,394 @@
+# Crystal Defense Technique (Kỹ Thuật Phòng Thủ Tinh Thể)
+# A powerful defensive technique that crystallizes the user and provides massive defense bonuses
+
+action_metadata:
+  id: "crystal_defense_technique"
+  name: "Crystal Defense Technique"
+  name_vi: "Kỹ Thuật Phòng Thủ Tinh Thể"
+  description: "The user crystallizes into a crystal form, becoming immobile but gaining massive defense bonuses for all physical and elemental attributes."
+  description_vi: "Người thi triển kết tinh thành tinh thể, không thể di chuyển, tăng defense point của các thuộc tính thuộc elemental category vật lý và nguyên tố lên 20 lần chỉ số của người thi triển, cộng thêm tuyệt đối 100000 điểm."
+  
+  # Action categorization
+  category: "Combat"
+  type: "Defense"
+  sub_type: "Crystallization"
+  
+  # Skill level and requirements
+  level: 1
+  max_level: 10
+  cultivation_requirement:
+    min_level: 50
+    min_realm: "Golden Core"
+    required_elements: ["earth", "metal"]
+    element_mastery_requirements:
+      earth: 1000
+      metal: 1000
+  
+  # Skill rarity and availability
+  rarity: "Epic"
+  availability: "Cultivation Reward"
+  unlock_condition: "Complete Earth-Metal Fusion Cultivation Path"
+
+# Action properties
+action_properties:
+  # Basic action properties
+  name: "Crystal Defense Technique"
+  id: "crystal_defense_technique"
+  
+  # Target requirements (self-targeting defense)
+  target_requirements:
+    target_type: "Self"
+    target_count: 1
+    target_selection: "Self"
+    area_size: 0.0  # No area effect, only affects self
+  
+  # Execution timing
+  execution_duration:
+    min: "2.0s"
+    max: "3.0s"
+    base: "2.5s"
+    scaling_factor: 0.95  # Slightly faster with level
+  
+  # Cooldown timing
+  cooldown_duration:
+    min: "60.0s"
+    max: "120.0s"
+    base: "90.0s"
+    scaling_factor: 0.98  # Slightly shorter with level
+    cooldown_conditions: []
+    interrupt_affects_cooldown: false
+  
+  # Interrupt conditions
+  interrupt_conditions: []
+  
+  # Execution conditions
+  execution_conditions:
+    - condition: "self.health_percentage > 0.1"
+      description: "Must have at least 10% health"
+    - condition: "self.mana_percentage > 0.3"
+      description: "Must have at least 30% mana"
+    - condition: "self.qi_percentage > 0.2"
+      description: "Must have at least 20% qi"
+    - condition: "self.status_effects.crystallized == false"
+      description: "Cannot be already crystallized"
+    - condition: "self.movement_state == stationary"
+      description: "Must be stationary to crystallize"
+  
+  # Resource requirements
+  resource_requirements:
+    - resource_type: "Mana"
+      min_value: 500
+      max_value: 1000
+      scaling_factor: 1.1
+    - resource_type: "Qi"
+      min_value: 300
+      max_value: 600
+      scaling_factor: 1.05
+    - resource_type: "Stamina"
+      min_value: 200
+      max_value: 400
+      scaling_factor: 1.0
+
+# Defense properties
+defense_properties:
+  # Basic defense stats
+  defense_type: "Crystallization"
+  defense_scope: "Self"
+  
+  # Defense bonuses (base values before derived stats)
+  base_defense_bonus: 100000  # Absolute bonus
+  defense_multiplier: 20.0    # 20x multiplier
+  
+  # Defense duration
+  defense_duration:
+    min: "4.0s"
+    max: "6.0s"
+    base: "5.0s"
+    scaling_factor: 1.02  # Slightly longer with level
+  
+  # Defense cooldown
+  defense_cooldown:
+    min: "60.0s"
+    max: "120.0s"
+    base: "90.0s"
+    scaling_factor: 0.98
+  
+  # Defense resource cost
+  defense_resource_cost:
+    mana: 500
+    qi: 300
+    stamina: 200
+
+# Elemental properties
+elemental_properties:
+  # Primary elements
+  primary_elements: ["earth", "metal"]
+  secondary_elements: []
+  
+  # Elemental categories (NEW)
+  target_categories:
+    - "physical"    # Physical category
+    - "elemental"   # Elemental category
+  
+  # Category-based defense bonuses
+  category_defense_bonuses:
+    physical: 20.0  # 20x multiplier for physical category
+    elemental: 20.0 # 20x multiplier for elemental category
+  
+  # Category-based resistance
+  category_resistance:
+    physical: 0.8   # 80% physical category resistance
+    elemental: 0.8  # 80% elemental category resistance
+  
+  # Elemental defense bonuses (legacy support)
+  elemental_defense_bonuses:
+    physical: 20.0  # 20x multiplier for physical defense
+    earth: 20.0     # 20x multiplier for earth defense
+    metal: 20.0     # 20x multiplier for metal defense
+    fire: 15.0      # 15x multiplier for fire defense
+    water: 15.0     # 15x multiplier for water defense
+    wood: 15.0      # 15x multiplier for wood defense
+  
+  # Elemental resistance (legacy support)
+  elemental_resistance:
+    physical: 0.8   # 80% physical resistance
+    earth: 0.9      # 90% earth resistance
+    metal: 0.9      # 90% metal resistance
+    fire: 0.7       # 70% fire resistance
+    water: 0.7      # 70% water resistance
+    wood: 0.7       # 70% wood resistance
+
+# Status effects
+status_effects:
+  # Crystallization status
+  crystallization:
+    effect_type: "Transformation"
+    effect_name: "Crystal Defense"
+    effect_name_vi: "Phòng Thủ Tinh Thể"
+    duration:
+      min: "4.0s"
+      max: "6.0s"
+      base: "5.0s"
+    magnitude:
+      min: 1.0
+      max: 1.0
+      base: 1.0
+    trigger_chance: 1.0  # Always triggers
+    conditions: []
+    
+    # Crystallization effects
+    effects:
+      - effect_type: "DefenseMultiplier"
+        target: "Self"
+        magnitude: 20.0
+        affected_stats: ["defense_point", "physical_defense", "elemental_defense"]
+      
+      - effect_type: "DefenseBonus"
+        target: "Self"
+        magnitude: 100000
+        affected_stats: ["defense_point", "physical_defense", "elemental_defense"]
+      
+      - effect_type: "MovementRestriction"
+        target: "Self"
+        magnitude: 1.0
+        restriction_type: "Immobilized"
+      
+      - effect_type: "ElementalResistance"
+        target: "Self"
+        magnitude: 0.8
+        affected_elements: ["physical", "earth", "metal", "fire", "water", "wood"]
+      
+      - effect_type: "StatusImmunity"
+        target: "Self"
+        magnitude: 1.0
+        immune_statuses: ["stun", "knockback", "movement_impairment"]
+      
+      - effect_type: "VisualEffect"
+        target: "Self"
+        effect_name: "crystal_formation"
+        duration: "5.0s"
+        intensity: "high"
+    
+    # Movement restrictions (NEW)
+    movement_restrictions:
+      - restriction_type: "Immobilized"
+        magnitude: 1.0
+        duration: "5.0s"
+        source: "StatusEffect"
+        conditions:
+          - condition_type: "StatusEffect"
+            condition_value: 1.0
+            condition_operator: "EqualTo"
+            condition_target: "crystallization"
+    
+    # Immunity effects (NEW)
+    immunity_effects:
+      - immunity_type: "StatusImmunity"
+        target_effects: ["stun", "knockback", "movement_impairment", "paralysis", "root"]
+        magnitude: 1.0
+        duration: "5.0s"
+        break_conditions:
+          - condition_type: "HealthPercentage"
+            condition_value: 0.05
+            condition_operator: "LessThan"
+          - condition_type: "StatusEffect"
+            condition_value: 1.0
+            condition_operator: "EqualTo"
+            condition_target: "crystallization_break"
+
+# Action effects
+action_effects:
+  # Immediate effects on cast
+  immediate_effects:
+    - effect_type: "ResourceConsumption"
+      target: "Self"
+      resources:
+        mana: 500
+        qi: 300
+        stamina: 200
+    
+    - effect_type: "StatusApplication"
+      target: "Self"
+      status_effect: "crystallization"
+      trigger_chance: 1.0
+    
+    - effect_type: "VisualEffect"
+      target: "Self"
+      effect_name: "crystal_cast"
+      duration: "2.5s"
+      intensity: "high"
+  
+  # Effects during crystallization
+  duration_effects:
+    - effect_type: "DefenseMultiplier"
+      target: "Self"
+      magnitude: 20.0
+      affected_stats: ["defense_point", "physical_defense", "elemental_defense"]
+    
+    - effect_type: "DefenseBonus"
+      target: "Self"
+      magnitude: 100000
+      affected_stats: ["defense_point", "physical_defense", "elemental_defense"]
+    
+    - effect_type: "MovementRestriction"
+      target: "Self"
+      magnitude: 1.0
+      restriction_type: "Immobilized"
+    
+    - effect_type: "ElementalResistance"
+      target: "Self"
+      magnitude: 0.8
+      affected_elements: ["physical", "earth", "metal", "fire", "water", "wood"]
+  
+  # Effects on expiration
+  expiration_effects:
+    - effect_type: "StatusRemoval"
+      target: "Self"
+      status_effect: "crystallization"
+      trigger_chance: 1.0
+    
+    - effect_type: "VisualEffect"
+      target: "Self"
+      effect_name: "crystal_break"
+      duration: "1.0s"
+      intensity: "medium"
+    
+    - effect_type: "StatusApplication"
+      target: "Self"
+      status_effect: "crystal_fatigue"
+      duration: "10.0s"
+      trigger_chance: 0.3
+
+# Derived stats integration
+derived_stats_integration:
+  # Stats that affect this action
+  affecting_stats:
+    - "skill_execution_speed"      # Affects execution duration
+    - "skill_cooldown_reduction"   # Affects cooldown duration
+    - "defense_skill_effectiveness" # Affects defense effectiveness
+    - "resource_efficiency"        # Affects resource consumption
+    - "elemental_mastery"          # Affects elemental bonuses
+    - "defense_point"              # Base defense point
+    - "physical_defense"           # Physical defense
+    - "elemental_defense"          # Elemental defense
+  
+  # Stats that this action affects
+  affected_stats:
+    - "defense_point"              # Multiplied by 20x + 100000
+    - "physical_defense"           # Multiplied by 20x + 100000
+    - "elemental_defense"          # Multiplied by 20x + 100000
+    - "movement_speed"             # Set to 0 (immobilized)
+    - "elemental_resistance"       # Increased by 80%
+    - "status_resistance"          # Increased for certain statuses
+
+# Scaling formulas
+scaling_formulas:
+  # Defense bonus calculation
+  defense_bonus: |
+    base_defense = actor.defense_point + actor.physical_defense + actor.elemental_defense
+    elemental_bonus = actor.earth_mastery * 0.1 + actor.metal_mastery * 0.1
+    final_defense = (base_defense * 20.0 + 100000) * (1.0 + elemental_bonus)
+  
+  # Duration calculation
+  duration: |
+    base_duration = 5.0
+    mastery_bonus = (actor.earth_mastery + actor.metal_mastery) * 0.0001
+    level_bonus = action_level * 0.1
+    final_duration = base_duration * (1.0 + mastery_bonus + level_bonus)
+  
+  # Resource cost calculation
+  resource_cost: |
+    base_mana = 500
+    base_qi = 300
+    base_stamina = 200
+    efficiency_bonus = actor.resource_efficiency * 0.1
+    final_mana = base_mana * (1.0 - efficiency_bonus)
+    final_qi = base_qi * (1.0 - efficiency_bonus)
+    final_stamina = base_stamina * (1.0 - efficiency_bonus)
+
+# Balance considerations
+balance_considerations:
+  # Strengths
+  strengths:
+    - "Massive defense bonus (20x + 100000)"
+    - "High elemental resistance (80%)"
+    - "Status immunity during crystallization"
+    - "Visual impact and strategic value"
+    - "Scales with earth and metal mastery"
+  
+  # Weaknesses
+  weaknesses:
+    - "Immobilized during effect"
+    - "High resource cost"
+    - "Long cooldown"
+    - "Vulnerable to certain status effects"
+    - "Requires high cultivation level"
+  
+  # Counterplay
+  counterplay:
+    - "Use status effects that bypass defense"
+    - "Wait for crystallization to expire"
+    - "Use area attacks to damage surroundings"
+    - "Focus on other targets during crystallization"
+    - "Use dispel effects to remove crystallization"
+
+# Implementation notes
+implementation_notes:
+  - "This is a high-level defensive technique"
+  - "Requires significant resource investment"
+  - "Provides massive defensive bonuses but immobilizes user"
+  - "Should be used strategically in combat"
+  - "Visual effects should be impressive to match power level"
+  - "Balance testing needed for 20x multiplier"
+  - "Consider adding cooldown reduction with mastery"
+
+# Testing requirements
+testing_requirements:
+  - "Test defense bonus calculation with various mastery levels"
+  - "Test resource consumption with different efficiency stats"
+  - "Test duration scaling with level and mastery"
+  - "Test status immunity during crystallization"
+  - "Test movement restriction implementation"
+  - "Test visual effects and animations"
+  - "Test balance against various attack types"
+  - "Test cooldown and resource management"

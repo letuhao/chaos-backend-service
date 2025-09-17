@@ -184,10 +184,13 @@ impl StatsAggregator {
         // Skill Execution & Performance (from fire_element.yaml)
         aggregated.insert("skill_execution_speed".to_string(), stats.skill_execution_speed);
         aggregated.insert("skill_cooldown_reduction".to_string(), stats.skill_cooldown_reduction);
-        aggregated.insert("combat_skill_effectiveness".to_string(), stats.combat_skill_effectiveness);
+        aggregated.insert("attack_skill_effectiveness".to_string(), stats.attack_skill_effectiveness);
+        aggregated.insert("defense_skill_effectiveness".to_string(), stats.defense_skill_effectiveness);
         aggregated.insert("status_skill_effectiveness".to_string(), stats.status_skill_effectiveness);
         aggregated.insert("movement_technique_effectiveness".to_string(), stats.movement_technique_effectiveness);
         aggregated.insert("healing_skill_effectiveness".to_string(), stats.healing_skill_effectiveness);
+        aggregated.insert("support_skill_effectiveness".to_string(), stats.support_skill_effectiveness);
+        aggregated.insert("utility_skill_effectiveness".to_string(), stats.utility_skill_effectiveness);
         aggregated.insert("skill_effectiveness".to_string(), stats.skill_effectiveness);
         
         // Resource Management (from fire_element.yaml)
@@ -552,10 +555,13 @@ pub struct ElementDerivedStats {
     // Skill Execution & Performance (from fire_element.yaml)
     pub skill_execution_speed: f64,
     pub skill_cooldown_reduction: f64,
-    pub combat_skill_effectiveness: f64,
+    pub attack_skill_effectiveness: f64,
+    pub defense_skill_effectiveness: f64,
     pub status_skill_effectiveness: f64,
     pub movement_technique_effectiveness: f64,
     pub healing_skill_effectiveness: f64,
+    pub support_skill_effectiveness: f64,
+    pub utility_skill_effectiveness: f64,
     pub skill_effectiveness: f64,
     
     // Resource Management (from fire_element.yaml)
@@ -625,10 +631,13 @@ impl ElementDerivedStats {
             // Skill Execution & Performance
             skill_execution_speed: 1.0,
             skill_cooldown_reduction: 1.0,
-            combat_skill_effectiveness: 1.0,
+            attack_skill_effectiveness: 1.0,
+            defense_skill_effectiveness: 1.0,
             status_skill_effectiveness: 1.0,
             movement_technique_effectiveness: 1.0,
             healing_skill_effectiveness: 1.0,
+            support_skill_effectiveness: 1.0,
+            utility_skill_effectiveness: 1.0,
             skill_effectiveness: 1.0,
             
             // Resource Management
@@ -854,10 +863,13 @@ impl CombatDerivedStats {
             status_intensity_reduction: 1.0,
             
             // Skill Effectiveness
-            combat_skill_effectiveness: 1.0,
+            attack_skill_effectiveness: 1.0,
+            defense_skill_effectiveness: 1.0,
             status_skill_effectiveness: 1.0,
             movement_technique_effectiveness: 1.0,
             healing_skill_effectiveness: 1.0,
+            support_skill_effectiveness: 1.0,
+            utility_skill_effectiveness: 1.0,
             skill_effectiveness: 1.0,
             
             // Resource Management

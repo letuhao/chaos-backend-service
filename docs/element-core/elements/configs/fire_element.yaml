@@ -22,7 +22,10 @@ element:
   probability_overrides: {}
 
   derived_stats:
-    # Counterbalance pairs first
+    # Core Element Mastery
+    - "element_mastery"
+    
+    # Counterbalance Pairs (from fire_element.yaml)
     - "power_point"
     - "defense_point"
     - "crit_rate"
@@ -45,26 +48,52 @@ element:
     - "resist_reflection_rate"
     - "reflection_damage"
     - "resist_reflection_damage"
+    
+    # Parry System (from fire_element.yaml)
     - "parry_rate"
     - "parry_break"
     - "parry_strength"
     - "parry_shred"
+    
+    # Block System (from fire_element.yaml)
     - "block_rate"
     - "block_break"
     - "block_strength"
     - "block_shred"
-    # Unpaired / type-specific below
+    
+    # Skill Execution & Performance (from fire_element.yaml)
     - "skill_execution_speed"
     - "skill_cooldown_reduction"
-    - "combat_skill_effectiveness"
+    - "attack_skill_effectiveness"
+    - "defense_skill_effectiveness"
     - "status_skill_effectiveness"
     - "movement_technique_effectiveness"
     - "healing_skill_effectiveness"
+    - "support_skill_effectiveness"
+    - "utility_skill_effectiveness"
     - "skill_effectiveness"
+    
+    # Resource Management (from fire_element.yaml)
     - "resource_regeneration"
     - "resource_efficiency"
+    
+    # Social & Economy (Future features)
+    - "element_leadership_bonus"
+    - "element_teaching_efficiency"
+    - "element_crafting_efficiency"
     - "element_resource_discovery"
+    
+    # Perception & Detection
     - "element_sensitivity"
+    
+    # Advanced Combat Mechanics
+    - "mastery_synergy_bonus"
+    
+    # Element Interaction Bonuses (from Element Interaction System)
+    - "element_interaction_bonuses"
+    
+    # Feature flags for conditional stats
+    - "feature_flags"
 
   status_effects:
     - name: "burning"
