@@ -38,6 +38,19 @@ Actor Core v3 is a metadata-only aggregator system that:
 | **Registry System** | Configuration and rule management | ✅ Implemented |
 | **Cache System** | In-memory cache implemented; advanced multi-layer optional | ✅ Implemented (basic) |
 | **Subsystem Interface** | Plugin system for game modules | ✅ Implemented |
+| **Condition Integration** | Integration with Condition Core for conditional logic | 🚧 Design Complete |
+
+### 🔗 **Condition Core Integration**
+
+Actor Core now supports integration with Condition Core for advanced conditional logic:
+
+- **Conditional Subsystems** - Enable/disable subsystems based on conditions
+- **Resource Validation** - Validate actor resources before stat aggregation  
+- **Dynamic Stat Modifiers** - Apply conditional stat modifications
+- **Event-Driven Conditions** - React to actor state changes
+- **Performance Optimization** - Cache condition results for performance
+
+**Documentation**: [Designs/27_Condition_Core_Integration.md](designs/27_Condition_Core_Integration.md)
 
 ## 🚀 Quick Start
 

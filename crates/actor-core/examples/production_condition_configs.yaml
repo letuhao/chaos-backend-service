@@ -1,0 +1,581 @@
+# Production-Ready Condition Configurations
+# 
+# This file contains comprehensive condition configurations for production use
+# in a game system with Actor Core + Condition Core integration.
+
+# =============================================================================
+# COMBAT CONDITIONS
+# =============================================================================
+
+# Health-based conditions
+health_conditions:
+  - condition_id: "is_healthy"
+    function_name: "get_actor_resource"
+    operator: ">="
+    value: 80.0
+    parameters: ["health"]
+    description: "Actor has high health (80%+)"
+    
+  - condition_id: "is_injured"
+    function_name: "is_resource_below_percentage"
+    operator: "=="
+    value: true
+    parameters: ["health", 50.0]
+    description: "Actor is injured (health < 50%)"
+    
+  - condition_id: "is_critical"
+    function_name: "is_resource_below_percentage"
+    operator: "=="
+    value: true
+    parameters: ["health", 25.0]
+    description: "Actor is in critical condition (health < 25%)"
+
+# Mana-based conditions
+mana_conditions:
+  - condition_id: "has_full_mana"
+    function_name: "get_actor_resource"
+    operator: ">="
+    value: 100.0
+    parameters: ["mana"]
+    description: "Actor has full mana"
+    
+  - condition_id: "has_sufficient_mana"
+    function_name: "is_resource_above_percentage"
+    operator: "=="
+    value: true
+    parameters: ["mana", 50.0]
+    description: "Actor has sufficient mana (50%+)"
+    
+  - condition_id: "is_mana_depleted"
+    function_name: "is_resource_below_percentage"
+    operator: "=="
+    value: true
+    parameters: ["mana", 10.0]
+    description: "Actor is mana depleted (mana < 10%)"
+
+# Stamina-based conditions
+stamina_conditions:
+  - condition_id: "has_stamina"
+    function_name: "is_resource_above_percentage"
+    operator: "=="
+    value: true
+    parameters: ["stamina", 20.0]
+    description: "Actor has stamina for actions"
+    
+  - condition_id: "is_exhausted"
+    function_name: "is_resource_below_percentage"
+    operator: "=="
+    value: true
+    parameters: ["stamina", 5.0]
+    description: "Actor is exhausted (stamina < 5%)"
+
+# =============================================================================
+# STATUS EFFECT CONDITIONS
+# =============================================================================
+
+# Buff conditions
+buff_conditions:
+  - condition_id: "has_any_buffs"
+    function_name: "has_actor_status_effects"
+    operator: "=="
+    value: true
+    parameters: ["buffs"]
+    description: "Actor has any buffs"
+    
+  - condition_id: "has_multiple_buffs"
+    function_name: "get_actor_status_effect_count"
+    operator: ">"
+    value: 2
+    parameters: ["buffs"]
+    description: "Actor has multiple buffs (3+)"
+    
+  - condition_id: "has_combat_buffs"
+    function_name: "get_actor_status_effect_count_by_category"
+    operator: ">"
+    value: 0
+    parameters: ["buffs", "combat"]
+    description: "Actor has combat-related buffs"
+
+# Debuff conditions
+debuff_conditions:
+  - condition_id: "has_any_debuffs"
+    function_name: "has_actor_status_effects"
+    operator: "=="
+    value: true
+    parameters: ["debuffs"]
+    description: "Actor has any debuffs"
+    
+  - condition_id: "has_multiple_debuffs"
+    function_name: "get_actor_status_effect_count"
+    operator: ">"
+    value: 1
+    parameters: ["debuffs"]
+    description: "Actor has multiple debuffs (2+)"
+    
+  - condition_id: "has_magic_debuffs"
+    function_name: "get_actor_status_effect_count_by_category"
+    operator: ">"
+    value: 0
+    parameters: ["debuffs", "magic"]
+    description: "Actor has magic-related debuffs"
+
+# Ailment conditions
+ailment_conditions:
+  - condition_id: "has_ailments"
+    function_name: "has_actor_status_effects"
+    operator: "=="
+    value: true
+    parameters: ["ailments"]
+    description: "Actor has any ailments"
+    
+  - condition_id: "has_poison"
+    function_name: "get_actor_status_effect_count_by_category"
+    operator: ">"
+    value: 0
+    parameters: ["ailments", "poison"]
+    description: "Actor is poisoned"
+
+# =============================================================================
+# EQUIPMENT CONDITIONS
+# =============================================================================
+
+# Weapon conditions
+weapon_conditions:
+  - condition_id: "has_weapon"
+    function_name: "has_category_item"
+    operator: "=="
+    value: true
+    parameters: ["weapon"]
+    description: "Actor has a weapon equipped"
+    
+  - condition_id: "has_ranged_weapon"
+    function_name: "has_category_item"
+    operator: "=="
+    value: true
+    parameters: ["ranged_weapon"]
+    description: "Actor has a ranged weapon"
+    
+  - condition_id: "has_magic_weapon"
+    function_name: "has_category_item"
+    operator: "=="
+    value: true
+    parameters: ["magic_weapon"]
+    description: "Actor has a magic weapon"
+
+# Armor conditions
+armor_conditions:
+  - condition_id: "has_armor"
+    function_name: "has_category_item"
+    operator: "=="
+    value: true
+    parameters: ["armor"]
+    description: "Actor has armor equipped"
+    
+  - condition_id: "has_heavy_armor"
+    function_name: "has_category_item"
+    operator: "=="
+    value: true
+    parameters: ["heavy_armor"]
+    description: "Actor has heavy armor"
+    
+  - condition_id: "has_magic_armor"
+    function_name: "has_category_item"
+    operator: "=="
+    value: true
+    parameters: ["magic_armor"]
+    description: "Actor has magic armor"
+
+# Consumable conditions
+consumable_conditions:
+  - condition_id: "has_health_potion"
+    function_name: "has_category_item"
+    operator: "=="
+    value: true
+    parameters: ["health_potion"]
+    description: "Actor has health potions"
+    
+  - condition_id: "has_mana_potion"
+    function_name: "has_category_item"
+    operator: "=="
+    value: true
+    parameters: ["mana_potion"]
+    description: "Actor has mana potions"
+    
+  - condition_id: "has_food"
+    function_name: "has_category_item"
+    operator: "=="
+    value: true
+    parameters: ["food"]
+    description: "Actor has food"
+
+# =============================================================================
+# COMBAT STATE CONDITIONS
+# =============================================================================
+
+combat_conditions:
+  - condition_id: "is_in_combat"
+    function_name: "is_actor_in_combat"
+    operator: "=="
+    value: true
+    parameters: []
+    description: "Actor is currently in combat"
+    
+  - condition_id: "is_out_of_combat"
+    function_name: "is_actor_in_combat"
+    operator: "=="
+    value: false
+    parameters: []
+    description: "Actor is not in combat"
+
+# =============================================================================
+# RACE CONDITIONS
+# =============================================================================
+
+race_conditions:
+  - condition_id: "is_human"
+    function_name: "get_actor_race"
+    operator: "=="
+    value: "human"
+    parameters: []
+    description: "Actor is human"
+    
+  - condition_id: "is_elf"
+    function_name: "get_actor_race"
+    operator: "=="
+    value: "elf"
+    parameters: []
+    description: "Actor is elf"
+    
+  - condition_id: "is_dwarf"
+    function_name: "get_actor_race"
+    operator: "=="
+    value: "dwarf"
+    parameters: []
+    description: "Actor is dwarf"
+
+# =============================================================================
+# COMPLEX CONDITION CHAINS
+# =============================================================================
+
+# Combat readiness chain
+combat_readiness_chain:
+  chain_id: "is_combat_ready"
+  logic: "And"
+  conditions:
+    - condition_id: "has_weapon"
+      function_name: "has_category_item"
+      operator: "=="
+      value: true
+      parameters: ["weapon"]
+    - condition_id: "has_armor"
+      function_name: "has_category_item"
+      operator: "=="
+      value: true
+      parameters: ["armor"]
+    - condition_id: "has_stamina"
+      function_name: "is_resource_above_percentage"
+      operator: "=="
+      value: true
+      parameters: ["stamina", 20.0]
+  description: "Actor is ready for combat (has weapon, armor, and stamina)"
+
+# Magic casting chain
+magic_casting_chain:
+  chain_id: "can_cast_magic"
+  logic: "And"
+  conditions:
+    - condition_id: "has_sufficient_mana"
+      function_name: "is_resource_above_percentage"
+      operator: "=="
+      value: true
+      parameters: ["mana", 25.0]
+    - condition_id: "has_magic_weapon"
+      function_name: "has_category_item"
+      operator: "=="
+      value: true
+      parameters: ["magic_weapon"]
+    - condition_id: "is_not_exhausted"
+      function_name: "is_resource_above_percentage"
+      operator: "=="
+      value: true
+      parameters: ["stamina", 10.0]
+  description: "Actor can cast magic (has mana, magic weapon, and stamina)"
+
+# Emergency healing chain
+emergency_healing_chain:
+  chain_id: "needs_emergency_healing"
+  logic: "Or"
+  conditions:
+    - condition_id: "is_critical"
+      function_name: "is_resource_below_percentage"
+      operator: "=="
+      value: true
+      parameters: ["health", 25.0]
+    - condition_id: "has_poison"
+      function_name: "get_actor_status_effect_count_by_category"
+      operator: ">"
+      value: 0
+      parameters: ["ailments", "poison"]
+  description: "Actor needs emergency healing (critical health or poisoned)"
+
+# Survival chain
+survival_chain:
+  chain_id: "is_surviving"
+  logic: "And"
+  conditions:
+    - condition_id: "is_not_critical"
+      function_name: "is_resource_above_percentage"
+      operator: "=="
+      value: true
+      parameters: ["health", 25.0]
+    - condition_id: "is_not_exhausted"
+      function_name: "is_resource_above_percentage"
+      operator: "=="
+      value: true
+      parameters: ["stamina", 5.0]
+    - condition_id: "has_food"
+      function_name: "has_category_item"
+      operator: "=="
+      value: true
+      parameters: ["food"]
+  description: "Actor is surviving (not critical, not exhausted, has food)"
+
+# =============================================================================
+# SKILL-BASED CONDITIONS
+# =============================================================================
+
+# Elemental mastery conditions
+elemental_conditions:
+  - condition_id: "has_fire_mastery"
+    function_name: "get_element_mastery"
+    operator: ">"
+    value: 50.0
+    parameters: ["fire"]
+    description: "Actor has fire elemental mastery"
+    
+  - condition_id: "has_water_mastery"
+    function_name: "get_element_mastery"
+    operator: ">"
+    value: 50.0
+    parameters: ["water"]
+    description: "Actor has water elemental mastery"
+    
+  - condition_id: "has_earth_mastery"
+    function_name: "get_element_mastery"
+    operator: ">"
+    value: 50.0
+    parameters: ["earth"]
+    description: "Actor has earth elemental mastery"
+    
+  - condition_id: "has_air_mastery"
+    function_name: "get_element_mastery"
+    operator: ">"
+    value: 50.0
+    parameters: ["air"]
+    description: "Actor has air elemental mastery"
+
+# Stat-based conditions
+stat_conditions:
+  - condition_id: "is_strong"
+    function_name: "get_actor_stat"
+    operator: ">"
+    value: 80.0
+    parameters: ["strength"]
+    description: "Actor has high strength"
+    
+  - condition_id: "is_intelligent"
+    function_name: "get_actor_stat"
+    operator: ">"
+    value: 80.0
+    parameters: ["intelligence"]
+    description: "Actor has high intelligence"
+    
+  - condition_id: "is_agile"
+    function_name: "get_actor_stat"
+    operator: ">"
+    value: 80.0
+    parameters: ["agility"]
+    description: "Actor has high agility"
+
+# =============================================================================
+# ENVIRONMENTAL CONDITIONS
+# =============================================================================
+
+# Weather conditions
+weather_conditions:
+  - condition_id: "is_raining"
+    function_name: "get_weather"
+    operator: "=="
+    value: "rain"
+    parameters: []
+    description: "It is raining"
+    
+  - condition_id: "is_sunny"
+    function_name: "get_weather"
+    operator: "=="
+    value: "sunny"
+    parameters: []
+    description: "It is sunny"
+    
+  - condition_id: "is_stormy"
+    function_name: "get_weather"
+    operator: "=="
+    value: "storm"
+    parameters: []
+    description: "There is a storm"
+
+# Time-based conditions
+time_conditions:
+  - condition_id: "is_day"
+    function_name: "get_time_of_day"
+    operator: ">="
+    value: 6.0
+    parameters: []
+    description: "It is daytime (6 AM - 6 PM)"
+    
+  - condition_id: "is_night"
+    function_name: "get_time_of_day"
+    operator: "<"
+    value: 6.0
+    parameters: []
+    description: "It is nighttime (6 PM - 6 AM)"
+    
+  - condition_id: "is_dawn"
+    function_name: "get_time_of_day"
+    operator: ">="
+    value: 5.0
+    parameters: []
+    description: "It is dawn (5 AM - 7 AM)"
+
+# =============================================================================
+# QUEST CONDITIONS
+# =============================================================================
+
+quest_conditions:
+  - condition_id: "has_active_quest"
+    function_name: "has_quest"
+    operator: "=="
+    value: true
+    parameters: ["active"]
+    description: "Actor has an active quest"
+    
+  - condition_id: "has_completed_quest"
+    function_name: "has_quest"
+    operator: "=="
+    value: true
+    parameters: ["completed"]
+    description: "Actor has completed a quest"
+    
+  - condition_id: "is_quest_ready"
+    function_name: "is_quest_ready"
+    operator: "=="
+    value: true
+    parameters: ["main_quest"]
+    description: "Actor is ready for the main quest"
+
+# =============================================================================
+# PERFORMANCE CONDITIONS
+# =============================================================================
+
+# Performance-based conditions
+performance_conditions:
+  - condition_id: "is_high_performance"
+    function_name: "get_performance_level"
+    operator: ">"
+    value: 80.0
+    parameters: []
+    description: "Actor has high performance level"
+    
+  - condition_id: "is_low_performance"
+    function_name: "get_performance_level"
+    operator: "<"
+    value: 30.0
+    parameters: []
+    description: "Actor has low performance level"
+    
+  - condition_id: "is_optimal_performance"
+    function_name: "get_performance_level"
+    operator: ">="
+    value: 90.0
+    parameters: []
+    description: "Actor has optimal performance level"
+
+# =============================================================================
+# USAGE EXAMPLES
+# =============================================================================
+
+# Example: Check if player can enter a dangerous area
+dangerous_area_entry:
+  chain_id: "can_enter_dangerous_area"
+  logic: "And"
+  conditions:
+    - condition_id: "is_healthy"
+      function_name: "get_actor_resource"
+      operator: ">="
+      value: 80.0
+      parameters: ["health"]
+    - condition_id: "has_weapon"
+      function_name: "has_category_item"
+      operator: "=="
+      value: true
+      parameters: ["weapon"]
+    - condition_id: "has_armor"
+      function_name: "has_category_item"
+      operator: "=="
+      value: true
+      parameters: ["armor"]
+    - condition_id: "has_health_potion"
+      function_name: "has_category_item"
+      operator: "=="
+      value: true
+      parameters: ["health_potion"]
+  description: "Player can enter dangerous area (healthy, armed, armored, has potions)"
+
+# Example: Check if player can cast a powerful spell
+powerful_spell_casting:
+  chain_id: "can_cast_powerful_spell"
+  logic: "And"
+  conditions:
+    - condition_id: "has_sufficient_mana"
+      function_name: "is_resource_above_percentage"
+      operator: "=="
+      value: true
+      parameters: ["mana", 75.0]
+    - condition_id: "has_magic_weapon"
+      function_name: "has_category_item"
+      operator: "=="
+      value: true
+      parameters: ["magic_weapon"]
+    - condition_id: "is_intelligent"
+      function_name: "get_actor_stat"
+      operator: ">"
+      value: 70.0
+      parameters: ["intelligence"]
+    - condition_id: "has_fire_mastery"
+      function_name: "get_element_mastery"
+      operator: ">"
+      value: 60.0
+      parameters: ["fire"]
+  description: "Player can cast powerful spell (high mana, magic weapon, intelligence, fire mastery)"
+
+# Example: Check if player needs rest
+needs_rest:
+  chain_id: "needs_rest"
+  logic: "Or"
+  conditions:
+    - condition_id: "is_injured"
+      function_name: "is_resource_below_percentage"
+      operator: "=="
+      value: true
+      parameters: ["health", 50.0]
+    - condition_id: "is_exhausted"
+      function_name: "is_resource_below_percentage"
+      operator: "=="
+      value: true
+      parameters: ["stamina", 10.0]
+    - condition_id: "is_mana_depleted"
+      function_name: "is_resource_below_percentage"
+      operator: "=="
+      value: true
+      parameters: ["mana", 20.0]
+  description: "Player needs rest (injured, exhausted, or mana depleted)"

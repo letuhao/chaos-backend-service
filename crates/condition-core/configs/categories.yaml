@@ -1,0 +1,287 @@
+# Category Plugin Configurations
+- category_id: "weapon"
+  category_name: "Weapon"
+  category_type: "equipment"
+  is_available: true
+  is_blocked: false
+  default_count: 3
+  subcategories:
+    - "sword"
+    - "bow"
+    - "staff"
+    - "dagger"
+    - "axe"
+
+- category_id: "armor"
+  category_name: "Armor"
+  category_type: "equipment"
+  is_available: true
+  is_blocked: false
+  default_count: 5
+  subcategories:
+    - "helmet"
+    - "chestplate"
+    - "leggings"
+    - "boots"
+    - "gloves"
+
+- category_id: "potion"
+  category_name: "Potion"
+  category_type: "consumable"
+  is_available: true
+  is_blocked: false
+  default_count: 10
+  subcategories:
+    - "health_potion"
+    - "mana_potion"
+    - "stamina_potion"
+    - "elixir"
+    - "antidote"
+
+- category_id: "scroll"
+  category_name: "Scroll"
+  category_type: "consumable"
+  is_available: true
+  is_blocked: false
+  default_count: 0
+  subcategories:
+    - "teleport_scroll"
+    - "identify_scroll"
+    - "enchant_scroll"
+    - "curse_scroll"
+
+- category_id: "gem"
+  category_name: "Gem"
+  category_type: "material"
+  is_available: true
+  is_blocked: false
+  default_count: 2
+  subcategories:
+    - "ruby"
+    - "sapphire"
+    - "emerald"
+    - "diamond"
+    - "crystal"
+
+- category_id: "food"
+  category_name: "Food"
+  category_type: "consumable"
+  is_available: true
+  is_blocked: false
+  default_count: 0
+  subcategories:
+    - "bread"
+    - "meat"
+    - "fruit"
+    - "vegetable"
+    - "fish"
+
+- category_id: "tool"
+  category_name: "Tool"
+  category_type: "equipment"
+  is_available: true
+  is_blocked: false
+  default_count: 1
+  subcategories:
+    - "pickaxe"
+    - "shovel"
+    - "hammer"
+    - "saw"
+    - "chisel"
+
+- category_id: "material"
+  category_name: "Material"
+  category_type: "crafting"
+  is_available: true
+  is_blocked: false
+  default_count: 15
+  subcategories:
+    - "wood"
+    - "stone"
+    - "metal"
+    - "cloth"
+    - "leather"
+
+# Action Categories
+- category_id: "combat"
+  category_name: "Combat"
+  category_type: "action"
+  is_available: true
+  is_blocked: false
+  default_count: 0
+  subcategories:
+    - "attack"
+    - "defend"
+    - "block"
+    - "dodge"
+    - "counter"
+
+- category_id: "magic"
+  category_name: "Magic"
+  category_type: "action"
+  is_available: true
+  is_blocked: false
+  default_count: 0
+  subcategories:
+    - "cast_spell"
+    - "channel"
+    - "ritual"
+    - "enchant"
+    - "dispel"
+
+- category_id: "movement"
+  category_name: "Movement"
+  category_type: "action"
+  is_available: true
+  is_blocked: false
+  default_count: 0
+  subcategories:
+    - "walk"
+    - "run"
+    - "jump"
+    - "climb"
+    - "swim"
+
+- category_id: "crafting"
+  category_name: "Crafting"
+  category_type: "action"
+  is_available: false
+  is_blocked: true
+  default_count: 0
+  subcategories:
+    - "smith"
+    - "enchant"
+    - "brew"
+    - "cook"
+    - "sew"
+
+- category_id: "trading"
+  category_name: "Trading"
+  category_type: "action"
+  is_available: true
+  is_blocked: false
+  default_count: 0
+  subcategories:
+    - "buy"
+    - "sell"
+    - "barter"
+    - "auction"
+    - "gift"
+
+- category_id: "quest"
+  category_name: "Quest"
+  category_type: "action"
+  is_available: true
+  is_blocked: false
+  default_count: 0
+  subcategories:
+    - "accept"
+    - "complete"
+    - "abandon"
+    - "track"
+    - "report"
+
+- category_id: "social"
+  category_name: "Social"
+  category_type: "action"
+  is_available: true
+  is_blocked: false
+  default_count: 0
+  subcategories:
+    - "chat"
+    - "emote"
+    - "group"
+    - "guild"
+    - "party"
+
+- category_id: "admin"
+  category_name: "Admin"
+  category_type: "action"
+  is_available: false
+  is_blocked: true
+  default_count: 0
+  subcategories:
+    - "teleport"
+    - "spawn"
+    - "ban"
+    - "kick"
+    - "mute"
+
+# Status Categories
+- category_id: "buff"
+  category_name: "Buff"
+  category_type: "status"
+  is_available: true
+  is_blocked: false
+  default_count: 0
+  subcategories:
+    - "blessing"
+    - "haste"
+    - "strength"
+    - "protection"
+    - "regeneration"
+
+- category_id: "debuff"
+  category_name: "Debuff"
+  category_type: "status"
+  is_available: true
+  is_blocked: false
+  default_count: 0
+  subcategories:
+    - "curse"
+    - "weakness"
+    - "slow"
+    - "vulnerability"
+    - "exhaustion"
+
+- category_id: "dot"
+  category_name: "Damage Over Time"
+  category_type: "status"
+  is_available: true
+  is_blocked: false
+  default_count: 0
+  subcategories:
+    - "burning"
+    - "poison"
+    - "bleeding"
+    - "corruption"
+    - "decay"
+
+- category_id: "hot"
+  category_name: "Healing Over Time"
+  category_type: "status"
+  is_available: true
+  is_blocked: false
+  default_count: 0
+  subcategories:
+    - "regeneration"
+    - "healing"
+    - "recovery"
+    - "restoration"
+    - "renewal"
+
+- category_id: "stun"
+  category_name: "Stun"
+  category_type: "status"
+  is_available: true
+  is_blocked: false
+  default_count: 0
+  subcategories:
+    - "stun"
+    - "paralyze"
+    - "freeze"
+    - "petrify"
+    - "sleep"
+
+- category_id: "charm"
+  category_name: "Charm"
+  category_type: "status"
+  is_available: true
+  is_blocked: false
+  default_count: 0
+  subcategories:
+    - "charm"
+    - "fear"
+    - "confusion"
+    - "berserk"
+    - "charm"

@@ -26,6 +26,7 @@ heavy-deps = ["moka-cache", "memory-mapped", "redis-cache", "mongodb-storage", "
 [dependencies]
 # Workspace dependencies
 shared = { path = "../shared" }
+condition-core = { path = "../condition-core" }
 
 # Core dependencies
 serde = { version = "1", features = ["derive"] }

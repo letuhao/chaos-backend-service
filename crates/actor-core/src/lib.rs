@@ -212,6 +212,8 @@ pub mod subsystems;
 #[doc(hidden)]
 pub mod observability;
 
+// Condition Core Integration
+pub mod condition_integration;
 
 // Re-export prelude as the main API
 pub use prelude::*;

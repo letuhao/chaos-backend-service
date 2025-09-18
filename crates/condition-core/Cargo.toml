@@ -1,0 +1,24 @@
+[package]
+name = "condition-core"
+version = "0.1.0"
+edition = "2021"
+authors = ["Chaos World Team"]
+description = "Condition Core - Condition Logic Resolver for Chaos World"
+license = "MIT"
+
+[dependencies]
+serde = { workspace = true }
+serde_yaml = "0.9"
+tokio = { workspace = true }
+thiserror = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+async-trait = { workspace = true }
+
+[dev-dependencies]
+tokio-test = { workspace = true }
+criterion = { workspace = true, features = ["html_reports"] }
+
+[[bench]]
+name = "condition_resolver_bench"
+harness = false

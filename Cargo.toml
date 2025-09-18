@@ -4,6 +4,7 @@ members = [
     # Libraries
     "crates/shared",
     "crates/actor-core",
+    "crates/condition-core",
     # "crates/combat-core", 
     # "crates/leveling-core",
     # "crates/race-core",

@@ -1,0 +1,131 @@
+# Element Plugin Configurations
+- element_id: "fire"
+  element_name: "Fire"
+  element_type: "primary"
+  base_mastery: 150.0
+  base_resistance: 0.2
+  affinity_multiplier: 1.5
+  weakness_multiplier: 0.5
+  interactions:
+    water: "suppress"
+    ice: "melt"
+    air: "enhance"
+    earth: "neutral"
+
+- element_id: "water"
+  element_name: "Water"
+  element_type: "primary"
+  base_mastery: 120.0
+  base_resistance: 0.5
+  affinity_multiplier: 1.3
+  weakness_multiplier: 0.7
+  interactions:
+    fire: "extinguish"
+    earth: "nourish"
+    air: "evaporate"
+    lightning: "conduct"
+
+- element_id: "earth"
+  element_name: "Earth"
+  element_type: "primary"
+  base_mastery: 100.0
+  base_resistance: 0.3
+  affinity_multiplier: 1.0
+  weakness_multiplier: 0.8
+  interactions:
+    air: "block"
+    water: "absorb"
+    fire: "neutral"
+    lightning: "ground"
+
+- element_id: "air"
+  element_name: "Air"
+  element_type: "primary"
+  base_mastery: 80.0
+  base_resistance: 0.1
+  affinity_multiplier: 0.8
+  weakness_multiplier: 1.2
+  interactions:
+    earth: "erode"
+    fire: "fan"
+    water: "evaporate"
+    lightning: "conduct"
+
+- element_id: "light"
+  element_name: "Light"
+  element_type: "divine"
+  base_mastery: 200.0
+  base_resistance: 0.8
+  affinity_multiplier: 2.0
+  weakness_multiplier: 0.3
+  interactions:
+    dark: "purify"
+    shadow: "illuminate"
+    fire: "enhance"
+    water: "bless"
+
+- element_id: "dark"
+  element_name: "Dark"
+  element_type: "divine"
+  base_mastery: 90.0
+  base_resistance: 0.4
+  affinity_multiplier: 1.1
+  weakness_multiplier: 1.5
+  interactions:
+    light: "corrupt"
+    shadow: "enhance"
+    fire: "extinguish"
+    water: "taint"
+
+- element_id: "ice"
+  element_name: "Ice"
+  element_type: "secondary"
+  base_mastery: 110.0
+  base_resistance: 0.6
+  affinity_multiplier: 1.2
+  weakness_multiplier: 0.6
+  interactions:
+    fire: "freeze"
+    water: "freeze"
+    air: "blizzard"
+    earth: "frost"
+
+- element_id: "lightning"
+  element_name: "Lightning"
+  element_type: "secondary"
+  base_mastery: 130.0
+  base_resistance: 0.0
+  affinity_multiplier: 1.4
+  weakness_multiplier: 1.0
+  interactions:
+    water: "conduct"
+    air: "enhance"
+    earth: "ground"
+    metal: "attract"
+
+# New elements can be added here without code changes!
+- element_id: "shadow"
+  element_name: "Shadow"
+  element_type: "secondary"
+  base_mastery: 95.0
+  base_resistance: 0.3
+  affinity_multiplier: 1.1
+  weakness_multiplier: 1.1
+  interactions:
+    light: "hide"
+    dark: "enhance"
+    fire: "extinguish"
+    water: "corrupt"
+
+- element_id: "metal"
+  element_name: "Metal"
+  element_type: "secondary"
+  base_mastery: 105.0
+  base_resistance: 0.7
+  affinity_multiplier: 1.0
+  weakness_multiplier: 0.9
+  interactions:
+    fire: "melt"
+    lightning: "attract"
+    earth: "enhance"
+    water: "rust"

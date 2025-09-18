@@ -1,0 +1,97 @@
+# Resource Plugin Configurations
+- resource_id: "health"
+  resource_name: "Health"
+  resource_type: "vital"
+  base_value: 100.0
+  max_value: 100.0
+  low_threshold: 0.3
+  regeneration_rate: 1.0
+
+- resource_id: "mana"
+  resource_name: "Mana"
+  resource_type: "magic"
+  base_value: 50.0
+  max_value: 50.0
+  low_threshold: 0.2
+  regeneration_rate: 0.5
+
+- resource_id: "stamina"
+  resource_name: "Stamina"
+  resource_type: "physical"
+  base_value: 75.0
+  max_value: 100.0
+  low_threshold: 0.25
+  regeneration_rate: 2.0
+
+- resource_id: "lifespan"
+  resource_name: "Lifespan"
+  resource_type: "vital"
+  base_value: 1000.0
+  max_value: 1000.0
+  low_threshold: 0.1
+  regeneration_rate: 0.1
+
+- resource_id: "energy"
+  resource_name: "Energy"
+  resource_type: "physical"
+  base_value: 80.0
+  max_value: 100.0
+  low_threshold: 0.4
+  regeneration_rate: 1.5
+
+- resource_id: "focus"
+  resource_name: "Focus"
+  resource_type: "mental"
+  base_value: 60.0
+  max_value: 100.0
+  low_threshold: 0.5
+  regeneration_rate: 0.8
+
+- resource_id: "chi"
+  resource_name: "Chi"
+  resource_type: "spiritual"
+  base_value: 40.0
+  max_value: 100.0
+  low_threshold: 0.6
+  regeneration_rate: 0.3
+
+# New resources can be added here without code changes!
+- resource_id: "sanity"
+  resource_name: "Sanity"
+  resource_type: "mental"
+  base_value: 100.0
+  max_value: 100.0
+  low_threshold: 0.2
+  regeneration_rate: 0.1
+
+- resource_id: "karma"
+  resource_name: "Karma"
+  resource_type: "spiritual"
+  base_value: 0.0
+  max_value: 100.0
+  low_threshold: 0.0
+  regeneration_rate: 0.0
+
+- resource_id: "luck"
+  resource_name: "Luck"
+  resource_type: "fortune"
+  base_value: 50.0
+  max_value: 100.0
+  low_threshold: 0.3
+  regeneration_rate: 0.2
+
+- resource_id: "reputation"
+  resource_name: "Reputation"
+  resource_type: "social"
+  base_value: 0.0
+  max_value: 100.0
+  low_threshold: 0.0
+  regeneration_rate: 0.0
+
+- resource_id: "honor"
+  resource_name: "Honor"
+  resource_type: "moral"
+  base_value: 50.0
+  max_value: 100.0
+  low_threshold: 0.4
+  regeneration_rate: 0.1
