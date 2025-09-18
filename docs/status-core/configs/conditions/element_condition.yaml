@@ -1,0 +1,113 @@
+# Element Condition Configuration
+condition_definition:
+  # Basic Info
+  condition_id: "element_condition"
+  condition_name: "Element Condition"
+  condition_name_vi: "Điều Kiện Nguyên Tố"
+  
+  # Condition Properties
+  condition_type: "element"
+  priority: 120
+  stackable: true
+  max_stacks: 8
+  stack_behavior: "stack_additive"
+  
+  # Condition Description
+  description: "Condition based on element mastery and affinity"
+  description_vi: "Điều kiện dựa trên thành thạo nguyên tố và độ tương thích"
+  
+  # Condition Properties
+  properties:
+    element_id: "fire"
+    required_mastery: 1
+    mastery_type: "minimum"
+    visual_effect: "element_indicator"
+    audio_effect: "element_sound"
+    
+  # Condition Rules
+  rules:
+    - rule_id: "element_mastery_check"
+      rule_name: "Element Mastery Check"
+      rule_name_vi: "Kiểm Tra Thành Thạo Nguyên Tố"
+      rule_type: "mastery_check"
+      rule_description: "Check if actor meets element mastery requirements"
+      rule_formula: "mastery_check = actor_mastery >= required_mastery"
+      
+    - rule_id: "element_affinity_calculation"
+      rule_name: "Element Affinity Calculation"
+      rule_name_vi: "Tính Toán Độ Tương Thích Nguyên Tố"
+      rule_type: "affinity_calculation"
+      rule_description: "Calculate element affinity based on mastery and resistance"
+      rule_formula: "affinity = (mastery - resistance) / 100.0"
+      
+    - rule_id: "element_interaction_processing"
+      rule_name: "Element Interaction Processing"
+      rule_name_vi: "Xử Lý Tương Tác Nguyên Tố"
+      rule_type: "interaction_processing"
+      rule_description: "Process element interactions and conflicts"
+      rule_formula: "interaction_modifier = base_modifier * element_interaction_factor"
+      
+  # Condition Modifiers
+  modifiers:
+    - modifier_id: "element_mastery_multiplier"
+      modifier_name: "Element Mastery Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Thành Thạo Nguyên Tố"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "element_mastery"
+      
+    - modifier_id: "element_resistance_modifier"
+      modifier_name: "Element Resistance Modifier"
+      modifier_name_vi: "Sửa Đổi Kháng Nguyên Tố"
+      modifier_type: "resistance"
+      base_value: 0.0
+      scaling_factor: 0.01
+      scaling_stat: "element_resistance"
+      
+  # Condition Interactions
+  interactions:
+    - interaction_id: "element_with_healing"
+      interaction_name: "Element with Healing"
+      interaction_name_vi: "Nguyên Tố với Hồi Máu"
+      interaction_type: "conflict"
+      target_condition: "healing_condition"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.5
+      
+    - interaction_id: "element_with_resistance"
+      interaction_name: "Element with Resistance"
+      interaction_name_vi: "Nguyên Tố với Kháng Cự"
+      interaction_type: "resistance"
+      target_condition: "resistance_condition"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.7
+      
+  # Condition Immunity
+  immunity:
+    - immunity_id: "element_immunity"
+      immunity_name: "Element Immunity"
+      immunity_name_vi: "Miễn Nhiễm Nguyên Tố"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Condition Visual Effects
+  visual_effects:
+    - effect_id: "element_indicator"
+      effect_name: "Element Indicator"
+      effect_name_vi: "Chỉ Báo Nguyên Tố"
+      effect_type: "indicator_effect"
+      indicator_type: "element"
+      indicator_color: "#ff6b35"
+      indicator_intensity: 1.0
+      
+  # Condition Audio Effects
+  audio_effects:
+    - effect_id: "element_sound"
+      effect_name: "Element Sound"
+      effect_name_vi: "Âm Thanh Nguyên Tố"
+      effect_type: "ambient_sound"
+      sound_type: "element"
+      volume: 0.6
+      loop: true

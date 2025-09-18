@@ -1,0 +1,113 @@
+# Resistance With Interaction Configuration
+interaction_definition:
+  # Basic Info
+  interaction_id: "resistance_with"
+  interaction_name: "Resistance With"
+  interaction_name_vi: "Kháng Cự Với"
+  
+  # Interaction Properties
+  interaction_type: "resistance"
+  priority: 160
+  stackable: true
+  max_stacks: 8
+  stack_behavior: "stack_additive"
+  
+  # Interaction Description
+  description: "Provides resistance against status effects based on resistance values"
+  description_vi: "Cung cấp kháng cự chống lại trạng thái dựa trên giá trị kháng cự"
+  
+  # Interaction Properties
+  properties:
+    target_status: "all_damage_status"
+    resistance_type: "damage_reduction"
+    resistance_value: 0.7
+    visual_effect: "resistance_with_indicator"
+    audio_effect: "resistance_with_sound"
+    
+  # Interaction Rules
+  rules:
+    - rule_id: "resistance_with_calculation"
+      rule_name: "Resistance With Calculation"
+      rule_name_vi: "Tính Toán Kháng Cự Với"
+      rule_type: "resistance_calculation"
+      rule_description: "Calculate resistance effects based on target status and resistance type"
+      rule_formula: "resistance_effect = base_effect * (1 - resistance_value * resistance_multiplier)"
+      
+    - rule_id: "resistance_with_application"
+      rule_name: "Resistance With Application"
+      rule_name_vi: "Áp Dụng Kháng Cự Với"
+      rule_type: "resistance_application"
+      rule_description: "Apply resistance effects when status effects are resisted"
+      rule_formula: "final_effect = base_effect * resistance_effect"
+      
+    - rule_id: "resistance_with_condition_processing"
+      rule_name: "Resistance With Condition Processing"
+      rule_name_vi: "Xử Lý Điều Kiện Kháng Cự Với"
+      rule_type: "condition_processing"
+      rule_description: "Process resistance conditions and trigger effects"
+      rule_formula: "condition_trigger = resistance_condition && condition_active"
+      
+  # Interaction Modifiers
+  modifiers:
+    - modifier_id: "resistance_with_multiplier"
+      modifier_name: "Resistance With Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Kháng Cự Với"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "constitution"
+      
+    - modifier_id: "resistance_with_resistance_modifier"
+      modifier_name: "Resistance With Resistance Modifier"
+      modifier_name_vi: "Sửa Đổi Kháng Cự Kháng Cự Với"
+      modifier_type: "resistance"
+      base_value: 0.0
+      scaling_factor: 0.01
+      scaling_stat: "wisdom"
+      
+  # Interaction Interactions
+  interactions:
+    - interaction_id: "resistance_with_with_healing"
+      interaction_name: "Resistance With with Healing"
+      interaction_name_vi: "Kháng Cự Với với Hồi Máu"
+      interaction_type: "conflict"
+      target_interaction: "healing_interaction"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.3
+      
+    - interaction_id: "resistance_with_with_damage"
+      interaction_name: "Resistance With with Damage"
+      interaction_name_vi: "Kháng Cự Với với Sát Thương"
+      interaction_type: "resistance"
+      target_interaction: "damage_interaction"
+      interaction_behavior: "reduce_damage"
+      interaction_modifier: 0.5
+      
+  # Interaction Immunity
+  immunity:
+    - immunity_id: "resistance_with_immunity"
+      immunity_name: "Resistance With Immunity"
+      immunity_name_vi: "Miễn Nhiễm Kháng Cự Với"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Interaction Visual Effects
+  visual_effects:
+    - effect_id: "resistance_with_indicator"
+      effect_name: "Resistance With Indicator"
+      effect_name_vi: "Chỉ Báo Kháng Cự Với"
+      effect_type: "indicator_effect"
+      indicator_type: "resistance"
+      indicator_color: "#4ecdc4"
+      indicator_intensity: 0.7
+      
+  # Interaction Audio Effects
+  audio_effects:
+    - effect_id: "resistance_with_sound"
+      effect_name: "Resistance With Sound"
+      effect_name_vi: "Âm Thanh Kháng Cự Với"
+      effect_type: "ambient_sound"
+      sound_type: "resistance"
+      volume: 0.6
+      loop: true

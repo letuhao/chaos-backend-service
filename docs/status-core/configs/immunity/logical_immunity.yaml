@@ -1,0 +1,113 @@
+# Logical Immunity Configuration
+immunity_definition:
+  # Basic Info
+  immunity_id: "logical_immunity"
+  immunity_name: "Logical Immunity"
+  immunity_name_vi: "Miễn Nhiễm Logic"
+  
+  # Immunity Properties
+  immunity_type: "logical"
+  priority: 180
+  stackable: true
+  max_stacks: 5
+  stack_behavior: "stack_additive"
+  
+  # Immunity Description
+  description: "Provides immunity based on logical game world rules and character stats"
+  description_vi: "Cung cấp miễn nhiễm dựa trên quy tắc logic thế giới game và chỉ số nhân vật"
+  
+  # Immunity Properties
+  properties:
+    immunity_condition: "fire_element_mastery_above_100"
+    immunity_type: "burning"
+    immunity_reason: "High fire mastery provides natural burning resistance"
+    visual_effect: "logical_immunity_indicator"
+    audio_effect: "logical_immunity_sound"
+    
+  # Immunity Rules
+  rules:
+    - rule_id: "logical_immunity_calculation"
+      rule_name: "Logical Immunity Calculation"
+      rule_name_vi: "Tính Toán Miễn Nhiễm Logic"
+      rule_type: "immunity_calculation"
+      rule_description: "Calculate logical immunity based on character stats and game world rules"
+      rule_formula: "logical_immunity = immunity_condition_met && immunity_type == target_type"
+      
+    - rule_id: "logical_immunity_application"
+      rule_name: "Logical Immunity Application"
+      rule_name_vi: "Áp Dụng Miễn Nhiễm Logic"
+      rule_type: "immunity_application"
+      rule_description: "Apply logical immunity to status effect application"
+      rule_formula: "status_blocked = logical_immunity && target_status in immune_statuses"
+      
+    - rule_id: "logical_immunity_condition_processing"
+      rule_name: "Logical Immunity Condition Processing"
+      rule_name_vi: "Xử Lý Điều Kiện Miễn Nhiễm Logic"
+      rule_type: "condition_processing"
+      rule_description: "Process logical immunity conditions and trigger effects"
+      rule_formula: "condition_trigger = immunity_condition && condition_active"
+      
+  # Immunity Modifiers
+  modifiers:
+    - modifier_id: "logical_immunity_multiplier"
+      modifier_name: "Logical Immunity Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Miễn Nhiễm Logic"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "element_mastery"
+      
+    - modifier_id: "logical_immunity_condition_modifier"
+      modifier_name: "Logical Immunity Condition Modifier"
+      modifier_name_vi: "Sửa Đổi Điều Kiện Miễn Nhiễm Logic"
+      modifier_type: "condition"
+      base_value: 0.0
+      scaling_factor: 0.01
+      scaling_stat: "constitution"
+      
+  # Immunity Interactions
+  interactions:
+    - interaction_id: "logical_immunity_with_healing"
+      interaction_name: "Logical Immunity with Healing"
+      interaction_name_vi: "Miễn Nhiễm Logic với Hồi Máu"
+      interaction_type: "conflict"
+      target_immunity: "healing_immunity"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.5
+      
+    - interaction_id: "logical_immunity_with_resistance"
+      interaction_name: "Logical Immunity with Resistance"
+      interaction_name_vi: "Miễn Nhiễm Logic với Kháng Cự"
+      interaction_type: "resistance"
+      target_immunity: "resistance_immunity"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.7
+      
+  # Immunity Immunity
+  immunity:
+    - immunity_id: "logical_immunity_immunity"
+      immunity_name: "Logical Immunity Immunity"
+      immunity_name_vi: "Miễn Nhiễm Miễn Nhiễm Logic"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Immunity Visual Effects
+  visual_effects:
+    - effect_id: "logical_immunity_indicator"
+      effect_name: "Logical Immunity Indicator"
+      effect_name_vi: "Chỉ Báo Miễn Nhiễm Logic"
+      effect_type: "indicator_effect"
+      indicator_type: "immunity"
+      indicator_color: "#4ecdc4"
+      indicator_intensity: 0.7
+      
+  # Immunity Audio Effects
+  audio_effects:
+    - effect_id: "logical_immunity_sound"
+      effect_name: "Logical Immunity Sound"
+      effect_name_vi: "Âm Thanh Miễn Nhiễm Logic"
+      effect_type: "ambient_sound"
+      sound_type: "immunity"
+      volume: 0.6
+      loop: true

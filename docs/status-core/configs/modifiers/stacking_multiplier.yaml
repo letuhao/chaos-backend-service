@@ -1,0 +1,97 @@
+# Stacking Multiplier Modifier Configuration
+modifier_definition:
+  # Basic Info
+  modifier_id: "stacking_multiplier"
+  modifier_name: "Stacking Multiplier"
+  modifier_name_vi: "Hệ Số Nhân Chồng Chất"
+  
+  # Modifier Properties
+  modifier_type: "stacking"
+  priority: 110
+  stackable: true
+  max_stacks: 10
+  stack_behavior: "stack_additive"
+  
+  # Modifier Description
+  description: "Multiplies effects based on stacking count and scaling factors"
+  description_vi: "Nhân hiệu ứng dựa trên số lượng chồng chất và hệ số nhân"
+  
+  # Modifier Properties
+  properties:
+    value: 0.15
+    source: "curse_stacking"
+    scaling_factor: 0.0
+    scaling_stat: "none"
+    stack_type: "additive"
+    visual_effect: "stacking_multiplier_indicator"
+    audio_effect: "stacking_multiplier_sound"
+    
+  # Modifier Rules
+  rules:
+    - rule_id: "stacking_multiplier_calculation"
+      rule_name: "Stacking Multiplier Calculation"
+      rule_name_vi: "Tính Toán Hệ Số Nhân Chồng Chất"
+      rule_type: "stacking_calculation"
+      rule_description: "Calculate stacking multiplier based on stack count and scaling factors"
+      rule_formula: "stacking_multiplier = base_value * stack_count * (1 + scaling_factor * stat_value)"
+      
+    - rule_id: "stacking_multiplier_application"
+      rule_name: "Stacking Multiplier Application"
+      rule_name_vi: "Áp Dụng Hệ Số Nhân Chồng Chất"
+      rule_type: "stacking_application"
+      rule_description: "Apply stacking multiplier to effect calculation"
+      rule_formula: "final_effect = base_effect * (1 + stacking_multiplier)"
+      
+    - rule_id: "stacking_multiplier_stack_processing"
+      rule_name: "Stacking Multiplier Stack Processing"
+      rule_name_vi: "Xử Lý Chồng Hệ Số Nhân Chồng Chất"
+      rule_type: "stack_processing"
+      rule_description: "Process stacking multiplier stack effects"
+      rule_formula: "total_multiplier = sum(individual_multipliers) * stack_multiplier"
+      
+  # Modifier Interactions
+  interactions:
+    - interaction_id: "stacking_multiplier_with_healing"
+      interaction_name: "Stacking Multiplier with Healing"
+      interaction_name_vi: "Hệ Số Nhân Chồng Chất với Hồi Máu"
+      interaction_type: "conflict"
+      target_modifier: "healing_multiplier"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.5
+      
+    - interaction_id: "stacking_multiplier_with_resistance"
+      interaction_name: "Stacking Multiplier with Resistance"
+      interaction_name_vi: "Hệ Số Nhân Chồng Chất với Kháng Cự"
+      interaction_type: "resistance"
+      target_modifier: "resistance_modifier"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.7
+      
+  # Modifier Immunity
+  immunity:
+    - immunity_id: "stacking_multiplier_immunity"
+      immunity_name: "Stacking Multiplier Immunity"
+      immunity_name_vi: "Miễn Nhiễm Hệ Số Nhân Chồng Chất"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Modifier Visual Effects
+  visual_effects:
+    - effect_id: "stacking_multiplier_indicator"
+      effect_name: "Stacking Multiplier Indicator"
+      effect_name_vi: "Chỉ Báo Hệ Số Nhân Chồng Chất"
+      effect_type: "indicator_effect"
+      indicator_type: "stacking"
+      indicator_color: "#2c1810"
+      indicator_intensity: 0.6
+      
+  # Modifier Audio Effects
+  audio_effects:
+    - effect_id: "stacking_multiplier_sound"
+      effect_name: "Stacking Multiplier Sound"
+      effect_name_vi: "Âm Thanh Hệ Số Nhân Chồng Chất"
+      effect_type: "ambient_sound"
+      sound_type: "stacking"
+      volume: 0.6
+      loop: true

@@ -1,0 +1,112 @@
+# On Apply Trigger Configuration
+trigger_definition:
+  # Basic Info
+  trigger_id: "on_apply"
+  trigger_name: "On Apply"
+  trigger_name_vi: "Khi Áp Dụng"
+  
+  # Trigger Properties
+  trigger_type: "apply"
+  priority: 200
+  stackable: false
+  max_stacks: 1
+  stack_behavior: "replace_all"
+  
+  # Trigger Description
+  description: "Trigger when status effect is applied"
+  description_vi: "Kích hoạt khi trạng thái được áp dụng"
+  
+  # Trigger Properties
+  properties:
+    immediate_effect: true
+    apply_type: "instant"
+    visual_effect: "apply_trigger"
+    audio_effect: "apply_trigger_sound"
+    
+  # Trigger Rules
+  rules:
+    - rule_id: "apply_trigger_calculation"
+      rule_name: "Apply Trigger Calculation"
+      rule_name_vi: "Tính Toán Kích Hoạt Áp Dụng"
+      rule_type: "trigger_calculation"
+      rule_description: "Calculate apply trigger based on application conditions"
+      rule_formula: "apply_trigger = status_applied && immediate_effect"
+      
+    - rule_id: "apply_effect_processing"
+      rule_name: "Apply Effect Processing"
+      rule_name_vi: "Xử Lý Hiệu Ứng Áp Dụng"
+      rule_type: "effect_processing"
+      rule_description: "Process effects when apply trigger is activated"
+      rule_formula: "effect_processed = apply_trigger && effect_conditions_met"
+      
+    - rule_id: "apply_instant_application"
+      rule_name: "Apply Instant Application"
+      rule_name_vi: "Áp Dụng Tức Thời"
+      rule_type: "instant_application"
+      rule_description: "Apply effects instantly when trigger is activated"
+      rule_formula: "instant_applied = apply_trigger && apply_type == instant"
+      
+  # Trigger Modifiers
+  modifiers:
+    - modifier_id: "apply_immediate_multiplier"
+      modifier_name: "Apply Immediate Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Áp Dụng Tức Thời"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "intelligence"
+      
+    - modifier_id: "apply_instant_modifier"
+      modifier_name: "Apply Instant Modifier"
+      modifier_name_vi: "Sửa Đổi Áp Dụng Tức Thời"
+      modifier_type: "instant"
+      base_value: 0.0
+      scaling_factor: 0.01
+      scaling_stat: "wisdom"
+      
+  # Trigger Interactions
+  interactions:
+    - interaction_id: "apply_with_healing"
+      interaction_name: "Apply with Healing"
+      interaction_name_vi: "Áp Dụng với Hồi Máu"
+      interaction_type: "conflict"
+      target_trigger: "healing_trigger"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.3
+      
+    - interaction_id: "apply_with_resistance"
+      interaction_name: "Apply with Resistance"
+      interaction_name_vi: "Áp Dụng với Kháng Cự"
+      interaction_type: "resistance"
+      target_trigger: "resistance_trigger"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.5
+      
+  # Trigger Immunity
+  immunity:
+    - immunity_id: "apply_immunity"
+      immunity_name: "Apply Immunity"
+      immunity_name_vi: "Miễn Nhiễm Áp Dụng"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Trigger Visual Effects
+  visual_effects:
+    - effect_id: "apply_trigger"
+      effect_name: "Apply Trigger"
+      effect_name_vi: "Kích Hoạt Áp Dụng"
+      effect_type: "trigger_effect"
+      trigger_type: "instant"
+      trigger_color: "#ff6b6b"
+      trigger_intensity: 1.0
+      
+  # Trigger Audio Effects
+  audio_effects:
+    - effect_id: "apply_trigger_sound"
+      effect_name: "Apply Trigger Sound"
+      effect_name_vi: "Âm Thanh Kích Hoạt Áp Dụng"
+      effect_type: "instant_sound"
+      sound_type: "apply"
+      volume: 0.8
+      loop: false

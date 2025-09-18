@@ -1,0 +1,114 @@
+# Partial Block Movement Restriction Configuration
+movement_restriction_definition:
+  # Basic Info
+  restriction_id: "partial_block"
+  restriction_name: "Partial Block"
+  restriction_name_vi: "Chặn Một Phần"
+  
+  # Restriction Properties
+  restriction_type: "partial"
+  priority: 150
+  stackable: true
+  max_stacks: 5
+  stack_behavior: "stack_additive"
+  
+  # Restriction Description
+  description: "Partially blocks actor movement and actions"
+  description_vi: "Chặn một phần di chuyển và hành động của diễn viên"
+  
+  # Restriction Properties
+  properties:
+    movement_type: "all"
+    restriction_value: 0.5
+    restriction_duration: "temporary"
+    restriction_condition: "status_active"
+    visual_effect: "partial_block_indicator"
+    audio_effect: "partial_block_sound"
+    
+  # Restriction Rules
+  rules:
+    - rule_id: "partial_block_calculation"
+      rule_name: "Partial Block Calculation"
+      rule_name_vi: "Tính Toán Chặn Một Phần"
+      rule_type: "partial_calculation"
+      rule_description: "Calculate partial block based on restriction value and conditions"
+      rule_formula: "partial_block = restriction_value * restriction_multiplier * restriction_condition"
+      
+    - rule_id: "partial_block_application"
+      rule_name: "Partial Block Application"
+      rule_name_vi: "Áp Dụng Chặn Một Phần"
+      rule_type: "partial_application"
+      rule_description: "Apply partial block to actor movement and actions"
+      rule_formula: "final_restriction = base_restriction * partial_block"
+      
+    - rule_id: "partial_block_break_processing"
+      rule_name: "Partial Block Break Processing"
+      rule_name_vi: "Xử Lý Phá Vỡ Chặn Một Phần"
+      rule_type: "break_processing"
+      rule_description: "Process partial block break conditions"
+      rule_formula: "block_broken = (constitution + willpower) / 200.0 > break_threshold"
+      
+  # Restriction Modifiers
+  modifiers:
+    - modifier_id: "partial_block_value_multiplier"
+      modifier_name: "Partial Block Value Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Giá Trị Chặn Một Phần"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "constitution"
+      
+    - modifier_id: "partial_block_condition_modifier"
+      modifier_name: "Partial Block Condition Modifier"
+      modifier_name_vi: "Sửa Đổi Điều Kiện Chặn Một Phần"
+      modifier_type: "condition"
+      base_value: 0.0
+      scaling_factor: 0.01
+      scaling_stat: "wisdom"
+      
+  # Restriction Interactions
+  interactions:
+    - interaction_id: "partial_block_with_healing"
+      interaction_name: "Partial Block with Healing"
+      interaction_name_vi: "Chặn Một Phần với Hồi Máu"
+      interaction_type: "conflict"
+      target_restriction: "healing_movement_restriction"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.5
+      
+    - interaction_id: "partial_block_with_resistance"
+      interaction_name: "Partial Block with Resistance"
+      interaction_name_vi: "Chặn Một Phần với Kháng Cự"
+      interaction_type: "resistance"
+      target_restriction: "resistance_movement_restriction"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.7
+      
+  # Restriction Immunity
+  immunity:
+    - immunity_id: "partial_block_immunity"
+      immunity_name: "Partial Block Immunity"
+      immunity_name_vi: "Miễn Nhiễm Chặn Một Phần"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Restriction Visual Effects
+  visual_effects:
+    - effect_id: "partial_block_indicator"
+      effect_name: "Partial Block Indicator"
+      effect_name_vi: "Chỉ Báo Chặn Một Phần"
+      effect_type: "indicator_effect"
+      indicator_type: "movement"
+      indicator_color: "#ffd700"
+      indicator_intensity: 0.6
+      
+  # Restriction Audio Effects
+  audio_effects:
+    - effect_id: "partial_block_sound"
+      effect_name: "Partial Block Sound"
+      effect_name_vi: "Âm Thanh Chặn Một Phần"
+      effect_type: "instant_sound"
+      sound_type: "movement"
+      volume: 0.6
+      loop: false

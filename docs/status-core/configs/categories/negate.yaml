@@ -1,0 +1,112 @@
+# Negate Category Configuration
+category_definition:
+  # Basic Info
+  category_id: "negate"
+  category_name: "Negate"
+  category_name_vi: "Phủ Định"
+  
+  # Category Properties
+  priority: 180
+  stackable: false
+  max_stacks: 1
+  stack_behavior: "replace_all"
+  
+  # Category Description
+  description: "Status effects that negate or impair actor abilities"
+  description_vi: "Trạng thái phủ định hoặc suy yếu khả năng của diễn viên"
+  
+  # Category Properties
+  properties:
+    negate_type: "ability_impairment"
+    visual_effect: "negate_overlay"
+    audio_effect: "negate_sound"
+    element_binding: true
+    resistance_calculation: true
+    
+  # Category Rules
+  rules:
+    - rule_id: "negate_calculation"
+      rule_name: "Negate Calculation"
+      rule_name_vi: "Tính Toán Phủ Định"
+      rule_type: "negate_calculation"
+      rule_description: "Calculate negate effects based on magnitude and constitution"
+      rule_formula: "negate_value = base_magnitude * constitution_bonus * element_mastery_bonus"
+      
+    - rule_id: "negate_duration"
+      rule_name: "Negate Duration"
+      rule_name_vi: "Thời Gian Phủ Định"
+      rule_type: "duration_calculation"
+      rule_description: "Calculate negate duration based on mastery and resistance"
+      rule_formula: "duration = base_duration * (1 + mastery_bonus - resistance_modifier)"
+      
+    - rule_id: "negate_impairment"
+      rule_name: "Negate Impairment"
+      rule_name_vi: "Suy Yếu Phủ Định"
+      rule_type: "impairment_calculation"
+      rule_description: "Calculate ability impairment effects"
+      rule_formula: "impairment = base_impairment * (1 + negate_magnitude)"
+      
+  # Category Modifiers
+  modifiers:
+    - modifier_id: "negate_magnitude_multiplier"
+      modifier_name: "Negate Magnitude Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Cường Độ Phủ Định"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "constitution"
+      
+    - modifier_id: "negate_resistance_modifier"
+      modifier_name: "Negate Resistance Modifier"
+      modifier_name_vi: "Sửa Đổi Kháng Phủ Định"
+      modifier_type: "resistance"
+      base_value: 0.0
+      scaling_factor: 0.01
+      scaling_stat: "strength"
+      
+  # Category Interactions
+  interactions:
+    - interaction_id: "negate_with_healing"
+      interaction_name: "Negate with Healing"
+      interaction_name_vi: "Phủ Định với Hồi Máu"
+      interaction_type: "conflict"
+      target_category: "healing"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.7
+      
+    - interaction_id: "negate_with_buff"
+      interaction_name: "Negate with Buff"
+      interaction_name_vi: "Phủ Định với Buff"
+      interaction_type: "conflict"
+      target_category: "buff"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.5
+      
+  # Category Immunity
+  immunity:
+    - immunity_id: "negate_immunity"
+      immunity_name: "Negate Immunity"
+      immunity_name_vi: "Miễn Nhiễm Phủ Định"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Category Visual Effects
+  visual_effects:
+    - effect_id: "negate_overlay"
+      effect_name: "Negate Overlay"
+      effect_name_vi: "Lớp Phủ Phủ Định"
+      effect_type: "overlay_effect"
+      overlay_type: "crack"
+      overlay_color: "#8b4513"
+      overlay_intensity: 1.0
+      
+  # Category Audio Effects
+  audio_effects:
+    - effect_id: "negate_sound"
+      effect_name: "Negate Sound"
+      effect_name_vi: "Âm Thanh Phủ Định"
+      effect_type: "instant_sound"
+      sound_type: "negate"
+      volume: 0.7
+      loop: false

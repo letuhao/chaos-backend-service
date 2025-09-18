@@ -1,0 +1,113 @@
+# Action Category Condition Configuration
+condition_definition:
+  # Basic Info
+  condition_id: "action_category_condition"
+  condition_name: "Action Category Condition"
+  condition_name_vi: "Điều Kiện Danh Mục Hành Động"
+  
+  # Condition Properties
+  condition_type: "action_category"
+  priority: 150
+  stackable: true
+  max_stacks: 5
+  stack_behavior: "stack_additive"
+  
+  # Condition Description
+  description: "Condition based on action categories and restrictions"
+  description_vi: "Điều kiện dựa trên danh mục hành động và hạn chế"
+  
+  # Condition Properties
+  properties:
+    action_categories: ["physical", "movement", "attack", "defense"]
+    restriction_type: "block_all"
+    condition_type: "category_match"
+    visual_effect: "action_indicator"
+    audio_effect: "action_sound"
+    
+  # Condition Rules
+  rules:
+    - rule_id: "action_category_check"
+      rule_name: "Action Category Check"
+      rule_name_vi: "Kiểm Tra Danh Mục Hành Động"
+      rule_type: "category_check"
+      rule_description: "Check if action matches required categories"
+      rule_formula: "category_match = action_category in required_categories"
+      
+    - rule_id: "action_restriction_application"
+      rule_name: "Action Restriction Application"
+      rule_name_vi: "Áp Dụng Hạn Chế Hành Động"
+      rule_type: "restriction_application"
+      rule_description: "Apply action restrictions based on condition type"
+      rule_formula: "restriction_applied = category_match && restriction_type"
+      
+    - rule_id: "action_enhancement_application"
+      rule_name: "Action Enhancement Application"
+      rule_name_vi: "Áp Dụng Tăng Cường Hành Động"
+      rule_type: "enhancement_application"
+      rule_description: "Apply action enhancements based on condition type"
+      rule_formula: "enhancement_applied = category_match && enhancement_type"
+      
+  # Condition Modifiers
+  modifiers:
+    - modifier_id: "action_category_multiplier"
+      modifier_name: "Action Category Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Danh Mục Hành Động"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "intelligence"
+      
+    - modifier_id: "action_restriction_modifier"
+      modifier_name: "Action Restriction Modifier"
+      modifier_name_vi: "Sửa Đổi Hạn Chế Hành Động"
+      modifier_type: "restriction"
+      base_value: 0.0
+      scaling_factor: 0.01
+      scaling_stat: "constitution"
+      
+  # Condition Interactions
+  interactions:
+    - interaction_id: "action_category_with_healing"
+      interaction_name: "Action Category with Healing"
+      interaction_name_vi: "Danh Mục Hành Động với Hồi Máu"
+      interaction_type: "conflict"
+      target_condition: "healing_condition"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.3
+      
+    - interaction_id: "action_category_with_resistance"
+      interaction_name: "Action Category with Resistance"
+      interaction_name_vi: "Danh Mục Hành Động với Kháng Cự"
+      interaction_type: "resistance"
+      target_condition: "resistance_condition"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.5
+      
+  # Condition Immunity
+  immunity:
+    - immunity_id: "action_category_immunity"
+      immunity_name: "Action Category Immunity"
+      immunity_name_vi: "Miễn Nhiễm Danh Mục Hành Động"
+      immunity_type: "complete"
+      immunity_condition: "mental_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Condition Visual Effects
+  visual_effects:
+    - effect_id: "action_indicator"
+      effect_name: "Action Indicator"
+      effect_name_vi: "Chỉ Báo Hành Động"
+      effect_type: "indicator_effect"
+      indicator_type: "action"
+      indicator_color: "#45b7d1"
+      indicator_intensity: 1.0
+      
+  # Condition Audio Effects
+  audio_effects:
+    - effect_id: "action_sound"
+      effect_name: "Action Sound"
+      effect_name_vi: "Âm Thanh Hành Động"
+      effect_type: "ambient_sound"
+      sound_type: "action"
+      volume: 0.7
+      loop: true

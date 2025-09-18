@@ -1,0 +1,150 @@
+# Burning Status Configuration
+# DOT Damage Status - Fire Element
+status_definition:
+  # Basic Info
+  status_id: "burning"
+  status_guid: "550e8400-e29b-41d4-a716-446655440001"
+  world_id: "chaos_world_001"
+  status_name: "Burning"
+  status_name_vi: "Bị Đốt Cháy"
+  
+  # Categories (multiple)
+  categories: ["damage_over_time", "fire_element", "debuff"]
+  
+  # Element Binding
+  elements:
+    primary_element: "fire"
+    secondary_elements: ["heat"]
+    element_affinity: 0.9
+    
+  # Basic Properties
+  effect_type: "debuff"
+  priority: 100
+  stackable: true
+  max_stacks: 5
+  stack_behavior: "replace_oldest"
+  
+  # Immunity System
+  immunity_system:
+    mechanical_immunity:
+      - condition: "already_burning"
+        immunity_type: "burning"
+        reason: "Cannot be burned while already burning"
+      - condition: "dead"
+        immunity_type: "all_damage_status"
+        reason: "Dead actors cannot receive damage status"
+        
+    logical_immunity:
+      - condition: "fire_element_mastery_above_100"
+        immunity_type: "burning"
+        reason: "High fire mastery provides natural burning resistance"
+        
+    temporary_immunity:
+      - condition: "just_removed_burning"
+        immunity_type: "burning"
+        duration: 3.0
+        reason: "Temporary immunity after burning removal"
+  
+  # Status Effects
+  effects:
+    - effect_id: "burning_damage"
+      effect_type: "damage_over_time"
+      magnitude:
+        base_value: 15.0
+        scaling_factor: 0.1
+        scaling_stat: "intelligence"
+      duration:
+        base_duration: 10.0
+        scaling_factor: 0.05
+        scaling_stat: "wisdom"
+      conditions:
+        - condition_type: "tick_condition"
+          tick_interval: 1.0
+          tick_count: 10
+        - condition_type: "element_condition"
+          element_id: "fire"
+          required_mastery: 1
+      triggers:
+        - trigger_type: "on_tick"
+          trigger_data:
+            tick_interval: 1.0
+            tick_count: 10
+      modifiers:
+        - modifier_type: "damage_multiplier"
+          value: 1.0
+          source: "base_burning"
+        - modifier_type: "element_mastery_bonus"
+          element_id: "fire"
+          scaling_factor: 0.01
+      interactions:
+        - interaction_type: "stack_with"
+          target_status: "burning"
+          max_stacks: 5
+      immunity_list:
+        - "fire_immunity"
+        - "burning_immunity"
+      movement_restrictions: []
+      visual_effects:
+        - effect_type: "particle_system"
+          effect_name: "fire_particles"
+          duration: 10.0
+          intensity: 1.0
+      audio_effects:
+        - effect_type: "ambient_sound"
+          sound_name: "burning_sound"
+          volume: 0.7
+          loop: true
+
+  # Dynamic Scaling System
+  scaling_system:
+    level_scaling:
+      base_level: 1
+      max_level: 100
+      scaling_formula: "exponential"
+      scaling_factor: 1.1
+      
+    stat_scaling:
+      primary_stat: "intelligence"
+      secondary_stat: "wisdom"
+      tertiary_stat: "constitution"
+      scaling_weights: [0.5, 0.3, 0.2]
+
+  # Conditional Effects
+  conditional_effects:
+    - condition: "health_below_50%"
+      effect_modifier: 1.5
+      effect_type: "magnitude_multiplier"
+      
+    - condition: "enemy_fire_mastery_above_100"
+      effect_modifier: 0.7
+      effect_type: "magnitude_multiplier"
+
+  # Environment Interactions
+  environment_interactions:
+    - environment: "water"
+      effect_modifier: 0.5
+      effect_type: "magnitude_multiplier"
+      
+    - environment: "fire"
+      effect_modifier: 1.5
+      effect_type: "magnitude_multiplier"
+
+  # Time-based Modifiers
+  time_modifiers:
+    - time_period: "day"
+      effect_modifier: 1.2
+      effect_type: "magnitude_multiplier"
+      
+    - time_period: "night"
+      effect_modifier: 0.8
+      effect_type: "magnitude_multiplier"
+
+  # Relationship-based Effects
+  relationship_effects:
+    - relationship: "ally"
+      effect_modifier: 0.0
+      effect_type: "magnitude_multiplier"
+      
+    - relationship: "enemy"
+      effect_modifier: 1.0
+      effect_type: "magnitude_multiplier"

@@ -1,0 +1,112 @@
+# On Resource Consumption Trigger Configuration
+trigger_definition:
+  # Basic Info
+  trigger_id: "on_resource_consumption"
+  trigger_name: "On Resource Consumption"
+  trigger_name_vi: "Khi Tiêu Tốn Tài Nguyên"
+  
+  # Trigger Properties
+  trigger_type: "resource_consumption"
+  priority: 140
+  stackable: true
+  max_stacks: 8
+  stack_behavior: "stack_additive"
+  
+  # Trigger Description
+  description: "Trigger when actor consumes specific resources"
+  description_vi: "Kích hoạt khi diễn viên tiêu tốn tài nguyên cụ thể"
+  
+  # Trigger Properties
+  properties:
+    resource_categories: ["life", "stamina", "lifespan"]
+    consumption_type: "any"
+    visual_effect: "resource_consumption_trigger"
+    audio_effect: "resource_consumption_trigger_sound"
+    
+  # Trigger Rules
+  rules:
+    - rule_id: "resource_consumption_trigger_calculation"
+      rule_name: "Resource Consumption Trigger Calculation"
+      rule_name_vi: "Tính Toán Kích Hoạt Tiêu Tốn Tài Nguyên"
+      rule_type: "trigger_calculation"
+      rule_description: "Calculate resource consumption trigger based on resource categories"
+      rule_formula: "resource_trigger = resource_consumed && resource_category in required_categories"
+      
+    - rule_id: "resource_consumption_effect_processing"
+      rule_name: "Resource Consumption Effect Processing"
+      rule_name_vi: "Xử Lý Hiệu Ứng Tiêu Tốn Tài Nguyên"
+      rule_type: "effect_processing"
+      rule_description: "Process effects when resource consumption trigger is activated"
+      rule_formula: "effect_processed = resource_trigger && effect_conditions_met"
+      
+    - rule_id: "resource_consumption_immediate_application"
+      rule_name: "Resource Consumption Immediate Application"
+      rule_name_vi: "Áp Dụng Tức Thời Tiêu Tốn Tài Nguyên"
+      rule_type: "immediate_application"
+      rule_description: "Apply effects immediately when resource consumption trigger is activated"
+      rule_formula: "immediate_applied = resource_trigger && consumption_type == any"
+      
+  # Trigger Modifiers
+  modifiers:
+    - modifier_id: "resource_consumption_multiplier"
+      modifier_name: "Resource Consumption Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Tiêu Tốn Tài Nguyên"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "intelligence"
+      
+    - modifier_id: "resource_consumption_modifier"
+      modifier_name: "Resource Consumption Modifier"
+      modifier_name_vi: "Sửa Đổi Tiêu Tốn Tài Nguyên"
+      modifier_type: "consumption"
+      base_value: 0.0
+      scaling_factor: 0.01
+      scaling_stat: "constitution"
+      
+  # Trigger Interactions
+  interactions:
+    - interaction_id: "resource_consumption_with_healing"
+      interaction_name: "Resource Consumption with Healing"
+      interaction_name_vi: "Tiêu Tốn Tài Nguyên với Hồi Máu"
+      interaction_type: "conflict"
+      target_trigger: "healing_trigger"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.3
+      
+    - interaction_id: "resource_consumption_with_resistance"
+      interaction_name: "Resource Consumption with Resistance"
+      interaction_name_vi: "Tiêu Tốn Tài Nguyên với Kháng Cự"
+      interaction_type: "resistance"
+      target_trigger: "resistance_trigger"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.5
+      
+  # Trigger Immunity
+  immunity:
+    - immunity_id: "resource_consumption_immunity"
+      immunity_name: "Resource Consumption Immunity"
+      immunity_name_vi: "Miễn Nhiễm Tiêu Tốn Tài Nguyên"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Trigger Visual Effects
+  visual_effects:
+    - effect_id: "resource_consumption_trigger"
+      effect_name: "Resource Consumption Trigger"
+      effect_name_vi: "Kích Hoạt Tiêu Tốn Tài Nguyên"
+      effect_type: "trigger_effect"
+      trigger_type: "resource"
+      trigger_color: "#2c1810"
+      trigger_intensity: 0.6
+      
+  # Trigger Audio Effects
+  audio_effects:
+    - effect_id: "resource_consumption_trigger_sound"
+      effect_name: "Resource Consumption Trigger Sound"
+      effect_name_vi: "Âm Thanh Kích Hoạt Tiêu Tốn Tài Nguyên"
+      effect_type: "ambient_sound"
+      sound_type: "resource"
+      volume: 0.6
+      loop: true

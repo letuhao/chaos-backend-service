@@ -1,0 +1,152 @@
+# Stun Status Configuration
+# Hard Control Status - Mental Element
+status_definition:
+  # Basic Info
+  status_id: "stun"
+  status_guid: "550e8400-e29b-41d4-a716-446655440002"
+  world_id: "chaos_world_001"
+  status_name: "Stun"
+  status_name_vi: "Bị Choáng"
+  
+  # Categories (multiple)
+  categories: ["hard_control", "mental_element", "debuff"]
+  
+  # Element Binding
+  elements:
+    primary_element: "mental"
+    secondary_elements: ["shock"]
+    element_affinity: 0.8
+    
+  # Basic Properties
+  effect_type: "debuff"
+  priority: 200
+  stackable: false
+  max_stacks: 1
+  stack_behavior: "replace_all"
+  
+  # Immunity System
+  immunity_system:
+    mechanical_immunity:
+      - condition: "already_stunned"
+        immunity_type: "stun"
+        reason: "Cannot be stunned while already stunned"
+      - condition: "dead"
+        immunity_type: "all_control_status"
+        reason: "Dead actors cannot receive control status"
+        
+    logical_immunity:
+      - condition: "mental_element_mastery_above_100"
+        immunity_type: "stun"
+        reason: "High mental mastery provides natural stun resistance"
+        
+    temporary_immunity:
+      - condition: "just_removed_stun"
+        immunity_type: "stun"
+        duration: 5.0
+        reason: "Temporary immunity after stun removal"
+  
+  # Status Effects
+  effects:
+    - effect_id: "stun_control"
+      effect_type: "action_restriction"
+      magnitude:
+        base_value: 1.0
+        scaling_factor: 0.0
+        scaling_stat: "none"
+      duration:
+        base_duration: 3.0
+        scaling_factor: 0.02
+        scaling_stat: "constitution"
+      conditions:
+        - condition_type: "action_category_condition"
+          action_categories: ["movement", "attack", "defense", "cast"]
+          restriction_type: "block_all"
+        - condition_type: "tick_condition"
+          tick_interval: 1.0
+          tick_count: 3
+      triggers:
+        - trigger_type: "on_apply"
+          trigger_data:
+            immediate_effect: true
+        - trigger_type: "on_tick"
+          trigger_data:
+            tick_interval: 1.0
+            tick_count: 3
+      modifiers:
+        - modifier_type: "action_block"
+          value: 1.0
+          source: "stun_effect"
+      interactions:
+        - interaction_type: "remove_on"
+          target_status: "stun_immunity"
+          remove_condition: "immediate"
+      immunity_list:
+        - "stun_immunity"
+        - "control_immunity"
+      movement_restrictions:
+        - "movement_block"
+        - "action_block"
+      visual_effects:
+        - effect_type: "overlay_effect"
+          effect_name: "stun_stars"
+          duration: 3.0
+          intensity: 1.0
+      audio_effects:
+        - effect_type: "instant_sound"
+          sound_name: "stun_sound"
+          volume: 0.8
+          loop: false
+
+  # Dynamic Scaling System
+  scaling_system:
+    level_scaling:
+      base_level: 1
+      max_level: 100
+      scaling_formula: "exponential"
+      scaling_factor: 1.1
+      
+    stat_scaling:
+      primary_stat: "intelligence"
+      secondary_stat: "constitution"
+      tertiary_stat: "wisdom"
+      scaling_weights: [0.4, 0.4, 0.2]
+
+  # Conditional Effects
+  conditional_effects:
+    - condition: "enemy_mental_mastery_above_100"
+      effect_modifier: 0.5
+      effect_type: "duration_multiplier"
+      
+    - condition: "target_constitution_above_50"
+      effect_modifier: 0.7
+      effect_type: "duration_multiplier"
+
+  # Environment Interactions
+  environment_interactions:
+    - environment: "mental_realm"
+      effect_modifier: 1.5
+      effect_type: "duration_multiplier"
+      
+    - environment: "physical_realm"
+      effect_modifier: 0.8
+      effect_type: "duration_multiplier"
+
+  # Time-based Modifiers
+  time_modifiers:
+    - time_period: "day"
+      effect_modifier: 1.0
+      effect_type: "duration_multiplier"
+      
+    - time_period: "night"
+      effect_modifier: 1.2
+      effect_type: "duration_multiplier"
+
+  # Relationship-based Effects
+  relationship_effects:
+    - relationship: "ally"
+      effect_modifier: 0.0
+      effect_type: "magnitude_multiplier"
+      
+    - relationship: "enemy"
+      effect_modifier: 1.0
+      effect_type: "magnitude_multiplier"

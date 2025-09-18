@@ -1,0 +1,114 @@
+# Action Block Movement Restriction Configuration
+movement_restriction_definition:
+  # Basic Info
+  restriction_id: "action_block"
+  restriction_name: "Action Block"
+  restriction_name_vi: "Chặn Hành Động"
+  
+  # Restriction Properties
+  restriction_type: "block"
+  priority: 200
+  stackable: false
+  max_stacks: 1
+  stack_behavior: "replace_all"
+  
+  # Restriction Description
+  description: "Blocks actor actions that require movement"
+  description_vi: "Chặn hành động của diễn viên yêu cầu di chuyển"
+  
+  # Restriction Properties
+  properties:
+    movement_type: "action_related"
+    restriction_value: 1.0
+    restriction_duration: "permanent"
+    restriction_condition: "status_active"
+    visual_effect: "action_block_indicator"
+    audio_effect: "action_block_sound"
+    
+  # Restriction Rules
+  rules:
+    - rule_id: "action_block_calculation"
+      rule_name: "Action Block Calculation"
+      rule_name_vi: "Tính Toán Chặn Hành Động"
+      rule_type: "block_calculation"
+      rule_description: "Calculate action block based on restriction value and conditions"
+      rule_formula: "action_blocked = restriction_value == 1.0 && restriction_condition_met"
+      
+    - rule_id: "action_block_application"
+      rule_name: "Action Block Application"
+      rule_name_vi: "Áp Dụng Chặn Hành Động"
+      rule_type: "block_application"
+      rule_description: "Apply action block to actor actions"
+      rule_formula: "action_allowed = !action_blocked && action_conditions_met"
+      
+    - rule_id: "action_block_break_processing"
+      rule_name: "Action Block Break Processing"
+      rule_name_vi: "Xử Lý Phá Vỡ Chặn Hành Động"
+      rule_type: "break_processing"
+      rule_description: "Process action block break conditions"
+      rule_formula: "block_broken = (constitution + willpower) / 200.0 > break_threshold"
+      
+  # Restriction Modifiers
+  modifiers:
+    - modifier_id: "action_block_value_multiplier"
+      modifier_name: "Action Block Value Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Giá Trị Chặn Hành Động"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.0
+      scaling_stat: "none"
+      
+    - modifier_id: "action_block_condition_modifier"
+      modifier_name: "Action Block Condition Modifier"
+      modifier_name_vi: "Sửa Đổi Điều Kiện Chặn Hành Động"
+      modifier_type: "condition"
+      base_value: 0.0
+      scaling_factor: 0.0
+      scaling_stat: "none"
+      
+  # Restriction Interactions
+  interactions:
+    - interaction_id: "action_block_with_healing"
+      interaction_name: "Action Block with Healing"
+      interaction_name_vi: "Chặn Hành Động với Hồi Máu"
+      interaction_type: "conflict"
+      target_restriction: "healing_movement_restriction"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.3
+      
+    - interaction_id: "action_block_with_resistance"
+      interaction_name: "Action Block with Resistance"
+      interaction_name_vi: "Chặn Hành Động với Kháng Cự"
+      interaction_type: "resistance"
+      target_restriction: "resistance_movement_restriction"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.5
+      
+  # Restriction Immunity
+  immunity:
+    - immunity_id: "action_block_immunity"
+      immunity_name: "Action Block Immunity"
+      immunity_name_vi: "Miễn Nhiễm Chặn Hành Động"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Restriction Visual Effects
+  visual_effects:
+    - effect_id: "action_block_indicator"
+      effect_name: "Action Block Indicator"
+      effect_name_vi: "Chỉ Báo Chặn Hành Động"
+      effect_type: "indicator_effect"
+      indicator_type: "action"
+      indicator_color: "#ffff00"
+      indicator_intensity: 1.0
+      
+  # Restriction Audio Effects
+  audio_effects:
+    - effect_id: "action_block_sound"
+      effect_name: "Action Block Sound"
+      effect_name_vi: "Âm Thanh Chặn Hành Động"
+      effect_type: "instant_sound"
+      sound_type: "action"
+      volume: 0.8
+      loop: false

@@ -1,0 +1,118 @@
+# Resistance Sound Audio Effect Configuration
+audio_effect_definition:
+  # Basic Info
+  effect_id: "resistance_sound"
+  effect_name: "Resistance Sound"
+  effect_name_vi: "Âm Thanh Kháng Cự"
+  
+  # Effect Properties
+  effect_type: "resistance"
+  priority: 160
+  stackable: true
+  max_stacks: 8
+  stack_behavior: "stack_additive"
+  
+  # Effect Description
+  description: "Creates resistance sound effects for status audio representation"
+  description_vi: "Tạo hiệu ứng âm thanh kháng cự cho biểu diễn âm thanh của trạng thái"
+  
+  # Effect Properties
+  properties:
+    sound_type: "damage"
+    sound_volume: 0.6
+    sound_loop: true
+    sound_fade: true
+    sound_pitch: 1.0
+    sound_pan: 0.0
+    sound_priority: 160
+    sound_category: "status_effect"
+    visual_effect: "resistance_sound_indicator"
+    audio_effect: "resistance_sound_sound"
+    
+  # Effect Rules
+  rules:
+    - rule_id: "resistance_sound_calculation"
+      rule_name: "Resistance Sound Calculation"
+      rule_name_vi: "Tính Toán Âm Thanh Kháng Cự"
+      rule_type: "sound_calculation"
+      rule_description: "Calculate resistance sound properties based on status magnitude and resistance value"
+      rule_formula: "sound_volume = base_volume * status_magnitude * resistance_value_multiplier"
+      
+    - rule_id: "resistance_sound_application"
+      rule_name: "Resistance Sound Application"
+      rule_name_vi: "Áp Dụng Âm Thanh Kháng Cự"
+      rule_type: "sound_application"
+      rule_description: "Apply resistance sound effects to status audio representation"
+      rule_formula: "resistance_sound = sound_system * sound_volume * resistance_value"
+      
+    - rule_id: "resistance_sound_animation"
+      rule_name: "Resistance Sound Animation"
+      rule_name_vi: "Hoạt Hình Âm Thanh Kháng Cự"
+      rule_type: "sound_animation"
+      rule_description: "Animate resistance sound effects over time"
+      rule_formula: "sound_animation = resistance_sound * time_multiplier * animation_speed"
+      
+  # Effect Modifiers
+  modifiers:
+    - modifier_id: "resistance_sound_volume_multiplier"
+      modifier_name: "Resistance Sound Volume Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Âm Lượng Âm Thanh Kháng Cự"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "constitution"
+      
+    - modifier_id: "resistance_sound_resistance_multiplier"
+      modifier_name: "Resistance Sound Resistance Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Kháng Cự Âm Thanh Kháng Cự"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.005
+      scaling_stat: "wisdom"
+      
+  # Effect Interactions
+  interactions:
+    - interaction_id: "resistance_sound_with_healing"
+      interaction_name: "Resistance Sound with Healing"
+      interaction_name_vi: "Âm Thanh Kháng Cự với Hồi Máu"
+      interaction_type: "conflict"
+      target_effect: "healing_audio_effect"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.3
+      
+    - interaction_id: "resistance_sound_with_damage"
+      interaction_name: "Resistance Sound with Damage"
+      interaction_name_vi: "Âm Thanh Kháng Cự với Sát Thương"
+      interaction_type: "resistance"
+      target_effect: "damage_audio_effect"
+      interaction_behavior: "reduce_damage"
+      interaction_modifier: 0.5
+      
+  # Effect Immunity
+  immunity:
+    - immunity_id: "resistance_sound_immunity"
+      immunity_name: "Resistance Sound Immunity"
+      immunity_name_vi: "Miễn Nhiễm Âm Thanh Kháng Cự"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Effect Visual Effects
+  visual_effects:
+    - effect_id: "resistance_sound_indicator"
+      effect_name: "Resistance Sound Indicator"
+      effect_name_vi: "Chỉ Báo Âm Thanh Kháng Cự"
+      effect_type: "indicator_effect"
+      indicator_type: "sound"
+      indicator_color: "#4ecdc4"
+      indicator_intensity: 0.7
+      
+  # Effect Audio Effects
+  audio_effects:
+    - effect_id: "resistance_sound_sound"
+      effect_name: "Resistance Sound Sound"
+      effect_name_vi: "Âm Thanh Âm Thanh Kháng Cự"
+      effect_type: "ambient_sound"
+      sound_type: "resistance"
+      volume: 0.6
+      loop: true

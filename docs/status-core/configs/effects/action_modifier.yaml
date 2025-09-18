@@ -1,0 +1,113 @@
+# Action Modifier Effect Configuration
+effect_definition:
+  # Basic Info
+  effect_id: "action_modifier"
+  effect_name: "Action Modifier"
+  effect_name_vi: "Sửa Đổi Hành Động"
+  
+  # Effect Properties
+  effect_type: "action"
+  priority: 180
+  stackable: false
+  max_stacks: 1
+  stack_behavior: "replace_all"
+  
+  # Effect Description
+  description: "Modifies action execution and cooldown based on magnitude and scaling factors"
+  description_vi: "Sửa đổi thực hiện và hồi chiêu hành động dựa trên cường độ và hệ số nhân"
+  
+  # Effect Properties
+  properties:
+    modifier_type: "execution_modifier"
+    visual_effect: "action_overlay"
+    audio_effect: "action_sound"
+    element_binding: true
+    resistance_calculation: true
+    
+  # Effect Rules
+  rules:
+    - rule_id: "action_modifier_calculation"
+      rule_name: "Action Modifier Calculation"
+      rule_name_vi: "Tính Toán Sửa Đổi Hành Động"
+      rule_type: "action_calculation"
+      rule_description: "Calculate action modifications based on magnitude and scaling factors"
+      rule_formula: "action_modifier = base_magnitude * scaling_factor * action_value"
+      
+    - rule_id: "action_modifier_duration"
+      rule_name: "Action Modifier Duration"
+      rule_name_vi: "Thời Gian Sửa Đổi Hành Động"
+      rule_type: "duration_calculation"
+      rule_description: "Calculate modifier duration based on mastery and resistance"
+      rule_formula: "duration = base_duration * (1 + mastery_bonus - resistance_modifier)"
+      
+    - rule_id: "action_modifier_execution"
+      rule_name: "Action Modifier Execution"
+      rule_name_vi: "Thực Hiện Sửa Đổi Hành Động"
+      rule_type: "execution_calculation"
+      rule_description: "Calculate action execution modifications"
+      rule_formula: "execution_time = base_execution_time * (1 + action_modifier)"
+      
+  # Effect Modifiers
+  modifiers:
+    - modifier_id: "action_magnitude_multiplier"
+      modifier_name: "Action Magnitude Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Cường Độ Hành Động"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "constitution"
+      
+    - modifier_id: "action_resistance_modifier"
+      modifier_name: "Action Resistance Modifier"
+      modifier_name_vi: "Sửa Đổi Kháng Hành Động"
+      modifier_type: "resistance"
+      base_value: 0.0
+      scaling_factor: 0.01
+      scaling_stat: "strength"
+      
+  # Effect Interactions
+  interactions:
+    - interaction_id: "action_modifier_with_healing"
+      interaction_name: "Action Modifier with Healing"
+      interaction_name_vi: "Sửa Đổi Hành Động với Hồi Máu"
+      interaction_type: "conflict"
+      target_effect: "healing_over_time"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.7
+      
+    - interaction_id: "action_modifier_with_buff"
+      interaction_name: "Action Modifier with Buff"
+      interaction_name_vi: "Sửa Đổi Hành Động với Buff"
+      interaction_type: "conflict"
+      target_effect: "stat_modifier"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.5
+      
+  # Effect Immunity
+  immunity:
+    - immunity_id: "action_modifier_immunity"
+      immunity_name: "Action Modifier Immunity"
+      immunity_name_vi: "Miễn Nhiễm Sửa Đổi Hành Động"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Effect Visual Effects
+  visual_effects:
+    - effect_id: "action_overlay"
+      effect_name: "Action Overlay"
+      effect_name_vi: "Lớp Phủ Hành Động"
+      effect_type: "overlay_effect"
+      overlay_type: "crack"
+      overlay_color: "#8b4513"
+      overlay_intensity: 1.0
+      
+  # Effect Audio Effects
+  audio_effects:
+    - effect_id: "action_sound"
+      effect_name: "Action Sound"
+      effect_name_vi: "Âm Thanh Hành Động"
+      effect_type: "instant_sound"
+      sound_type: "action"
+      volume: 0.7
+      loop: false

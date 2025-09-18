@@ -1,0 +1,113 @@
+# Action Restriction Effect Configuration
+effect_definition:
+  # Basic Info
+  effect_id: "action_restriction"
+  effect_name: "Action Restriction"
+  effect_name_vi: "Hạn Chế Hành Động"
+  
+  # Effect Properties
+  effect_type: "control"
+  priority: 200
+  stackable: false
+  max_stacks: 1
+  stack_behavior: "replace_all"
+  
+  # Effect Description
+  description: "Completely restricts actor actions based on control type"
+  description_vi: "Hạn chế hoàn toàn hành động của diễn viên dựa trên loại kiểm soát"
+  
+  # Effect Properties
+  properties:
+    restriction_type: "complete_block"
+    visual_effect: "control_overlay"
+    audio_effect: "control_sound"
+    element_binding: true
+    resistance_calculation: true
+    
+  # Effect Rules
+  rules:
+    - rule_id: "action_restriction_application"
+      rule_name: "Action Restriction Application"
+      rule_name_vi: "Áp Dụng Hạn Chế Hành Động"
+      rule_type: "restriction_application"
+      rule_description: "Apply action restrictions that block all actions"
+      rule_formula: "restriction_success = (attacker_mastery - target_resistance) / 100.0"
+      
+    - rule_id: "action_restriction_duration"
+      rule_name: "Action Restriction Duration"
+      rule_name_vi: "Thời Gian Hạn Chế Hành Động"
+      rule_type: "duration_calculation"
+      rule_description: "Calculate restriction duration based on mastery and resistance"
+      rule_formula: "duration = base_duration * (1 + mastery_bonus - resistance_modifier)"
+      
+    - rule_id: "action_restriction_break"
+      rule_name: "Action Restriction Break"
+      rule_name_vi: "Phá Vỡ Hạn Chế Hành Động"
+      rule_type: "restriction_break"
+      rule_description: "Break restriction effects based on actor stats and external factors"
+      rule_formula: "break_chance = (constitution + willpower) / 200.0"
+      
+  # Effect Modifiers
+  modifiers:
+    - modifier_id: "restriction_duration_multiplier"
+      modifier_name: "Restriction Duration Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Thời Gian Hạn Chế"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.02
+      scaling_stat: "intelligence"
+      
+    - modifier_id: "restriction_resistance_modifier"
+      modifier_name: "Restriction Resistance Modifier"
+      modifier_name_vi: "Sửa Đổi Kháng Hạn Chế"
+      modifier_type: "resistance"
+      base_value: 0.0
+      scaling_factor: 0.01
+      scaling_stat: "constitution"
+      
+  # Effect Interactions
+  interactions:
+    - interaction_id: "restriction_with_healing"
+      interaction_name: "Restriction with Healing"
+      interaction_name_vi: "Hạn Chế với Hồi Máu"
+      interaction_type: "conflict"
+      target_effect: "healing_over_time"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.3
+      
+    - interaction_id: "restriction_with_resistance"
+      interaction_name: "Restriction with Resistance"
+      interaction_name_vi: "Hạn Chế với Kháng Cự"
+      interaction_type: "resistance"
+      target_effect: "resistance"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.5
+      
+  # Effect Immunity
+  immunity:
+    - immunity_id: "restriction_immunity"
+      immunity_name: "Restriction Immunity"
+      immunity_name_vi: "Miễn Nhiễm Hạn Chế"
+      immunity_type: "complete"
+      immunity_condition: "mental_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Effect Visual Effects
+  visual_effects:
+    - effect_id: "restriction_overlay"
+      effect_name: "Restriction Overlay"
+      effect_name_vi: "Lớp Phủ Hạn Chế"
+      effect_type: "overlay_effect"
+      overlay_type: "stars"
+      overlay_color: "#ffff00"
+      overlay_intensity: 1.0
+      
+  # Effect Audio Effects
+  audio_effects:
+    - effect_id: "restriction_sound"
+      effect_name: "Restriction Sound"
+      effect_name_vi: "Âm Thanh Hạn Chế"
+      effect_type: "instant_sound"
+      sound_type: "control"
+      volume: 0.8
+      loop: false

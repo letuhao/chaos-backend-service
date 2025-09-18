@@ -1,0 +1,118 @@
+# Indicator Effect Visual Effect Configuration
+visual_effect_definition:
+  # Basic Info
+  effect_id: "indicator_effect"
+  effect_name: "Indicator Effect"
+  effect_name_vi: "Hiệu Ứng Chỉ Báo"
+  
+  # Effect Properties
+  effect_type: "indicator"
+  priority: 120
+  stackable: true
+  max_stacks: 8
+  stack_behavior: "stack_additive"
+  
+  # Effect Description
+  description: "Creates indicator effects for status visual representation"
+  description_vi: "Tạo hiệu ứng chỉ báo cho biểu diễn trực quan của trạng thái"
+  
+  # Effect Properties
+  properties:
+    indicator_type: "timer"
+    indicator_color: "#4ecdc4"
+    indicator_intensity: 1.0
+    indicator_size: 0.5
+    indicator_pulse: true
+    indicator_rotation: false
+    indicator_fade: true
+    indicator_loop: true
+    visual_effect: "indicator_effect_indicator"
+    audio_effect: "indicator_effect_sound"
+    
+  # Effect Rules
+  rules:
+    - rule_id: "indicator_effect_calculation"
+      rule_name: "Indicator Effect Calculation"
+      rule_name_vi: "Tính Toán Hiệu Ứng Chỉ Báo"
+      rule_type: "indicator_calculation"
+      rule_description: "Calculate indicator effect properties based on status magnitude and duration"
+      rule_formula: "indicator_intensity = base_intensity * status_magnitude * duration_multiplier"
+      
+    - rule_id: "indicator_effect_application"
+      rule_name: "Indicator Effect Application"
+      rule_name_vi: "Áp Dụng Hiệu Ứng Chỉ Báo"
+      rule_type: "indicator_application"
+      rule_description: "Apply indicator effects to status visual representation"
+      rule_formula: "indicator_effect = indicator_system * indicator_intensity * indicator_size"
+      
+    - rule_id: "indicator_effect_animation"
+      rule_name: "Indicator Effect Animation"
+      rule_name_vi: "Hoạt Hình Hiệu Ứng Chỉ Báo"
+      rule_type: "indicator_animation"
+      rule_description: "Animate indicator effects over time"
+      rule_formula: "indicator_animation = indicator_effect * time_multiplier * animation_speed"
+      
+  # Effect Modifiers
+  modifiers:
+    - modifier_id: "indicator_intensity_multiplier"
+      modifier_name: "Indicator Intensity Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Cường Độ Chỉ Báo"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "intelligence"
+      
+    - modifier_id: "indicator_size_multiplier"
+      modifier_name: "Indicator Size Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Kích Thước Chỉ Báo"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.005
+      scaling_stat: "wisdom"
+      
+  # Effect Interactions
+  interactions:
+    - interaction_id: "indicator_effect_with_healing"
+      interaction_name: "Indicator Effect with Healing"
+      interaction_name_vi: "Hiệu Ứng Chỉ Báo với Hồi Máu"
+      interaction_type: "conflict"
+      target_effect: "healing_visual_effect"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.5
+      
+    - interaction_id: "indicator_effect_with_resistance"
+      interaction_name: "Indicator Effect with Resistance"
+      interaction_name_vi: "Hiệu Ứng Chỉ Báo với Kháng Cự"
+      interaction_type: "resistance"
+      target_effect: "resistance_visual_effect"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.7
+      
+  # Effect Immunity
+  immunity:
+    - immunity_id: "indicator_effect_immunity"
+      immunity_name: "Indicator Effect Immunity"
+      immunity_name_vi: "Miễn Nhiễm Hiệu Ứng Chỉ Báo"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Effect Visual Effects
+  visual_effects:
+    - effect_id: "indicator_effect_indicator"
+      effect_name: "Indicator Effect Indicator"
+      effect_name_vi: "Chỉ Báo Hiệu Ứng Chỉ Báo"
+      effect_type: "indicator_effect"
+      indicator_type: "indicator"
+      indicator_color: "#4ecdc4"
+      indicator_intensity: 1.0
+      
+  # Effect Audio Effects
+  audio_effects:
+    - effect_id: "indicator_effect_sound"
+      effect_name: "Indicator Effect Sound"
+      effect_name_vi: "Âm Thanh Hiệu Ứng Chỉ Báo"
+      effect_type: "ambient_sound"
+      sound_type: "indicator"
+      volume: 0.5
+      loop: true

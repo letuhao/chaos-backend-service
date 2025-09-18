@@ -1,0 +1,112 @@
+# Debuff Category Configuration
+category_definition:
+  # Basic Info
+  category_id: "debuff"
+  category_name: "Debuff"
+  category_name_vi: "Giảm Sát"
+  
+  # Category Properties
+  priority: 120
+  stackable: true
+  max_stacks: 8
+  stack_behavior: "stack_additive"
+  
+  # Category Description
+  description: "Status effects that reduce actor capabilities"
+  description_vi: "Trạng thái giảm khả năng của diễn viên"
+  
+  # Category Properties
+  properties:
+    debuff_type: "stat_reduction"
+    visual_effect: "debuff_aura"
+    audio_effect: "debuff_sound"
+    element_binding: true
+    resistance_calculation: true
+    
+  # Category Rules
+  rules:
+    - rule_id: "debuff_calculation"
+      rule_name: "Debuff Calculation"
+      rule_name_vi: "Tính Toán Debuff"
+      rule_type: "debuff_calculation"
+      rule_description: "Calculate debuff effects based on magnitude and intelligence"
+      rule_formula: "debuff_value = base_magnitude * intelligence_bonus * element_mastery_bonus"
+      
+    - rule_id: "debuff_duration"
+      rule_name: "Debuff Duration"
+      rule_name_vi: "Thời Gian Debuff"
+      rule_type: "duration_calculation"
+      rule_description: "Calculate debuff duration based on mastery and resistance"
+      rule_formula: "duration = base_duration * (1 + mastery_bonus - resistance_modifier)"
+      
+    - rule_id: "debuff_stack_processing"
+      rule_name: "Debuff Stack Processing"
+      rule_name_vi: "Xử Lý Chồng Debuff"
+      rule_type: "stack_processing"
+      rule_description: "Process debuff stacking effects"
+      rule_formula: "total_debuff = sum(individual_debuffs) * stack_multiplier"
+      
+  # Category Modifiers
+  modifiers:
+    - modifier_id: "debuff_magnitude_multiplier"
+      modifier_name: "Debuff Magnitude Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Cường Độ Debuff"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "intelligence"
+      
+    - modifier_id: "debuff_resistance_modifier"
+      modifier_name: "Debuff Resistance Modifier"
+      modifier_name_vi: "Sửa Đổi Kháng Debuff"
+      modifier_type: "resistance"
+      base_value: 0.0
+      scaling_factor: 0.01
+      scaling_stat: "constitution"
+      
+  # Category Interactions
+  interactions:
+    - interaction_id: "debuff_with_buff"
+      interaction_name: "Debuff with Buff"
+      interaction_name_vi: "Debuff với Buff"
+      interaction_type: "conflict"
+      target_category: "buff"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.5
+      
+    - interaction_id: "debuff_with_healing"
+      interaction_name: "Debuff with Healing"
+      interaction_name_vi: "Debuff với Hồi Máu"
+      interaction_type: "conflict"
+      target_category: "healing"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.3
+      
+  # Category Immunity
+  immunity:
+    - immunity_id: "debuff_immunity"
+      immunity_name: "Debuff Immunity"
+      immunity_name_vi: "Miễn Nhiễm Debuff"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Category Visual Effects
+  visual_effects:
+    - effect_id: "debuff_aura"
+      effect_name: "Debuff Aura"
+      effect_name_vi: "Hào Quang Debuff"
+      effect_type: "aura_effect"
+      aura_type: "circular"
+      aura_color: "#2c1810"
+      aura_intensity: 0.6
+      
+  # Category Audio Effects
+  audio_effects:
+    - effect_id: "debuff_sound"
+      effect_name: "Debuff Sound"
+      effect_name_vi: "Âm Thanh Debuff"
+      effect_type: "ambient_sound"
+      sound_type: "debuff"
+      volume: 0.6
+      loop: true

@@ -1,0 +1,96 @@
+# Action Block Modifier Configuration
+modifier_definition:
+  # Basic Info
+  modifier_id: "action_block"
+  modifier_name: "Action Block"
+  modifier_name_vi: "Chặn Hành Động"
+  
+  # Modifier Properties
+  modifier_type: "block"
+  priority: 200
+  stackable: false
+  max_stacks: 1
+  stack_behavior: "replace_all"
+  
+  # Modifier Description
+  description: "Blocks actor actions based on block type and conditions"
+  description_vi: "Chặn hành động của diễn viên dựa trên loại chặn và điều kiện"
+  
+  # Modifier Properties
+  properties:
+    value: 1.0
+    source: "control_effect"
+    block_type: "complete"
+    action_categories: ["all"]
+    visual_effect: "action_block_indicator"
+    audio_effect: "action_block_sound"
+    
+  # Modifier Rules
+  rules:
+    - rule_id: "action_block_calculation"
+      rule_name: "Action Block Calculation"
+      rule_name_vi: "Tính Toán Chặn Hành Động"
+      rule_type: "block_calculation"
+      rule_description: "Calculate action block based on block type and conditions"
+      rule_formula: "action_block = block_type == complete && action_category in blocked_categories"
+      
+    - rule_id: "action_block_application"
+      rule_name: "Action Block Application"
+      rule_name_vi: "Áp Dụng Chặn Hành Động"
+      rule_type: "block_application"
+      rule_description: "Apply action block to action execution"
+      rule_formula: "action_executed = !action_block && action_conditions_met"
+      
+    - rule_id: "action_block_break_processing"
+      rule_name: "Action Block Break Processing"
+      rule_name_vi: "Xử Lý Phá Vỡ Chặn Hành Động"
+      rule_type: "break_processing"
+      rule_description: "Process action block break conditions"
+      rule_formula: "block_broken = (constitution + willpower) / 200.0 > break_threshold"
+      
+  # Modifier Interactions
+  interactions:
+    - interaction_id: "action_block_with_healing"
+      interaction_name: "Action Block with Healing"
+      interaction_name_vi: "Chặn Hành Động với Hồi Máu"
+      interaction_type: "conflict"
+      target_modifier: "healing_multiplier"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.3
+      
+    - interaction_id: "action_block_with_resistance"
+      interaction_name: "Action Block with Resistance"
+      interaction_name_vi: "Chặn Hành Động với Kháng Cự"
+      interaction_type: "resistance"
+      target_modifier: "resistance_modifier"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.5
+      
+  # Modifier Immunity
+  immunity:
+    - immunity_id: "action_block_immunity"
+      immunity_name: "Action Block Immunity"
+      immunity_name_vi: "Miễn Nhiễm Chặn Hành Động"
+      immunity_type: "complete"
+      immunity_condition: "mental_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Modifier Visual Effects
+  visual_effects:
+    - effect_id: "action_block_indicator"
+      effect_name: "Action Block Indicator"
+      effect_name_vi: "Chỉ Báo Chặn Hành Động"
+      effect_type: "indicator_effect"
+      indicator_type: "block"
+      indicator_color: "#ffff00"
+      indicator_intensity: 1.0
+      
+  # Modifier Audio Effects
+  audio_effects:
+    - effect_id: "action_block_sound"
+      effect_name: "Action Block Sound"
+      effect_name_vi: "Âm Thanh Chặn Hành Động"
+      effect_type: "instant_sound"
+      sound_type: "control"
+      volume: 0.8
+      loop: false

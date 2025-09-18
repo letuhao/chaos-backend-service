@@ -1,0 +1,119 @@
+# Particle System Visual Effect Configuration
+visual_effect_definition:
+  # Basic Info
+  effect_id: "particle_system"
+  effect_name: "Particle System"
+  effect_name_vi: "Hệ Thống Hạt"
+  
+  # Effect Properties
+  effect_type: "particle"
+  priority: 100
+  stackable: true
+  max_stacks: 5
+  stack_behavior: "stack_additive"
+  
+  # Effect Description
+  description: "Creates particle effects for status visual representation"
+  description_vi: "Tạo hiệu ứng hạt cho biểu diễn trực quan của trạng thái"
+  
+  # Effect Properties
+  properties:
+    particle_type: "damage"
+    particle_color: "#ff6b35"
+    particle_intensity: 1.0
+    particle_count: 100
+    particle_lifetime: 2.0
+    particle_speed: 1.0
+    particle_gravity: 0.5
+    particle_fade: true
+    particle_loop: true
+    visual_effect: "particle_system_indicator"
+    audio_effect: "particle_system_sound"
+    
+  # Effect Rules
+  rules:
+    - rule_id: "particle_system_calculation"
+      rule_name: "Particle System Calculation"
+      rule_name_vi: "Tính Toán Hệ Thống Hạt"
+      rule_type: "particle_calculation"
+      rule_description: "Calculate particle system properties based on status magnitude and duration"
+      rule_formula: "particle_intensity = base_intensity * status_magnitude * duration_multiplier"
+      
+    - rule_id: "particle_system_application"
+      rule_name: "Particle System Application"
+      rule_name_vi: "Áp Dụng Hệ Thống Hạt"
+      rule_type: "particle_application"
+      rule_description: "Apply particle system effects to status visual representation"
+      rule_formula: "particle_effect = particle_system * particle_intensity * particle_count"
+      
+    - rule_id: "particle_system_animation"
+      rule_name: "Particle System Animation"
+      rule_name_vi: "Hoạt Hình Hệ Thống Hạt"
+      rule_type: "particle_animation"
+      rule_description: "Animate particle system effects over time"
+      rule_formula: "particle_animation = particle_effect * time_multiplier * animation_speed"
+      
+  # Effect Modifiers
+  modifiers:
+    - modifier_id: "particle_intensity_multiplier"
+      modifier_name: "Particle Intensity Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Cường Độ Hạt"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "intelligence"
+      
+    - modifier_id: "particle_count_multiplier"
+      modifier_name: "Particle Count Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Số Lượng Hạt"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.005
+      scaling_stat: "wisdom"
+      
+  # Effect Interactions
+  interactions:
+    - interaction_id: "particle_system_with_healing"
+      interaction_name: "Particle System with Healing"
+      interaction_name_vi: "Hệ Thống Hạt với Hồi Máu"
+      interaction_type: "conflict"
+      target_effect: "healing_visual_effect"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.5
+      
+    - interaction_id: "particle_system_with_resistance"
+      interaction_name: "Particle System with Resistance"
+      interaction_name_vi: "Hệ Thống Hạt với Kháng Cự"
+      interaction_type: "resistance"
+      target_effect: "resistance_visual_effect"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.7
+      
+  # Effect Immunity
+  immunity:
+    - immunity_id: "particle_system_immunity"
+      immunity_name: "Particle System Immunity"
+      immunity_name_vi: "Miễn Nhiễm Hệ Thống Hạt"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Effect Visual Effects
+  visual_effects:
+    - effect_id: "particle_system_indicator"
+      effect_name: "Particle System Indicator"
+      effect_name_vi: "Chỉ Báo Hệ Thống Hạt"
+      effect_type: "indicator_effect"
+      indicator_type: "particle"
+      indicator_color: "#ff6b35"
+      indicator_intensity: 1.0
+      
+  # Effect Audio Effects
+  audio_effects:
+    - effect_id: "particle_system_sound"
+      effect_name: "Particle System Sound"
+      effect_name_vi: "Âm Thanh Hệ Thống Hạt"
+      effect_type: "ambient_sound"
+      sound_type: "particle"
+      volume: 0.7
+      loop: true

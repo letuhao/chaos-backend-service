@@ -1,0 +1,114 @@
+# Partial Immunity Configuration
+immunity_definition:
+  # Basic Info
+  immunity_id: "partial_immunity"
+  immunity_name: "Partial Immunity"
+  immunity_name_vi: "Miễn Nhiễm Một Phần"
+  
+  # Immunity Properties
+  immunity_type: "partial"
+  priority: 150
+  stackable: true
+  max_stacks: 5
+  stack_behavior: "stack_additive"
+  
+  # Immunity Description
+  description: "Provides partial immunity that reduces status effect effectiveness"
+  description_vi: "Cung cấp miễn nhiễm một phần làm giảm hiệu quả của trạng thái"
+  
+  # Immunity Properties
+  properties:
+    immunity_condition: "element_mastery_above_50"
+    immunity_type: "damage_status"
+    immunity_reduction: 0.5
+    immunity_reason: "Moderate element mastery provides partial damage status immunity"
+    visual_effect: "partial_immunity_indicator"
+    audio_effect: "partial_immunity_sound"
+    
+  # Immunity Rules
+  rules:
+    - rule_id: "partial_immunity_calculation"
+      rule_name: "Partial Immunity Calculation"
+      rule_name_vi: "Tính Toán Miễn Nhiễm Một Phần"
+      rule_type: "immunity_calculation"
+      rule_description: "Calculate partial immunity based on mastery and reduction values"
+      rule_formula: "partial_immunity = immunity_condition_met ? (1 - immunity_reduction) : 1.0"
+      
+    - rule_id: "partial_immunity_application"
+      rule_name: "Partial Immunity Application"
+      rule_name_vi: "Áp Dụng Miễn Nhiễm Một Phần"
+      rule_type: "immunity_application"
+      rule_description: "Apply partial immunity to status effect effectiveness"
+      rule_formula: "final_effectiveness = base_effectiveness * partial_immunity"
+      
+    - rule_id: "partial_immunity_condition_processing"
+      rule_name: "Partial Immunity Condition Processing"
+      rule_name_vi: "Xử Lý Điều Kiện Miễn Nhiễm Một Phần"
+      rule_type: "condition_processing"
+      rule_description: "Process partial immunity conditions and trigger effects"
+      rule_formula: "condition_trigger = immunity_condition && condition_active"
+      
+  # Immunity Modifiers
+  modifiers:
+    - modifier_id: "partial_immunity_reduction_multiplier"
+      modifier_name: "Partial Immunity Reduction Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Giảm Miễn Nhiễm Một Phần"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "element_mastery"
+      
+    - modifier_id: "partial_immunity_condition_modifier"
+      modifier_name: "Partial Immunity Condition Modifier"
+      modifier_name_vi: "Sửa Đổi Điều Kiện Miễn Nhiễm Một Phần"
+      modifier_type: "condition"
+      base_value: 0.0
+      scaling_factor: 0.01
+      scaling_stat: "constitution"
+      
+  # Immunity Interactions
+  interactions:
+    - interaction_id: "partial_immunity_with_healing"
+      interaction_name: "Partial Immunity with Healing"
+      interaction_name_vi: "Miễn Nhiễm Một Phần với Hồi Máu"
+      interaction_type: "conflict"
+      target_immunity: "healing_immunity"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.5
+      
+    - interaction_id: "partial_immunity_with_resistance"
+      interaction_name: "Partial Immunity with Resistance"
+      interaction_name_vi: "Miễn Nhiễm Một Phần với Kháng Cự"
+      interaction_type: "resistance"
+      target_immunity: "resistance_immunity"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.7
+      
+  # Immunity Immunity
+  immunity:
+    - immunity_id: "partial_immunity_immunity"
+      immunity_name: "Partial Immunity Immunity"
+      immunity_name_vi: "Miễn Nhiễm Miễn Nhiễm Một Phần"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Immunity Visual Effects
+  visual_effects:
+    - effect_id: "partial_immunity_indicator"
+      effect_name: "Partial Immunity Indicator"
+      effect_name_vi: "Chỉ Báo Miễn Nhiễm Một Phần"
+      effect_type: "indicator_effect"
+      indicator_type: "immunity"
+      indicator_color: "#ffd700"
+      indicator_intensity: 0.6
+      
+  # Immunity Audio Effects
+  audio_effects:
+    - effect_id: "partial_immunity_sound"
+      effect_name: "Partial Immunity Sound"
+      effect_name_vi: "Âm Thanh Miễn Nhiễm Một Phần"
+      effect_type: "ambient_sound"
+      sound_type: "immunity"
+      volume: 0.5
+      loop: true

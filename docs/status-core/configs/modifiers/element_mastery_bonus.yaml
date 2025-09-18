@@ -1,0 +1,96 @@
+# Element Mastery Bonus Modifier Configuration
+modifier_definition:
+  # Basic Info
+  modifier_id: "element_mastery_bonus"
+  modifier_name: "Element Mastery Bonus"
+  modifier_name_vi: "Thưởng Thành Thạo Nguyên Tố"
+  
+  # Modifier Properties
+  modifier_type: "mastery_bonus"
+  priority: 120
+  stackable: true
+  max_stacks: 8
+  stack_behavior: "stack_additive"
+  
+  # Modifier Description
+  description: "Provides bonus based on element mastery level and scaling factors"
+  description_vi: "Cung cấp thưởng dựa trên cấp độ thành thạo nguyên tố và hệ số nhân"
+  
+  # Modifier Properties
+  properties:
+    element_id: "fire"
+    scaling_factor: 0.01
+    source: "element_mastery"
+    scaling_stat: "element_mastery"
+    visual_effect: "element_mastery_bonus_indicator"
+    audio_effect: "element_mastery_bonus_sound"
+    
+  # Modifier Rules
+  rules:
+    - rule_id: "element_mastery_bonus_calculation"
+      rule_name: "Element Mastery Bonus Calculation"
+      rule_name_vi: "Tính Toán Thưởng Thành Thạo Nguyên Tố"
+      rule_type: "bonus_calculation"
+      rule_description: "Calculate element mastery bonus based on mastery level and scaling factors"
+      rule_formula: "mastery_bonus = mastery_level * scaling_factor * element_affinity"
+      
+    - rule_id: "element_mastery_bonus_application"
+      rule_name: "Element Mastery Bonus Application"
+      rule_name_vi: "Áp Dụng Thưởng Thành Thạo Nguyên Tố"
+      rule_type: "bonus_application"
+      rule_description: "Apply element mastery bonus to damage calculation"
+      rule_formula: "final_damage = base_damage * (1 + mastery_bonus)"
+      
+    - rule_id: "element_mastery_bonus_stack_processing"
+      rule_name: "Element Mastery Bonus Stack Processing"
+      rule_name_vi: "Xử Lý Chồng Thưởng Thành Thạo Nguyên Tố"
+      rule_type: "stack_processing"
+      rule_description: "Process element mastery bonus stacking effects"
+      rule_formula: "total_bonus = sum(individual_bonuses) * stack_multiplier"
+      
+  # Modifier Interactions
+  interactions:
+    - interaction_id: "element_mastery_bonus_with_healing"
+      interaction_name: "Element Mastery Bonus with Healing"
+      interaction_name_vi: "Thưởng Thành Thạo Nguyên Tố với Hồi Máu"
+      interaction_type: "conflict"
+      target_modifier: "healing_multiplier"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.5
+      
+    - interaction_id: "element_mastery_bonus_with_resistance"
+      interaction_name: "Element Mastery Bonus with Resistance"
+      interaction_name_vi: "Thưởng Thành Thạo Nguyên Tố với Kháng Cự"
+      interaction_type: "resistance"
+      target_modifier: "resistance_modifier"
+      interaction_behavior: "reduce_damage"
+      interaction_modifier: 0.7
+      
+  # Modifier Immunity
+  immunity:
+    - immunity_id: "element_mastery_bonus_immunity"
+      immunity_name: "Element Mastery Bonus Immunity"
+      immunity_name_vi: "Miễn Nhiễm Thưởng Thành Thạo Nguyên Tố"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Modifier Visual Effects
+  visual_effects:
+    - effect_id: "element_mastery_bonus_indicator"
+      effect_name: "Element Mastery Bonus Indicator"
+      effect_name_vi: "Chỉ Báo Thưởng Thành Thạo Nguyên Tố"
+      effect_type: "indicator_effect"
+      indicator_type: "mastery"
+      indicator_color: "#ff6b35"
+      indicator_intensity: 1.0
+      
+  # Modifier Audio Effects
+  audio_effects:
+    - effect_id: "element_mastery_bonus_sound"
+      effect_name: "Element Mastery Bonus Sound"
+      effect_name_vi: "Âm Thanh Thưởng Thành Thạo Nguyên Tố"
+      effect_type: "ambient_sound"
+      sound_type: "element"
+      volume: 0.6
+      loop: true

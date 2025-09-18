@@ -1,0 +1,113 @@
+# Resource Category Condition Configuration
+condition_definition:
+  # Basic Info
+  condition_id: "resource_category_condition"
+  condition_name: "Resource Category Condition"
+  condition_name_vi: "Điều Kiện Danh Mục Tài Nguyên"
+  
+  # Condition Properties
+  condition_type: "resource_category"
+  priority: 130
+  stackable: true
+  max_stacks: 8
+  stack_behavior: "stack_additive"
+  
+  # Condition Description
+  description: "Condition based on resource categories and consumption"
+  description_vi: "Điều kiện dựa trên danh mục tài nguyên và tiêu tốn"
+  
+  # Condition Properties
+  properties:
+    resource_categories: ["life", "stamina", "lifespan"]
+    modifier_type: "consumption_increase"
+    condition_type: "category_match"
+    visual_effect: "resource_indicator"
+    audio_effect: "resource_sound"
+    
+  # Condition Rules
+  rules:
+    - rule_id: "resource_category_check"
+      rule_name: "Resource Category Check"
+      rule_name_vi: "Kiểm Tra Danh Mục Tài Nguyên"
+      rule_type: "category_check"
+      rule_description: "Check if resource matches required categories"
+      rule_formula: "category_match = resource_category in required_categories"
+      
+    - rule_id: "resource_consumption_modification"
+      rule_name: "Resource Consumption Modification"
+      rule_name_vi: "Sửa Đổi Tiêu Tốn Tài Nguyên"
+      rule_type: "consumption_modification"
+      rule_description: "Modify resource consumption based on condition type"
+      rule_formula: "consumption_modifier = base_consumption * (1 + modifier_value)"
+      
+    - rule_id: "resource_regeneration_modification"
+      rule_name: "Resource Regeneration Modification"
+      rule_name_vi: "Sửa Đổi Tái Tạo Tài Nguyên"
+      rule_type: "regeneration_modification"
+      rule_description: "Modify resource regeneration based on condition type"
+      rule_formula: "regeneration_modifier = base_regeneration * (1 + modifier_value)"
+      
+  # Condition Modifiers
+  modifiers:
+    - modifier_id: "resource_category_multiplier"
+      modifier_name: "Resource Category Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Danh Mục Tài Nguyên"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "intelligence"
+      
+    - modifier_id: "resource_consumption_modifier"
+      modifier_name: "Resource Consumption Modifier"
+      modifier_name_vi: "Sửa Đổi Tiêu Tốn Tài Nguyên"
+      modifier_type: "consumption"
+      base_value: 0.0
+      scaling_factor: 0.01
+      scaling_stat: "constitution"
+      
+  # Condition Interactions
+  interactions:
+    - interaction_id: "resource_category_with_healing"
+      interaction_name: "Resource Category with Healing"
+      interaction_name_vi: "Danh Mục Tài Nguyên với Hồi Máu"
+      interaction_type: "conflict"
+      target_condition: "healing_condition"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.3
+      
+    - interaction_id: "resource_category_with_resistance"
+      interaction_name: "Resource Category with Resistance"
+      interaction_name_vi: "Danh Mục Tài Nguyên với Kháng Cự"
+      interaction_type: "resistance"
+      target_condition: "resistance_condition"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.5
+      
+  # Condition Immunity
+  immunity:
+    - immunity_id: "resource_category_immunity"
+      immunity_name: "Resource Category Immunity"
+      immunity_name_vi: "Miễn Nhiễm Danh Mục Tài Nguyên"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Condition Visual Effects
+  visual_effects:
+    - effect_id: "resource_indicator"
+      effect_name: "Resource Indicator"
+      effect_name_vi: "Chỉ Báo Tài Nguyên"
+      effect_type: "indicator_effect"
+      indicator_type: "resource"
+      indicator_color: "#2c1810"
+      indicator_intensity: 0.6
+      
+  # Condition Audio Effects
+  audio_effects:
+    - effect_id: "resource_sound"
+      effect_name: "Resource Sound"
+      effect_name_vi: "Âm Thanh Tài Nguyên"
+      effect_type: "ambient_sound"
+      sound_type: "resource"
+      volume: 0.6
+      loop: true

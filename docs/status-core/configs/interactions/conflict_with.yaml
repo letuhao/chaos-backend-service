@@ -1,0 +1,113 @@
+# Conflict With Interaction Configuration
+interaction_definition:
+  # Basic Info
+  interaction_id: "conflict_with"
+  interaction_name: "Conflict With"
+  interaction_name_vi: "Xung Đột Với"
+  
+  # Interaction Properties
+  interaction_type: "conflict"
+  priority: 180
+  stackable: false
+  max_stacks: 1
+  stack_behavior: "replace_all"
+  
+  # Interaction Description
+  description: "Creates conflicts between status effects that reduce their effectiveness"
+  description_vi: "Tạo xung đột giữa các trạng thái làm giảm hiệu quả của chúng"
+  
+  # Interaction Properties
+  properties:
+    target_status: "healing_over_time"
+    conflict_type: "effectiveness_reduction"
+    conflict_value: 0.5
+    visual_effect: "conflict_with_indicator"
+    audio_effect: "conflict_with_sound"
+    
+  # Interaction Rules
+  rules:
+    - rule_id: "conflict_with_calculation"
+      rule_name: "Conflict With Calculation"
+      rule_name_vi: "Tính Toán Xung Đột Với"
+      rule_type: "conflict_calculation"
+      rule_description: "Calculate conflict effects based on target status and conflict type"
+      rule_formula: "conflict_effect = base_effect * (1 - conflict_value * conflict_multiplier)"
+      
+    - rule_id: "conflict_with_application"
+      rule_name: "Conflict With Application"
+      rule_name_vi: "Áp Dụng Xung Đột Với"
+      rule_type: "conflict_application"
+      rule_description: "Apply conflict effects when status effects conflict"
+      rule_formula: "final_effect = base_effect * conflict_effect"
+      
+    - rule_id: "conflict_with_condition_processing"
+      rule_name: "Conflict With Condition Processing"
+      rule_name_vi: "Xử Lý Điều Kiện Xung Đột Với"
+      rule_type: "condition_processing"
+      rule_description: "Process conflict conditions and trigger effects"
+      rule_formula: "condition_trigger = conflict_condition && condition_active"
+      
+  # Interaction Modifiers
+  modifiers:
+    - modifier_id: "conflict_with_multiplier"
+      modifier_name: "Conflict With Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Xung Đột Với"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "intelligence"
+      
+    - modifier_id: "conflict_with_conflict_modifier"
+      modifier_name: "Conflict With Conflict Modifier"
+      modifier_name_vi: "Sửa Đổi Xung Đột Xung Đột Với"
+      modifier_type: "conflict"
+      base_value: 0.0
+      scaling_factor: 0.01
+      scaling_stat: "wisdom"
+      
+  # Interaction Interactions
+  interactions:
+    - interaction_id: "conflict_with_with_healing"
+      interaction_name: "Conflict With with Healing"
+      interaction_name_vi: "Xung Đột Với với Hồi Máu"
+      interaction_type: "conflict"
+      target_interaction: "healing_interaction"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.5
+      
+    - interaction_id: "conflict_with_with_resistance"
+      interaction_name: "Conflict With with Resistance"
+      interaction_name_vi: "Xung Đột Với với Kháng Cự"
+      interaction_type: "resistance"
+      target_interaction: "resistance_interaction"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.7
+      
+  # Interaction Immunity
+  immunity:
+    - immunity_id: "conflict_with_immunity"
+      immunity_name: "Conflict With Immunity"
+      immunity_name_vi: "Miễn Nhiễm Xung Đột Với"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Interaction Visual Effects
+  visual_effects:
+    - effect_id: "conflict_with_indicator"
+      effect_name: "Conflict With Indicator"
+      effect_name_vi: "Chỉ Báo Xung Đột Với"
+      effect_type: "indicator_effect"
+      indicator_type: "conflict"
+      indicator_color: "#ff6b6b"
+      indicator_intensity: 1.0
+      
+  # Interaction Audio Effects
+  audio_effects:
+    - effect_id: "conflict_with_sound"
+      effect_name: "Conflict With Sound"
+      effect_name_vi: "Âm Thanh Xung Đột Với"
+      effect_type: "instant_sound"
+      sound_type: "conflict"
+      volume: 0.8
+      loop: false

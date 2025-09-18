@@ -1,0 +1,118 @@
+# Overlay Effect Visual Effect Configuration
+visual_effect_definition:
+  # Basic Info
+  effect_id: "overlay_effect"
+  effect_name: "Overlay Effect"
+  effect_name_vi: "Hiệu Ứng Lớp Phủ"
+  
+  # Effect Properties
+  effect_type: "overlay"
+  priority: 200
+  stackable: false
+  max_stacks: 1
+  stack_behavior: "replace_all"
+  
+  # Effect Description
+  description: "Creates overlay effects on actors for status visual representation"
+  description_vi: "Tạo hiệu ứng lớp phủ trên diễn viên cho biểu diễn trực quan của trạng thái"
+  
+  # Effect Properties
+  properties:
+    overlay_type: "stars"
+    overlay_color: "#ffff00"
+    overlay_intensity: 1.0
+    overlay_size: 1.0
+    overlay_rotation: true
+    overlay_pulse: false
+    overlay_fade: true
+    overlay_loop: true
+    visual_effect: "overlay_effect_indicator"
+    audio_effect: "overlay_effect_sound"
+    
+  # Effect Rules
+  rules:
+    - rule_id: "overlay_effect_calculation"
+      rule_name: "Overlay Effect Calculation"
+      rule_name_vi: "Tính Toán Hiệu Ứng Lớp Phủ"
+      rule_type: "overlay_calculation"
+      rule_description: "Calculate overlay effect properties based on status magnitude and duration"
+      rule_formula: "overlay_intensity = base_intensity * status_magnitude * duration_multiplier"
+      
+    - rule_id: "overlay_effect_application"
+      rule_name: "Overlay Effect Application"
+      rule_name_vi: "Áp Dụng Hiệu Ứng Lớp Phủ"
+      rule_type: "overlay_application"
+      rule_description: "Apply overlay effects to status visual representation"
+      rule_formula: "overlay_effect = overlay_system * overlay_intensity * overlay_size"
+      
+    - rule_id: "overlay_effect_animation"
+      rule_name: "Overlay Effect Animation"
+      rule_name_vi: "Hoạt Hình Hiệu Ứng Lớp Phủ"
+      rule_type: "overlay_animation"
+      rule_description: "Animate overlay effects over time"
+      rule_formula: "overlay_animation = overlay_effect * time_multiplier * animation_speed"
+      
+  # Effect Modifiers
+  modifiers:
+    - modifier_id: "overlay_intensity_multiplier"
+      modifier_name: "Overlay Intensity Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Cường Độ Lớp Phủ"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "intelligence"
+      
+    - modifier_id: "overlay_size_multiplier"
+      modifier_name: "Overlay Size Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Kích Thước Lớp Phủ"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.005
+      scaling_stat: "wisdom"
+      
+  # Effect Interactions
+  interactions:
+    - interaction_id: "overlay_effect_with_healing"
+      interaction_name: "Overlay Effect with Healing"
+      interaction_name_vi: "Hiệu Ứng Lớp Phủ với Hồi Máu"
+      interaction_type: "conflict"
+      target_effect: "healing_visual_effect"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.3
+      
+    - interaction_id: "overlay_effect_with_resistance"
+      interaction_name: "Overlay Effect with Resistance"
+      interaction_name_vi: "Hiệu Ứng Lớp Phủ với Kháng Cự"
+      interaction_type: "resistance"
+      target_effect: "resistance_visual_effect"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.5
+      
+  # Effect Immunity
+  immunity:
+    - immunity_id: "overlay_effect_immunity"
+      immunity_name: "Overlay Effect Immunity"
+      immunity_name_vi: "Miễn Nhiễm Hiệu Ứng Lớp Phủ"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Effect Visual Effects
+  visual_effects:
+    - effect_id: "overlay_effect_indicator"
+      effect_name: "Overlay Effect Indicator"
+      effect_name_vi: "Chỉ Báo Hiệu Ứng Lớp Phủ"
+      effect_type: "indicator_effect"
+      indicator_type: "overlay"
+      indicator_color: "#ffff00"
+      indicator_intensity: 1.0
+      
+  # Effect Audio Effects
+  audio_effects:
+    - effect_id: "overlay_effect_sound"
+      effect_name: "Overlay Effect Sound"
+      effect_name_vi: "Âm Thanh Hiệu Ứng Lớp Phủ"
+      effect_type: "instant_sound"
+      sound_type: "overlay"
+      volume: 0.8
+      loop: false

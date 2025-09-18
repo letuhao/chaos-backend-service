@@ -1,0 +1,186 @@
+# Life Spirit's Gift Status Configuration
+# Healing Status + Buff - Life Element
+status_definition:
+  # Basic Info
+  status_id: "life_spirits_gift"
+  status_guid: "550e8400-e29b-41d4-a716-446655440003"
+  world_id: "chaos_world_001"
+  status_name: "Life Spirit's Gift"
+  status_name_vi: "Quà Tặng Linh Hồn Sự Sống"
+  
+  # Categories (multiple)
+  categories: ["healing_buff", "life_element", "buff"]
+  
+  # Element Binding
+  elements:
+    primary_element: "life"
+    secondary_elements: ["spirit", "healing"]
+    element_affinity: 0.95
+    
+  # Basic Properties
+  effect_type: "buff"
+  priority: 150
+  stackable: true
+  max_stacks: 3
+  stack_behavior: "stack_additive"
+  
+  # Immunity System
+  immunity_system:
+    mechanical_immunity:
+      - condition: "dead"
+        immunity_type: "all_healing_status"
+        reason: "Dead actors cannot receive healing status"
+        
+    logical_immunity:
+      - condition: "life_element_mastery_above_100"
+        immunity_type: "life_spirits_gift"
+        reason: "High life mastery provides natural life gift resistance"
+        
+    temporary_immunity:
+      - condition: "just_removed_life_spirits_gift"
+        immunity_type: "life_spirits_gift"
+        duration: 10.0
+        reason: "Temporary immunity after life gift removal"
+  
+  # Status Effects
+  effects:
+    - effect_id: "life_healing"
+      effect_type: "healing_over_time"
+      magnitude:
+        base_value: 25.0
+        scaling_factor: 0.15
+        scaling_stat: "wisdom"
+      duration:
+        base_duration: 15.0
+        scaling_factor: 0.1
+        scaling_stat: "constitution"
+      conditions:
+        - condition_type: "tick_condition"
+          tick_interval: 2.0
+          tick_count: 8
+        - condition_type: "health_condition"
+          health_percentage: 0.95
+          condition_type: "below"
+      triggers:
+        - trigger_type: "on_tick"
+          trigger_data:
+            tick_interval: 2.0
+            tick_count: 8
+      modifiers:
+        - modifier_type: "healing_multiplier"
+          value: 1.0
+          source: "base_healing"
+        - modifier_type: "wisdom_bonus"
+          scaling_factor: 0.15
+      interactions:
+        - interaction_type: "stack_with"
+          target_status: "life_spirits_gift"
+          max_stacks: 3
+      immunity_list: []
+      movement_restrictions: []
+      visual_effects:
+        - effect_type: "aura_effect"
+          effect_name: "golden_aura"
+          duration: 15.0
+          intensity: 1.0
+      audio_effects:
+        - effect_type: "ambient_sound"
+          sound_name: "healing_chime"
+          volume: 0.5
+          loop: true
+            
+    - effect_id: "physical_speed_buff"
+      effect_type: "stat_modifier"
+      magnitude:
+        base_value: 0.25
+        scaling_factor: 0.05
+        scaling_stat: "agility"
+      duration:
+        base_duration: 15.0
+        scaling_factor: 0.1
+        scaling_stat: "constitution"
+      conditions:
+        - condition_type: "action_category_condition"
+          action_categories: ["physical", "movement"]
+          restriction_type: "enhance"
+      triggers:
+        - trigger_type: "on_apply"
+          trigger_data:
+            immediate_effect: true
+      modifiers:
+        - modifier_type: "action_speed_multiplier"
+          value: 1.25
+          source: "life_gift_buff"
+        - modifier_type: "action_execution_speed"
+          value: 0.25
+          source: "life_gift_buff"
+      interactions:
+        - interaction_type: "stack_with"
+          target_status: "life_spirits_gift"
+          max_stacks: 3
+      immunity_list: []
+      movement_restrictions: []
+      visual_effects:
+        - effect_type: "aura_effect"
+          effect_name: "golden_aura"
+          duration: 15.0
+          intensity: 1.0
+      audio_effects:
+        - effect_type: "ambient_sound"
+          sound_name: "healing_chime"
+          volume: 0.5
+          loop: true
+
+  # Dynamic Scaling System
+  scaling_system:
+    level_scaling:
+      base_level: 1
+      max_level: 100
+      scaling_formula: "exponential"
+      scaling_factor: 1.1
+      
+    stat_scaling:
+      primary_stat: "wisdom"
+      secondary_stat: "constitution"
+      tertiary_stat: "agility"
+      scaling_weights: [0.4, 0.3, 0.3]
+
+  # Conditional Effects
+  conditional_effects:
+    - condition: "health_below_30%"
+      effect_modifier: 1.5
+      effect_type: "healing_multiplier"
+      
+    - condition: "life_element_mastery_above_100"
+      effect_modifier: 1.3
+      effect_type: "healing_multiplier"
+
+  # Environment Interactions
+  environment_interactions:
+    - environment: "life_realm"
+      effect_modifier: 1.5
+      effect_type: "healing_multiplier"
+      
+    - environment: "death_realm"
+      effect_modifier: 0.5
+      effect_type: "healing_multiplier"
+
+  # Time-based Modifiers
+  time_modifiers:
+    - time_period: "day"
+      effect_modifier: 1.2
+      effect_type: "healing_multiplier"
+      
+    - time_period: "night"
+      effect_modifier: 0.8
+      effect_type: "healing_multiplier"
+
+  # Relationship-based Effects
+  relationship_effects:
+    - relationship: "ally"
+      effect_modifier: 1.0
+      effect_type: "healing_multiplier"
+      
+    - relationship: "enemy"
+      effect_modifier: 0.0
+      effect_type: "healing_multiplier"

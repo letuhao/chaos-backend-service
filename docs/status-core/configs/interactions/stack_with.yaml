@@ -1,0 +1,113 @@
+# Stack With Interaction Configuration
+interaction_definition:
+  # Basic Info
+  interaction_id: "stack_with"
+  interaction_name: "Stack With"
+  interaction_name_vi: "Chồng Chất Với"
+  
+  # Interaction Properties
+  interaction_type: "stacking"
+  priority: 100
+  stackable: true
+  max_stacks: 10
+  stack_behavior: "replace_oldest"
+  
+  # Interaction Description
+  description: "Allows status effects to stack with each other based on stacking rules"
+  description_vi: "Cho phép trạng thái chồng chất với nhau dựa trên quy tắc chồng chất"
+  
+  # Interaction Properties
+  properties:
+    target_status: "burning"
+    max_stacks: 5
+    stack_behavior: "replace_oldest"
+    visual_effect: "stack_with_indicator"
+    audio_effect: "stack_with_sound"
+    
+  # Interaction Rules
+  rules:
+    - rule_id: "stack_with_calculation"
+      rule_name: "Stack With Calculation"
+      rule_name_vi: "Tính Toán Chồng Chất Với"
+      rule_type: "stacking_calculation"
+      rule_description: "Calculate stacking effects based on target status and max stacks"
+      rule_formula: "stack_effect = base_effect * (1 + stack_count * stack_multiplier)"
+      
+    - rule_id: "stack_with_application"
+      rule_name: "Stack With Application"
+      rule_name_vi: "Áp Dụng Chồng Chất Với"
+      rule_type: "stacking_application"
+      rule_description: "Apply stacking effects when status effects stack"
+      rule_formula: "final_effect = base_effect * stack_effect"
+      
+    - rule_id: "stack_with_stack_processing"
+      rule_name: "Stack With Stack Processing"
+      rule_name_vi: "Xử Lý Chồng Chồng Chất Với"
+      rule_type: "stack_processing"
+      rule_description: "Process stacking effects when status effects stack"
+      rule_formula: "total_effect = sum(individual_effects) * stack_multiplier"
+      
+  # Interaction Modifiers
+  modifiers:
+    - modifier_id: "stack_with_multiplier"
+      modifier_name: "Stack With Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Chồng Chất Với"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "intelligence"
+      
+    - modifier_id: "stack_with_stack_modifier"
+      modifier_name: "Stack With Stack Modifier"
+      modifier_name_vi: "Sửa Đổi Chồng Chồng Chất Với"
+      modifier_type: "stacking"
+      base_value: 0.0
+      scaling_factor: 0.01
+      scaling_stat: "constitution"
+      
+  # Interaction Interactions
+  interactions:
+    - interaction_id: "stack_with_with_healing"
+      interaction_name: "Stack With with Healing"
+      interaction_name_vi: "Chồng Chất Với với Hồi Máu"
+      interaction_type: "conflict"
+      target_interaction: "healing_interaction"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.5
+      
+    - interaction_id: "stack_with_with_resistance"
+      interaction_name: "Stack With with Resistance"
+      interaction_name_vi: "Chồng Chất Với với Kháng Cự"
+      interaction_type: "resistance"
+      target_interaction: "resistance_interaction"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.7
+      
+  # Interaction Immunity
+  immunity:
+    - immunity_id: "stack_with_immunity"
+      immunity_name: "Stack With Immunity"
+      immunity_name_vi: "Miễn Nhiễm Chồng Chất Với"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Interaction Visual Effects
+  visual_effects:
+    - effect_id: "stack_with_indicator"
+      effect_name: "Stack With Indicator"
+      effect_name_vi: "Chỉ Báo Chồng Chất Với"
+      effect_type: "indicator_effect"
+      indicator_type: "stacking"
+      indicator_color: "#4ecdc4"
+      indicator_intensity: 0.7
+      
+  # Interaction Audio Effects
+  audio_effects:
+    - effect_id: "stack_with_sound"
+      effect_name: "Stack With Sound"
+      effect_name_vi: "Âm Thanh Chồng Chất Với"
+      effect_type: "ambient_sound"
+      sound_type: "stacking"
+      volume: 0.6
+      loop: true

@@ -1,0 +1,114 @@
+# Complete Block Movement Restriction Configuration
+movement_restriction_definition:
+  # Basic Info
+  restriction_id: "complete_block"
+  restriction_name: "Complete Block"
+  restriction_name_vi: "Chặn Hoàn Toàn"
+  
+  # Restriction Properties
+  restriction_type: "complete"
+  priority: 200
+  stackable: false
+  max_stacks: 1
+  stack_behavior: "stack_replace"
+  
+  # Restriction Description
+  description: "Completely blocks actor movement and actions"
+  description_vi: "Chặn hoàn toàn di chuyển và hành động của diễn viên"
+  
+  # Restriction Properties
+  properties:
+    movement_type: "all"
+    restriction_value: 1.0
+    restriction_duration: "temporary"
+    restriction_condition: "status_active"
+    visual_effect: "complete_block_indicator"
+    audio_effect: "complete_block_sound"
+    
+  # Restriction Rules
+  rules:
+    - rule_id: "complete_block_calculation"
+      rule_name: "Complete Block Calculation"
+      rule_name_vi: "Tính Toán Chặn Hoàn Toàn"
+      rule_type: "complete_calculation"
+      rule_description: "Calculate complete block based on restriction value and conditions"
+      rule_formula: "complete_block = restriction_value * restriction_multiplier * restriction_condition"
+      
+    - rule_id: "complete_block_application"
+      rule_name: "Complete Block Application"
+      rule_name_vi: "Áp Dụng Chặn Hoàn Toàn"
+      rule_type: "complete_application"
+      rule_description: "Apply complete block to actor movement and actions"
+      rule_formula: "final_restriction = base_restriction * complete_block"
+      
+    - rule_id: "complete_block_break_processing"
+      rule_name: "Complete Block Break Processing"
+      rule_name_vi: "Xử Lý Phá Vỡ Chặn Hoàn Toàn"
+      rule_type: "break_processing"
+      rule_description: "Process complete block break conditions"
+      rule_formula: "block_broken = (constitution + willpower) / 100.0 > break_threshold"
+      
+  # Restriction Modifiers
+  modifiers:
+    - modifier_id: "complete_block_value_multiplier"
+      modifier_name: "Complete Block Value Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Giá Trị Chặn Hoàn Toàn"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "constitution"
+      
+    - modifier_id: "complete_block_condition_modifier"
+      modifier_name: "Complete Block Condition Modifier"
+      modifier_name_vi: "Sửa Đổi Điều Kiện Chặn Hoàn Toàn"
+      modifier_type: "condition"
+      base_value: 0.0
+      scaling_factor: 0.01
+      scaling_stat: "wisdom"
+      
+  # Restriction Interactions
+  interactions:
+    - interaction_id: "complete_block_with_healing"
+      interaction_name: "Complete Block with Healing"
+      interaction_name_vi: "Chặn Hoàn Toàn với Hồi Máu"
+      interaction_type: "conflict"
+      target_restriction: "healing_movement_restriction"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.0
+      
+    - interaction_id: "complete_block_with_resistance"
+      interaction_name: "Complete Block with Resistance"
+      interaction_name_vi: "Chặn Hoàn Toàn với Kháng Cự"
+      interaction_type: "resistance"
+      target_restriction: "resistance_movement_restriction"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.5
+      
+  # Restriction Immunity
+  immunity:
+    - immunity_id: "complete_block_immunity"
+      immunity_name: "Complete Block Immunity"
+      immunity_name_vi: "Miễn Nhiễm Chặn Hoàn Toàn"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_200"
+      immunity_duration: "permanent"
+      
+  # Restriction Visual Effects
+  visual_effects:
+    - effect_id: "complete_block_indicator"
+      effect_name: "Complete Block Indicator"
+      effect_name_vi: "Chỉ Báo Chặn Hoàn Toàn"
+      effect_type: "indicator_effect"
+      indicator_type: "movement"
+      indicator_color: "#ff0000"
+      indicator_intensity: 1.0
+      
+  # Restriction Audio Effects
+  audio_effects:
+    - effect_id: "complete_block_sound"
+      effect_name: "Complete Block Sound"
+      effect_name_vi: "Âm Thanh Chặn Hoàn Toàn"
+      effect_type: "instant_sound"
+      sound_type: "movement"
+      volume: 1.0
+      loop: false

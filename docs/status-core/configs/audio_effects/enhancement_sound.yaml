@@ -1,0 +1,118 @@
+# Enhancement Sound Audio Effect Configuration
+audio_effect_definition:
+  # Basic Info
+  effect_id: "enhancement_sound"
+  effect_name: "Enhancement Sound"
+  effect_name_vi: "Âm Thanh Tăng Cường"
+  
+  # Effect Properties
+  effect_type: "enhancement"
+  priority: 140
+  stackable: true
+  max_stacks: 5
+  stack_behavior: "stack_additive"
+  
+  # Effect Description
+  description: "Creates enhancement sound effects for status audio representation"
+  description_vi: "Tạo hiệu ứng âm thanh tăng cường cho biểu diễn âm thanh của trạng thái"
+  
+  # Effect Properties
+  properties:
+    sound_type: "healing"
+    sound_volume: 0.6
+    sound_loop: true
+    sound_fade: true
+    sound_pitch: 1.0
+    sound_pan: 0.0
+    sound_priority: 140
+    sound_category: "status_effect"
+    visual_effect: "enhancement_sound_indicator"
+    audio_effect: "enhancement_sound_sound"
+    
+  # Effect Rules
+  rules:
+    - rule_id: "enhancement_sound_calculation"
+      rule_name: "Enhancement Sound Calculation"
+      rule_name_vi: "Tính Toán Âm Thanh Tăng Cường"
+      rule_type: "sound_calculation"
+      rule_description: "Calculate enhancement sound properties based on status magnitude and enhancement value"
+      rule_formula: "sound_volume = base_volume * status_magnitude * enhancement_value_multiplier"
+      
+    - rule_id: "enhancement_sound_application"
+      rule_name: "Enhancement Sound Application"
+      rule_name_vi: "Áp Dụng Âm Thanh Tăng Cường"
+      rule_type: "sound_application"
+      rule_description: "Apply enhancement sound effects to status audio representation"
+      rule_formula: "enhancement_sound = sound_system * sound_volume * enhancement_value"
+      
+    - rule_id: "enhancement_sound_animation"
+      rule_name: "Enhancement Sound Animation"
+      rule_name_vi: "Hoạt Hình Âm Thanh Tăng Cường"
+      rule_type: "sound_animation"
+      rule_description: "Animate enhancement sound effects over time"
+      rule_formula: "sound_animation = enhancement_sound * time_multiplier * animation_speed"
+      
+  # Effect Modifiers
+  modifiers:
+    - modifier_id: "enhancement_sound_volume_multiplier"
+      modifier_name: "Enhancement Sound Volume Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Âm Lượng Âm Thanh Tăng Cường"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "intelligence"
+      
+    - modifier_id: "enhancement_sound_enhancement_multiplier"
+      modifier_name: "Enhancement Sound Enhancement Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Tăng Cường Âm Thanh Tăng Cường"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.005
+      scaling_stat: "wisdom"
+      
+  # Effect Interactions
+  interactions:
+    - interaction_id: "enhancement_sound_with_healing"
+      interaction_name: "Enhancement Sound with Healing"
+      interaction_name_vi: "Âm Thanh Tăng Cường với Hồi Máu"
+      interaction_type: "conflict"
+      target_effect: "healing_audio_effect"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.5
+      
+    - interaction_id: "enhancement_sound_with_resistance"
+      interaction_name: "Enhancement Sound with Resistance"
+      interaction_name_vi: "Âm Thanh Tăng Cường với Kháng Cự"
+      interaction_type: "resistance"
+      target_effect: "resistance_audio_effect"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.7
+      
+  # Effect Immunity
+  immunity:
+    - immunity_id: "enhancement_sound_immunity"
+      immunity_name: "Enhancement Sound Immunity"
+      immunity_name_vi: "Miễn Nhiễm Âm Thanh Tăng Cường"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Effect Visual Effects
+  visual_effects:
+    - effect_id: "enhancement_sound_indicator"
+      effect_name: "Enhancement Sound Indicator"
+      effect_name_vi: "Chỉ Báo Âm Thanh Tăng Cường"
+      effect_type: "indicator_effect"
+      indicator_type: "sound"
+      indicator_color: "#ffd700"
+      indicator_intensity: 0.8
+      
+  # Effect Audio Effects
+  audio_effects:
+    - effect_id: "enhancement_sound_sound"
+      effect_name: "Enhancement Sound Sound"
+      effect_name_vi: "Âm Thanh Âm Thanh Tăng Cường"
+      effect_type: "ambient_sound"
+      sound_type: "enhancement"
+      volume: 0.6
+      loop: true

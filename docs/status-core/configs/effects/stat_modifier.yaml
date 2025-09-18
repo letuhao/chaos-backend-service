@@ -1,0 +1,113 @@
+# Stat Modifier Effect Configuration
+effect_definition:
+  # Basic Info
+  effect_id: "stat_modifier"
+  effect_name: "Stat Modifier"
+  effect_name_vi: "Sửa Đổi Chỉ Số"
+  
+  # Effect Properties
+  effect_type: "buff_debuff"
+  priority: 120
+  stackable: true
+  max_stacks: 8
+  stack_behavior: "stack_additive"
+  
+  # Effect Description
+  description: "Modifies actor stats based on magnitude and scaling factors"
+  description_vi: "Sửa đổi chỉ số của diễn viên dựa trên cường độ và hệ số nhân"
+  
+  # Effect Properties
+  properties:
+    modifier_type: "stat_enhancement"
+    visual_effect: "stat_aura"
+    audio_effect: "stat_sound"
+    element_binding: true
+    resistance_calculation: true
+    
+  # Effect Rules
+  rules:
+    - rule_id: "stat_modifier_calculation"
+      rule_name: "Stat Modifier Calculation"
+      rule_name_vi: "Tính Toán Sửa Đổi Chỉ Số"
+      rule_type: "stat_calculation"
+      rule_description: "Calculate stat modifications based on magnitude and scaling factors"
+      rule_formula: "stat_modifier = base_magnitude * scaling_factor * stat_value"
+      
+    - rule_id: "stat_modifier_duration"
+      rule_name: "Stat Modifier Duration"
+      rule_name_vi: "Thời Gian Sửa Đổi Chỉ Số"
+      rule_type: "duration_calculation"
+      rule_description: "Calculate modifier duration based on mastery and resistance"
+      rule_formula: "duration = base_duration * (1 + mastery_bonus - resistance_modifier)"
+      
+    - rule_id: "stat_modifier_stack_processing"
+      rule_name: "Stat Modifier Stack Processing"
+      rule_name_vi: "Xử Lý Chồng Sửa Đổi Chỉ Số"
+      rule_type: "stack_processing"
+      rule_description: "Process stat modifier stacking effects"
+      rule_formula: "total_modifier = sum(individual_modifiers) * stack_multiplier"
+      
+  # Effect Modifiers
+  modifiers:
+    - modifier_id: "stat_magnitude_multiplier"
+      modifier_name: "Stat Magnitude Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Cường Độ Chỉ Số"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "intelligence"
+      
+    - modifier_id: "stat_resistance_modifier"
+      modifier_name: "Stat Resistance Modifier"
+      modifier_name_vi: "Sửa Đổi Kháng Chỉ Số"
+      modifier_type: "resistance"
+      base_value: 0.0
+      scaling_factor: 0.01
+      scaling_stat: "constitution"
+      
+  # Effect Interactions
+  interactions:
+    - interaction_id: "stat_modifier_with_buff"
+      interaction_name: "Stat Modifier with Buff"
+      interaction_name_vi: "Sửa Đổi Chỉ Số với Buff"
+      interaction_type: "conflict"
+      target_effect: "healing_over_time"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.5
+      
+    - interaction_id: "stat_modifier_with_debuff"
+      interaction_name: "Stat Modifier with Debuff"
+      interaction_name_vi: "Sửa Đổi Chỉ Số với Debuff"
+      interaction_type: "conflict"
+      target_effect: "resource_modifier"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.3
+      
+  # Effect Immunity
+  immunity:
+    - immunity_id: "stat_modifier_immunity"
+      immunity_name: "Stat Modifier Immunity"
+      immunity_name_vi: "Miễn Nhiễm Sửa Đổi Chỉ Số"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Effect Visual Effects
+  visual_effects:
+    - effect_id: "stat_aura"
+      effect_name: "Stat Aura"
+      effect_name_vi: "Hào Quang Chỉ Số"
+      effect_type: "aura_effect"
+      aura_type: "circular"
+      aura_color: "#4ecdc4"
+      aura_intensity: 0.7
+      
+  # Effect Audio Effects
+  audio_effects:
+    - effect_id: "stat_sound"
+      effect_name: "Stat Sound"
+      effect_name_vi: "Âm Thanh Chỉ Số"
+      effect_type: "ambient_sound"
+      sound_type: "stat"
+      volume: 0.6
+      loop: true

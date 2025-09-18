@@ -1,0 +1,115 @@
+# Damage Over Time Effect Configuration
+effect_definition:
+  # Basic Info
+  effect_id: "damage_over_time"
+  effect_name: "Damage Over Time"
+  effect_name_vi: "Sát Thương Theo Thời Gian"
+  
+  # Effect Properties
+  effect_type: "damage"
+  priority: 100
+  stackable: true
+  max_stacks: 10
+  stack_behavior: "replace_oldest"
+  
+  # Effect Description
+  description: "Deals damage over time based on magnitude and element mastery"
+  description_vi: "Gây sát thương theo thời gian dựa trên cường độ và thành thạo nguyên tố"
+  
+  # Effect Properties
+  properties:
+    damage_type: "status_effect"
+    damage_element: "fire"
+    damage_source: "status_effect"
+    visual_effect: "damage_particles"
+    audio_effect: "damage_sound"
+    element_binding: true
+    resistance_calculation: true
+    
+  # Effect Rules
+  rules:
+    - rule_id: "dot_damage_calculation"
+      rule_name: "DOT Damage Calculation"
+      rule_name_vi: "Tính Toán Sát Thương DOT"
+      rule_type: "damage_calculation"
+      rule_description: "Calculate damage over time based on magnitude and element mastery"
+      rule_formula: "damage = base_magnitude * element_mastery_bonus * resistance_modifier"
+      
+    - rule_id: "dot_tick_processing"
+      rule_name: "DOT Tick Processing"
+      rule_name_vi: "Xử Lý Tick DOT"
+      rule_type: "tick_processing"
+      rule_description: "Process damage on each tick based on tick_interval"
+      rule_formula: "tick_damage = total_damage / tick_count"
+      
+    - rule_id: "dot_element_interaction"
+      rule_name: "DOT Element Interaction"
+      rule_name_vi: "Tương Tác Nguyên Tố DOT"
+      rule_type: "element_interaction"
+      rule_description: "Apply element interactions for DOT effects"
+      rule_formula: "final_damage = damage * element_interaction_modifier"
+      
+  # Effect Modifiers
+  modifiers:
+    - modifier_id: "dot_damage_multiplier"
+      modifier_name: "DOT Damage Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Sát Thương DOT"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "element_mastery"
+      
+    - modifier_id: "dot_duration_multiplier"
+      modifier_name: "DOT Duration Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Thời Gian DOT"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.005
+      scaling_stat: "wisdom"
+      
+  # Effect Interactions
+  interactions:
+    - interaction_id: "dot_with_healing"
+      interaction_name: "DOT with Healing"
+      interaction_name_vi: "DOT với Hồi Máu"
+      interaction_type: "conflict"
+      target_effect: "healing_over_time"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.5
+      
+    - interaction_id: "dot_with_resistance"
+      interaction_name: "DOT with Resistance"
+      interaction_name_vi: "DOT với Kháng Cự"
+      interaction_type: "resistance"
+      target_effect: "resistance"
+      interaction_behavior: "reduce_damage"
+      interaction_modifier: 0.7
+      
+  # Effect Immunity
+  immunity:
+    - immunity_id: "dot_immunity"
+      immunity_name: "DOT Immunity"
+      immunity_name_vi: "Miễn Nhiễm DOT"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Effect Visual Effects
+  visual_effects:
+    - effect_id: "dot_particles"
+      effect_name: "DOT Particles"
+      effect_name_vi: "Hạt DOT"
+      effect_type: "particle_system"
+      particle_type: "damage"
+      particle_color: "#ff6b35"
+      particle_intensity: 1.0
+      
+  # Effect Audio Effects
+  audio_effects:
+    - effect_id: "dot_sound"
+      effect_name: "DOT Sound"
+      effect_name_vi: "Âm Thanh DOT"
+      effect_type: "ambient_sound"
+      sound_type: "damage"
+      volume: 0.7
+      loop: true

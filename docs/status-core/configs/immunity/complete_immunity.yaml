@@ -1,0 +1,114 @@
+# Complete Immunity Configuration
+immunity_definition:
+  # Basic Info
+  immunity_id: "complete_immunity"
+  immunity_name: "Complete Immunity"
+  immunity_name_vi: "Miễn Nhiễm Hoàn Toàn"
+  
+  # Immunity Properties
+  immunity_type: "complete"
+  priority: 200
+  stackable: false
+  max_stacks: 1
+  stack_behavior: "replace_all"
+  
+  # Immunity Description
+  description: "Provides complete immunity against all status effects"
+  description_vi: "Cung cấp miễn nhiễm hoàn toàn chống lại tất cả trạng thái"
+  
+  # Immunity Properties
+  properties:
+    immunity_condition: "element_mastery_above_100"
+    immunity_type: "all_status"
+    immunity_duration: "permanent"
+    immunity_reason: "High element mastery provides complete status immunity"
+    visual_effect: "complete_immunity_indicator"
+    audio_effect: "complete_immunity_sound"
+    
+  # Immunity Rules
+  rules:
+    - rule_id: "complete_immunity_calculation"
+      rule_name: "Complete Immunity Calculation"
+      rule_name_vi: "Tính Toán Miễn Nhiễm Hoàn Toàn"
+      rule_type: "immunity_calculation"
+      rule_description: "Calculate complete immunity based on mastery and conditions"
+      rule_formula: "complete_immunity = immunity_condition_met && immunity_type == all_status"
+      
+    - rule_id: "complete_immunity_application"
+      rule_name: "Complete Immunity Application"
+      rule_name_vi: "Áp Dụng Miễn Nhiễm Hoàn Toàn"
+      rule_type: "immunity_application"
+      rule_description: "Apply complete immunity to all status effect applications"
+      rule_formula: "status_blocked = complete_immunity && target_status in all_statuses"
+      
+    - rule_id: "complete_immunity_condition_processing"
+      rule_name: "Complete Immunity Condition Processing"
+      rule_name_vi: "Xử Lý Điều Kiện Miễn Nhiễm Hoàn Toàn"
+      rule_type: "condition_processing"
+      rule_description: "Process complete immunity conditions and trigger effects"
+      rule_formula: "condition_trigger = immunity_condition && condition_active"
+      
+  # Immunity Modifiers
+  modifiers:
+    - modifier_id: "complete_immunity_multiplier"
+      modifier_name: "Complete Immunity Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Miễn Nhiễm Hoàn Toàn"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "element_mastery"
+      
+    - modifier_id: "complete_immunity_condition_modifier"
+      modifier_name: "Complete Immunity Condition Modifier"
+      modifier_name_vi: "Sửa Đổi Điều Kiện Miễn Nhiễm Hoàn Toàn"
+      modifier_type: "condition"
+      base_value: 0.0
+      scaling_factor: 0.01
+      scaling_stat: "constitution"
+      
+  # Immunity Interactions
+  interactions:
+    - interaction_id: "complete_immunity_with_healing"
+      interaction_name: "Complete Immunity with Healing"
+      interaction_name_vi: "Miễn Nhiễm Hoàn Toàn với Hồi Máu"
+      interaction_type: "conflict"
+      target_immunity: "healing_immunity"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.0
+      
+    - interaction_id: "complete_immunity_with_resistance"
+      interaction_name: "Complete Immunity with Resistance"
+      interaction_name_vi: "Miễn Nhiễm Hoàn Toàn với Kháng Cự"
+      interaction_type: "resistance"
+      target_immunity: "resistance_immunity"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.0
+      
+  # Immunity Immunity
+  immunity:
+    - immunity_id: "complete_immunity_immunity"
+      immunity_name: "Complete Immunity Immunity"
+      immunity_name_vi: "Miễn Nhiễm Miễn Nhiễm Hoàn Toàn"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Immunity Visual Effects
+  visual_effects:
+    - effect_id: "complete_immunity_indicator"
+      effect_name: "Complete Immunity Indicator"
+      effect_name_vi: "Chỉ Báo Miễn Nhiễm Hoàn Toàn"
+      effect_type: "indicator_effect"
+      indicator_type: "immunity"
+      indicator_color: "#ffd700"
+      indicator_intensity: 1.0
+      
+  # Immunity Audio Effects
+  audio_effects:
+    - effect_id: "complete_immunity_sound"
+      effect_name: "Complete Immunity Sound"
+      effect_name_vi: "Âm Thanh Miễn Nhiễm Hoàn Toàn"
+      effect_type: "instant_sound"
+      sound_type: "immunity"
+      volume: 0.9
+      loop: false

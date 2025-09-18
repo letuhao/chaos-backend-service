@@ -1,0 +1,96 @@
+# Resource Consumption Multiplier Modifier Configuration
+modifier_definition:
+  # Basic Info
+  modifier_id: "resource_consumption_multiplier"
+  modifier_name: "Resource Consumption Multiplier"
+  modifier_name_vi: "Hệ Số Nhân Tiêu Tốn Tài Nguyên"
+  
+  # Modifier Properties
+  modifier_type: "multiplier"
+  priority: 130
+  stackable: true
+  max_stacks: 8
+  stack_behavior: "stack_additive"
+  
+  # Modifier Description
+  description: "Multiplies resource consumption based on magnitude and scaling factors"
+  description_vi: "Nhân tiêu tốn tài nguyên dựa trên cường độ và hệ số nhân"
+  
+  # Modifier Properties
+  properties:
+    value: 1.15
+    source: "curse_effect"
+    scaling_factor: 0.02
+    scaling_stat: "intelligence"
+    visual_effect: "resource_consumption_multiplier_indicator"
+    audio_effect: "resource_consumption_multiplier_sound"
+    
+  # Modifier Rules
+  rules:
+    - rule_id: "resource_consumption_multiplier_calculation"
+      rule_name: "Resource Consumption Multiplier Calculation"
+      rule_name_vi: "Tính Toán Hệ Số Nhân Tiêu Tốn Tài Nguyên"
+      rule_type: "multiplier_calculation"
+      rule_description: "Calculate resource consumption multiplier based on value and scaling factors"
+      rule_formula: "consumption_multiplier = base_value * (1 + scaling_factor * stat_value)"
+      
+    - rule_id: "resource_consumption_multiplier_application"
+      rule_name: "Resource Consumption Multiplier Application"
+      rule_name_vi: "Áp Dụng Hệ Số Nhân Tiêu Tốn Tài Nguyên"
+      rule_type: "multiplier_application"
+      rule_description: "Apply resource consumption multiplier to consumption calculation"
+      rule_formula: "final_consumption = base_consumption * consumption_multiplier"
+      
+    - rule_id: "resource_consumption_multiplier_stack_processing"
+      rule_name: "Resource Consumption Multiplier Stack Processing"
+      rule_name_vi: "Xử Lý Chồng Hệ Số Nhân Tiêu Tốn Tài Nguyên"
+      rule_type: "stack_processing"
+      rule_description: "Process resource consumption multiplier stacking effects"
+      rule_formula: "total_multiplier = sum(individual_multipliers) * stack_multiplier"
+      
+  # Modifier Interactions
+  interactions:
+    - interaction_id: "resource_consumption_multiplier_with_healing"
+      interaction_name: "Resource Consumption Multiplier with Healing"
+      interaction_name_vi: "Hệ Số Nhân Tiêu Tốn Tài Nguyên với Hồi Máu"
+      interaction_type: "conflict"
+      target_modifier: "healing_multiplier"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.3
+      
+    - interaction_id: "resource_consumption_multiplier_with_resistance"
+      interaction_name: "Resource Consumption Multiplier with Resistance"
+      interaction_name_vi: "Hệ Số Nhân Tiêu Tốn Tài Nguyên với Kháng Cự"
+      interaction_type: "resistance"
+      target_modifier: "resistance_modifier"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.5
+      
+  # Modifier Immunity
+  immunity:
+    - immunity_id: "resource_consumption_multiplier_immunity"
+      immunity_name: "Resource Consumption Multiplier Immunity"
+      immunity_name_vi: "Miễn Nhiễm Hệ Số Nhân Tiêu Tốn Tài Nguyên"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Modifier Visual Effects
+  visual_effects:
+    - effect_id: "resource_consumption_multiplier_indicator"
+      effect_name: "Resource Consumption Multiplier Indicator"
+      effect_name_vi: "Chỉ Báo Hệ Số Nhân Tiêu Tốn Tài Nguyên"
+      effect_type: "indicator_effect"
+      indicator_type: "multiplier"
+      indicator_color: "#2c1810"
+      indicator_intensity: 0.6
+      
+  # Modifier Audio Effects
+  audio_effects:
+    - effect_id: "resource_consumption_multiplier_sound"
+      effect_name: "Resource Consumption Multiplier Sound"
+      effect_name_vi: "Âm Thanh Hệ Số Nhân Tiêu Tốn Tài Nguyên"
+      effect_type: "ambient_sound"
+      sound_type: "resource"
+      volume: 0.6
+      loop: true

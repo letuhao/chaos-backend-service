@@ -1,0 +1,119 @@
+# Instant Effect Visual Effect Configuration
+visual_effect_definition:
+  # Basic Info
+  effect_id: "instant_effect"
+  effect_name: "Instant Effect"
+  effect_name_vi: "Hiệu Ứng Tức Thời"
+  
+  # Effect Properties
+  effect_type: "instant"
+  priority: 180
+  stackable: false
+  max_stacks: 1
+  stack_behavior: "replace_all"
+  
+  # Effect Description
+  description: "Creates instant visual effects for status representation"
+  description_vi: "Tạo hiệu ứng trực quan tức thời cho biểu diễn trạng thái"
+  
+  # Effect Properties
+  properties:
+    effect_type: "damage"
+    effect_color: "#ff6b35"
+    effect_intensity: 1.0
+    effect_duration: 0.5
+    effect_size: 1.0
+    effect_rotation: false
+    effect_pulse: false
+    effect_fade: true
+    effect_loop: false
+    visual_effect: "instant_effect_indicator"
+    audio_effect: "instant_effect_sound"
+    
+  # Effect Rules
+  rules:
+    - rule_id: "instant_effect_calculation"
+      rule_name: "Instant Effect Calculation"
+      rule_name_vi: "Tính Toán Hiệu Ứng Tức Thời"
+      rule_type: "instant_calculation"
+      rule_description: "Calculate instant effect properties based on status magnitude and duration"
+      rule_formula: "instant_intensity = base_intensity * status_magnitude * duration_multiplier"
+      
+    - rule_id: "instant_effect_application"
+      rule_name: "Instant Effect Application"
+      rule_name_vi: "Áp Dụng Hiệu Ứng Tức Thời"
+      rule_type: "instant_application"
+      rule_description: "Apply instant effects to status visual representation"
+      rule_formula: "instant_effect = instant_system * instant_intensity * instant_duration"
+      
+    - rule_id: "instant_effect_animation"
+      rule_name: "Instant Effect Animation"
+      rule_name_vi: "Hoạt Hình Hiệu Ứng Tức Thời"
+      rule_type: "instant_animation"
+      rule_description: "Animate instant effects over time"
+      rule_formula: "instant_animation = instant_effect * time_multiplier * animation_speed"
+      
+  # Effect Modifiers
+  modifiers:
+    - modifier_id: "instant_intensity_multiplier"
+      modifier_name: "Instant Intensity Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Cường Độ Tức Thời"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "intelligence"
+      
+    - modifier_id: "instant_duration_multiplier"
+      modifier_name: "Instant Duration Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Thời Lượng Tức Thời"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.005
+      scaling_stat: "wisdom"
+      
+  # Effect Interactions
+  interactions:
+    - interaction_id: "instant_effect_with_healing"
+      interaction_name: "Instant Effect with Healing"
+      interaction_name_vi: "Hiệu Ứng Tức Thời với Hồi Máu"
+      interaction_type: "conflict"
+      target_effect: "healing_visual_effect"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.3
+      
+    - interaction_id: "instant_effect_with_resistance"
+      interaction_name: "Instant Effect with Resistance"
+      interaction_name_vi: "Hiệu Ứng Tức Thời với Kháng Cự"
+      interaction_type: "resistance"
+      target_effect: "resistance_visual_effect"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.5
+      
+  # Effect Immunity
+  immunity:
+    - immunity_id: "instant_effect_immunity"
+      immunity_name: "Instant Effect Immunity"
+      immunity_name_vi: "Miễn Nhiễm Hiệu Ứng Tức Thời"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Effect Visual Effects
+  visual_effects:
+    - effect_id: "instant_effect_indicator"
+      effect_name: "Instant Effect Indicator"
+      effect_name_vi: "Chỉ Báo Hiệu Ứng Tức Thời"
+      effect_type: "indicator_effect"
+      indicator_type: "instant"
+      indicator_color: "#ff6b35"
+      indicator_intensity: 1.0
+      
+  # Effect Audio Effects
+  audio_effects:
+    - effect_id: "instant_effect_sound"
+      effect_name: "Instant Effect Sound"
+      effect_name_vi: "Âm Thanh Hiệu Ứng Tức Thời"
+      effect_type: "instant_sound"
+      sound_type: "instant"
+      volume: 0.7
+      loop: false

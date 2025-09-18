@@ -1,0 +1,113 @@
+# Time Condition Configuration
+condition_definition:
+  # Basic Info
+  condition_id: "time_condition"
+  condition_name: "Time Condition"
+  condition_name_vi: "Điều Kiện Thời Gian"
+  
+  # Condition Properties
+  condition_type: "time"
+  priority: 110
+  stackable: true
+  max_stacks: 5
+  stack_behavior: "stack_additive"
+  
+  # Condition Description
+  description: "Condition based on time periods and durations"
+  description_vi: "Điều kiện dựa trên khoảng thời gian và thời lượng"
+  
+  # Condition Properties
+  properties:
+    time_type: "duration"
+    time_value: 10.0
+    condition_type: "elapsed"
+    visual_effect: "time_indicator"
+    audio_effect: "time_sound"
+    
+  # Condition Rules
+  rules:
+    - rule_id: "time_elapsed_check"
+      rule_name: "Time Elapsed Check"
+      rule_name_vi: "Kiểm Tra Thời Gian Đã Trôi Qua"
+      rule_type: "elapsed_check"
+      rule_description: "Check if time has elapsed based on condition type"
+      rule_formula: "time_check = (current_time - start_time) >= time_value"
+      
+    - rule_id: "time_duration_calculation"
+      rule_name: "Time Duration Calculation"
+      rule_name_vi: "Tính Toán Thời Lượng"
+      rule_type: "duration_calculation"
+      rule_description: "Calculate time duration based on condition type"
+      rule_formula: "duration = time_value * time_multiplier"
+      
+    - rule_id: "time_condition_processing"
+      rule_name: "Time Condition Processing"
+      rule_name_vi: "Xử Lý Điều Kiện Thời Gian"
+      rule_type: "condition_processing"
+      rule_description: "Process time condition and trigger effects"
+      rule_formula: "condition_trigger = time_check && condition_active"
+      
+  # Condition Modifiers
+  modifiers:
+    - modifier_id: "time_duration_multiplier"
+      modifier_name: "Time Duration Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Thời Lượng"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "wisdom"
+      
+    - modifier_id: "time_elapsed_modifier"
+      modifier_name: "Time Elapsed Modifier"
+      modifier_name_vi: "Sửa Đổi Thời Gian Đã Trôi Qua"
+      modifier_type: "elapsed"
+      base_value: 0.0
+      scaling_factor: 0.01
+      scaling_stat: "constitution"
+      
+  # Condition Interactions
+  interactions:
+    - interaction_id: "time_with_healing"
+      interaction_name: "Time with Healing"
+      interaction_name_vi: "Thời Gian với Hồi Máu"
+      interaction_type: "conflict"
+      target_condition: "healing_condition"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.5
+      
+    - interaction_id: "time_with_resistance"
+      interaction_name: "Time with Resistance"
+      interaction_name_vi: "Thời Gian với Kháng Cự"
+      interaction_type: "resistance"
+      target_condition: "resistance_condition"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.7
+      
+  # Condition Immunity
+  immunity:
+    - immunity_id: "time_immunity"
+      immunity_name: "Time Immunity"
+      immunity_name_vi: "Miễn Nhiễm Thời Gian"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Condition Visual Effects
+  visual_effects:
+    - effect_id: "time_indicator"
+      effect_name: "Time Indicator"
+      effect_name_vi: "Chỉ Báo Thời Gian"
+      effect_type: "indicator_effect"
+      indicator_type: "timer"
+      indicator_color: "#4ecdc4"
+      indicator_intensity: 1.0
+      
+  # Condition Audio Effects
+  audio_effects:
+    - effect_id: "time_sound"
+      effect_name: "Time Sound"
+      effect_name_vi: "Âm Thanh Thời Gian"
+      effect_type: "ambient_sound"
+      sound_type: "time"
+      volume: 0.5
+      loop: true

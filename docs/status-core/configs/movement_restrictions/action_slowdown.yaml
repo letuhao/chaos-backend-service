@@ -1,0 +1,114 @@
+# Action Slowdown Movement Restriction Configuration
+movement_restriction_definition:
+  # Basic Info
+  restriction_id: "action_slowdown"
+  restriction_name: "Action Slowdown"
+  restriction_name_vi: "Làm Chậm Hành Động"
+  
+  # Restriction Properties
+  restriction_type: "slowdown"
+  priority: 180
+  stackable: true
+  max_stacks: 5
+  stack_behavior: "stack_additive"
+  
+  # Restriction Description
+  description: "Reduces actor action execution speed"
+  description_vi: "Giảm tốc độ thực hiện hành động của diễn viên"
+  
+  # Restriction Properties
+  properties:
+    movement_type: "action_related"
+    restriction_value: 0.5
+    restriction_duration: "temporary"
+    restriction_condition: "status_active"
+    visual_effect: "action_slowdown_indicator"
+    audio_effect: "action_slowdown_sound"
+    
+  # Restriction Rules
+  rules:
+    - rule_id: "action_slowdown_calculation"
+      rule_name: "Action Slowdown Calculation"
+      rule_name_vi: "Tính Toán Làm Chậm Hành Động"
+      rule_type: "slowdown_calculation"
+      rule_description: "Calculate action slowdown based on restriction value and conditions"
+      rule_formula: "action_speed = base_speed * (1 - restriction_value) * restriction_multiplier"
+      
+    - rule_id: "action_slowdown_application"
+      rule_name: "Action Slowdown Application"
+      rule_name_vi: "Áp Dụng Làm Chậm Hành Động"
+      rule_type: "slowdown_application"
+      rule_description: "Apply action slowdown to actor actions"
+      rule_formula: "final_action_speed = base_action_speed * action_speed"
+      
+    - rule_id: "action_slowdown_break_processing"
+      rule_name: "Action Slowdown Break Processing"
+      rule_name_vi: "Xử Lý Phá Vỡ Làm Chậm Hành Động"
+      rule_type: "break_processing"
+      rule_description: "Process action slowdown break conditions"
+      rule_formula: "slowdown_broken = (constitution + willpower) / 200.0 > break_threshold"
+      
+  # Restriction Modifiers
+  modifiers:
+    - modifier_id: "action_slowdown_value_multiplier"
+      modifier_name: "Action Slowdown Value Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Giá Trị Làm Chậm Hành Động"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "constitution"
+      
+    - modifier_id: "action_slowdown_condition_modifier"
+      modifier_name: "Action Slowdown Condition Modifier"
+      modifier_name_vi: "Sửa Đổi Điều Kiện Làm Chậm Hành Động"
+      modifier_type: "condition"
+      base_value: 0.0
+      scaling_factor: 0.01
+      scaling_stat: "wisdom"
+      
+  # Restriction Interactions
+  interactions:
+    - interaction_id: "action_slowdown_with_healing"
+      interaction_name: "Action Slowdown with Healing"
+      interaction_name_vi: "Làm Chậm Hành Động với Hồi Máu"
+      interaction_type: "conflict"
+      target_restriction: "healing_movement_restriction"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.5
+      
+    - interaction_id: "action_slowdown_with_resistance"
+      interaction_name: "Action Slowdown with Resistance"
+      interaction_name_vi: "Làm Chậm Hành Động với Kháng Cự"
+      interaction_type: "resistance"
+      target_restriction: "resistance_movement_restriction"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.7
+      
+  # Restriction Immunity
+  immunity:
+    - immunity_id: "action_slowdown_immunity"
+      immunity_name: "Action Slowdown Immunity"
+      immunity_name_vi: "Miễn Nhiễm Làm Chậm Hành Động"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Restriction Visual Effects
+  visual_effects:
+    - effect_id: "action_slowdown_indicator"
+      effect_name: "Action Slowdown Indicator"
+      effect_name_vi: "Chỉ Báo Làm Chậm Hành Động"
+      effect_type: "indicator_effect"
+      indicator_type: "action"
+      indicator_color: "#8b4513"
+      indicator_intensity: 1.0
+      
+  # Restriction Audio Effects
+  audio_effects:
+    - effect_id: "action_slowdown_sound"
+      effect_name: "Action Slowdown Sound"
+      effect_name_vi: "Âm Thanh Làm Chậm Hành Động"
+      effect_type: "instant_sound"
+      sound_type: "action"
+      volume: 0.7
+      loop: false

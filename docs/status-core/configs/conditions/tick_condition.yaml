@@ -1,0 +1,113 @@
+# Tick Condition Configuration
+condition_definition:
+  # Basic Info
+  condition_id: "tick_condition"
+  condition_name: "Tick Condition"
+  condition_name_vi: "Điều Kiện Tick"
+  
+  # Condition Properties
+  condition_type: "tick"
+  priority: 100
+  stackable: true
+  max_stacks: 10
+  stack_behavior: "replace_oldest"
+  
+  # Condition Description
+  description: "Condition based on tick intervals and counts"
+  description_vi: "Điều kiện dựa trên khoảng thời gian tick và số lượng tick"
+  
+  # Condition Properties
+  properties:
+    tick_interval: 1.0
+    tick_count: 10
+    tick_type: "fixed"
+    visual_effect: "tick_indicator"
+    audio_effect: "tick_sound"
+    
+  # Condition Rules
+  rules:
+    - rule_id: "tick_interval_calculation"
+      rule_name: "Tick Interval Calculation"
+      rule_name_vi: "Tính Toán Khoảng Thời Gian Tick"
+      rule_type: "interval_calculation"
+      rule_description: "Calculate tick interval based on duration and count"
+      rule_formula: "tick_interval = total_duration / tick_count"
+      
+    - rule_id: "tick_count_calculation"
+      rule_name: "Tick Count Calculation"
+      rule_name_vi: "Tính Toán Số Lượng Tick"
+      rule_type: "count_calculation"
+      rule_description: "Calculate tick count based on duration and interval"
+      rule_formula: "tick_count = total_duration / tick_interval"
+      
+    - rule_id: "tick_processing"
+      rule_name: "Tick Processing"
+      rule_name_vi: "Xử Lý Tick"
+      rule_type: "tick_processing"
+      rule_description: "Process tick condition and trigger effects"
+      rule_formula: "tick_trigger = (current_time - last_tick) >= tick_interval"
+      
+  # Condition Modifiers
+  modifiers:
+    - modifier_id: "tick_interval_multiplier"
+      modifier_name: "Tick Interval Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Khoảng Thời Gian Tick"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "wisdom"
+      
+    - modifier_id: "tick_count_multiplier"
+      modifier_name: "Tick Count Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Số Lượng Tick"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.005
+      scaling_stat: "constitution"
+      
+  # Condition Interactions
+  interactions:
+    - interaction_id: "tick_with_healing"
+      interaction_name: "Tick with Healing"
+      interaction_name_vi: "Tick với Hồi Máu"
+      interaction_type: "conflict"
+      target_condition: "healing_condition"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.5
+      
+    - interaction_id: "tick_with_resistance"
+      interaction_name: "Tick with Resistance"
+      interaction_name_vi: "Tick với Kháng Cự"
+      interaction_type: "resistance"
+      target_condition: "resistance_condition"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.7
+      
+  # Condition Immunity
+  immunity:
+    - immunity_id: "tick_immunity"
+      immunity_name: "Tick Immunity"
+      immunity_name_vi: "Miễn Nhiễm Tick"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Condition Visual Effects
+  visual_effects:
+    - effect_id: "tick_indicator"
+      effect_name: "Tick Indicator"
+      effect_name_vi: "Chỉ Báo Tick"
+      effect_type: "indicator_effect"
+      indicator_type: "timer"
+      indicator_color: "#4ecdc4"
+      indicator_intensity: 1.0
+      
+  # Condition Audio Effects
+  audio_effects:
+    - effect_id: "tick_sound"
+      effect_name: "Tick Sound"
+      effect_name_vi: "Âm Thanh Tick"
+      effect_type: "ambient_sound"
+      sound_type: "tick"
+      volume: 0.5
+      loop: true

@@ -1,0 +1,113 @@
+# Synergy With Interaction Configuration
+interaction_definition:
+  # Basic Info
+  interaction_id: "synergy_with"
+  interaction_name: "Synergy With"
+  interaction_name_vi: "Hiệp Lực Với"
+  
+  # Interaction Properties
+  interaction_type: "synergy"
+  priority: 140
+  stackable: true
+  max_stacks: 5
+  stack_behavior: "stack_additive"
+  
+  # Interaction Description
+  description: "Creates synergy between status effects that enhance their effectiveness"
+  description_vi: "Tạo hiệp lực giữa các trạng thái làm tăng hiệu quả của chúng"
+  
+  # Interaction Properties
+  properties:
+    target_status: "life_spirits_gift"
+    synergy_type: "effectiveness_enhancement"
+    synergy_value: 0.25
+    visual_effect: "synergy_with_indicator"
+    audio_effect: "synergy_with_sound"
+    
+  # Interaction Rules
+  rules:
+    - rule_id: "synergy_with_calculation"
+      rule_name: "Synergy With Calculation"
+      rule_name_vi: "Tính Toán Hiệp Lực Với"
+      rule_type: "synergy_calculation"
+      rule_description: "Calculate synergy effects based on target status and synergy type"
+      rule_formula: "synergy_effect = base_effect * (1 + synergy_value * synergy_multiplier)"
+      
+    - rule_id: "synergy_with_application"
+      rule_name: "Synergy With Application"
+      rule_name_vi: "Áp Dụng Hiệp Lực Với"
+      rule_type: "synergy_application"
+      rule_description: "Apply synergy effects when status effects synergize"
+      rule_formula: "final_effect = base_effect * synergy_effect"
+      
+    - rule_id: "synergy_with_condition_processing"
+      rule_name: "Synergy With Condition Processing"
+      rule_name_vi: "Xử Lý Điều Kiện Hiệp Lực Với"
+      rule_type: "condition_processing"
+      rule_description: "Process synergy conditions and trigger effects"
+      rule_formula: "condition_trigger = synergy_condition && condition_active"
+      
+  # Interaction Modifiers
+  modifiers:
+    - modifier_id: "synergy_with_multiplier"
+      modifier_name: "Synergy With Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Hiệp Lực Với"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "intelligence"
+      
+    - modifier_id: "synergy_with_synergy_modifier"
+      modifier_name: "Synergy With Synergy Modifier"
+      modifier_name_vi: "Sửa Đổi Hiệp Lực Hiệp Lực Với"
+      modifier_type: "synergy"
+      base_value: 0.0
+      scaling_factor: 0.01
+      scaling_stat: "wisdom"
+      
+  # Interaction Interactions
+  interactions:
+    - interaction_id: "synergy_with_with_healing"
+      interaction_name: "Synergy With with Healing"
+      interaction_name_vi: "Hiệp Lực Với với Hồi Máu"
+      interaction_type: "conflict"
+      target_interaction: "healing_interaction"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.5
+      
+    - interaction_id: "synergy_with_with_resistance"
+      interaction_name: "Synergy With with Resistance"
+      interaction_name_vi: "Hiệp Lực Với với Kháng Cự"
+      interaction_type: "resistance"
+      target_interaction: "resistance_interaction"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.7
+      
+  # Interaction Immunity
+  immunity:
+    - immunity_id: "synergy_with_immunity"
+      immunity_name: "Synergy With Immunity"
+      immunity_name_vi: "Miễn Nhiễm Hiệp Lực Với"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Interaction Visual Effects
+  visual_effects:
+    - effect_id: "synergy_with_indicator"
+      effect_name: "Synergy With Indicator"
+      effect_name_vi: "Chỉ Báo Hiệp Lực Với"
+      effect_type: "indicator_effect"
+      indicator_type: "synergy"
+      indicator_color: "#ffd700"
+      indicator_intensity: 0.8
+      
+  # Interaction Audio Effects
+  audio_effects:
+    - effect_id: "synergy_with_sound"
+      effect_name: "Synergy With Sound"
+      effect_name_vi: "Âm Thanh Hiệp Lực Với"
+      effect_type: "ambient_sound"
+      sound_type: "synergy"
+      volume: 0.6
+      loop: true

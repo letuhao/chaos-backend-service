@@ -1,0 +1,96 @@
+# Damage Multiplier Modifier Configuration
+modifier_definition:
+  # Basic Info
+  modifier_id: "damage_multiplier"
+  modifier_name: "Damage Multiplier"
+  modifier_name_vi: "Hệ Số Nhân Sát Thương"
+  
+  # Modifier Properties
+  modifier_type: "multiplier"
+  priority: 100
+  stackable: true
+  max_stacks: 10
+  stack_behavior: "stack_additive"
+  
+  # Modifier Description
+  description: "Multiplies damage based on magnitude and scaling factors"
+  description_vi: "Nhân sát thương dựa trên cường độ và hệ số nhân"
+  
+  # Modifier Properties
+  properties:
+    value: 1.0
+    source: "base_damage"
+    scaling_factor: 0.0
+    scaling_stat: "none"
+    visual_effect: "damage_multiplier_indicator"
+    audio_effect: "damage_multiplier_sound"
+    
+  # Modifier Rules
+  rules:
+    - rule_id: "damage_multiplier_calculation"
+      rule_name: "Damage Multiplier Calculation"
+      rule_name_vi: "Tính Toán Hệ Số Nhân Sát Thương"
+      rule_type: "multiplier_calculation"
+      rule_description: "Calculate damage multiplier based on value and scaling factors"
+      rule_formula: "damage_multiplier = base_value * (1 + scaling_factor * stat_value)"
+      
+    - rule_id: "damage_multiplier_application"
+      rule_name: "Damage Multiplier Application"
+      rule_name_vi: "Áp Dụng Hệ Số Nhân Sát Thương"
+      rule_type: "multiplier_application"
+      rule_description: "Apply damage multiplier to damage calculation"
+      rule_formula: "final_damage = base_damage * damage_multiplier"
+      
+    - rule_id: "damage_multiplier_stack_processing"
+      rule_name: "Damage Multiplier Stack Processing"
+      rule_name_vi: "Xử Lý Chồng Hệ Số Nhân Sát Thương"
+      rule_type: "stack_processing"
+      rule_description: "Process damage multiplier stacking effects"
+      rule_formula: "total_multiplier = sum(individual_multipliers) * stack_multiplier"
+      
+  # Modifier Interactions
+  interactions:
+    - interaction_id: "damage_multiplier_with_healing"
+      interaction_name: "Damage Multiplier with Healing"
+      interaction_name_vi: "Hệ Số Nhân Sát Thương với Hồi Máu"
+      interaction_type: "conflict"
+      target_modifier: "healing_multiplier"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.5
+      
+    - interaction_id: "damage_multiplier_with_resistance"
+      interaction_name: "Damage Multiplier with Resistance"
+      interaction_name_vi: "Hệ Số Nhân Sát Thương với Kháng Cự"
+      interaction_type: "resistance"
+      target_modifier: "resistance_modifier"
+      interaction_behavior: "reduce_damage"
+      interaction_modifier: 0.7
+      
+  # Modifier Immunity
+  immunity:
+    - immunity_id: "damage_multiplier_immunity"
+      immunity_name: "Damage Multiplier Immunity"
+      immunity_name_vi: "Miễn Nhiễm Hệ Số Nhân Sát Thương"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Modifier Visual Effects
+  visual_effects:
+    - effect_id: "damage_multiplier_indicator"
+      effect_name: "Damage Multiplier Indicator"
+      effect_name_vi: "Chỉ Báo Hệ Số Nhân Sát Thương"
+      effect_type: "indicator_effect"
+      indicator_type: "multiplier"
+      indicator_color: "#ff6b35"
+      indicator_intensity: 1.0
+      
+  # Modifier Audio Effects
+  audio_effects:
+    - effect_id: "damage_multiplier_sound"
+      effect_name: "Damage Multiplier Sound"
+      effect_name_vi: "Âm Thanh Hệ Số Nhân Sát Thương"
+      effect_type: "ambient_sound"
+      sound_type: "damage"
+      volume: 0.7
+      loop: true

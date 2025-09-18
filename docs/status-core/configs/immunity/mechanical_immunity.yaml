@@ -1,0 +1,113 @@
+# Mechanical Immunity Configuration
+immunity_definition:
+  # Basic Info
+  immunity_id: "mechanical_immunity"
+  immunity_name: "Mechanical Immunity"
+  immunity_name_vi: "Miễn Nhiễm Cơ Học"
+  
+  # Immunity Properties
+  immunity_type: "mechanical"
+  priority: 200
+  stackable: false
+  max_stacks: 1
+  stack_behavior: "replace_all"
+  
+  # Immunity Description
+  description: "Provides immunity based on mechanical game rules and logic"
+  description_vi: "Cung cấp miễn nhiễm dựa trên quy tắc cơ học và logic của game"
+  
+  # Immunity Properties
+  properties:
+    immunity_condition: "already_stunned"
+    immunity_type: "stun"
+    immunity_reason: "Cannot be stunned while already stunned"
+    visual_effect: "mechanical_immunity_indicator"
+    audio_effect: "mechanical_immunity_sound"
+    
+  # Immunity Rules
+  rules:
+    - rule_id: "mechanical_immunity_calculation"
+      rule_name: "Mechanical Immunity Calculation"
+      rule_name_vi: "Tính Toán Miễn Nhiễm Cơ Học"
+      rule_type: "immunity_calculation"
+      rule_description: "Calculate mechanical immunity based on game rules and logic"
+      rule_formula: "mechanical_immunity = immunity_condition_met && immunity_type == target_type"
+      
+    - rule_id: "mechanical_immunity_application"
+      rule_name: "Mechanical Immunity Application"
+      rule_name_vi: "Áp Dụng Miễn Nhiễm Cơ Học"
+      rule_type: "immunity_application"
+      rule_description: "Apply mechanical immunity to status effect application"
+      rule_formula: "status_blocked = mechanical_immunity && target_status in immune_statuses"
+      
+    - rule_id: "mechanical_immunity_condition_processing"
+      rule_name: "Mechanical Immunity Condition Processing"
+      rule_name_vi: "Xử Lý Điều Kiện Miễn Nhiễm Cơ Học"
+      rule_type: "condition_processing"
+      rule_description: "Process mechanical immunity conditions and trigger effects"
+      rule_formula: "condition_trigger = immunity_condition && condition_active"
+      
+  # Immunity Modifiers
+  modifiers:
+    - modifier_id: "mechanical_immunity_multiplier"
+      modifier_name: "Mechanical Immunity Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Miễn Nhiễm Cơ Học"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.0
+      scaling_stat: "none"
+      
+    - modifier_id: "mechanical_immunity_condition_modifier"
+      modifier_name: "Mechanical Immunity Condition Modifier"
+      modifier_name_vi: "Sửa Đổi Điều Kiện Miễn Nhiễm Cơ Học"
+      modifier_type: "condition"
+      base_value: 0.0
+      scaling_factor: 0.0
+      scaling_stat: "none"
+      
+  # Immunity Interactions
+  interactions:
+    - interaction_id: "mechanical_immunity_with_healing"
+      interaction_name: "Mechanical Immunity with Healing"
+      interaction_name_vi: "Miễn Nhiễm Cơ Học với Hồi Máu"
+      interaction_type: "conflict"
+      target_immunity: "healing_immunity"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.0
+      
+    - interaction_id: "mechanical_immunity_with_resistance"
+      interaction_name: "Mechanical Immunity with Resistance"
+      interaction_name_vi: "Miễn Nhiễm Cơ Học với Kháng Cự"
+      interaction_type: "resistance"
+      target_immunity: "resistance_immunity"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.0
+      
+  # Immunity Immunity
+  immunity:
+    - immunity_id: "mechanical_immunity_immunity"
+      immunity_name: "Mechanical Immunity Immunity"
+      immunity_name_vi: "Miễn Nhiễm Miễn Nhiễm Cơ Học"
+      immunity_type: "complete"
+      immunity_condition: "game_rules_override"
+      immunity_duration: "permanent"
+      
+  # Immunity Visual Effects
+  visual_effects:
+    - effect_id: "mechanical_immunity_indicator"
+      effect_name: "Mechanical Immunity Indicator"
+      effect_name_vi: "Chỉ Báo Miễn Nhiễm Cơ Học"
+      effect_type: "indicator_effect"
+      indicator_type: "immunity"
+      indicator_color: "#ffff00"
+      indicator_intensity: 1.0
+      
+  # Immunity Audio Effects
+  audio_effects:
+    - effect_id: "mechanical_immunity_sound"
+      effect_name: "Mechanical Immunity Sound"
+      effect_name_vi: "Âm Thanh Miễn Nhiễm Cơ Học"
+      effect_type: "instant_sound"
+      sound_type: "immunity"
+      volume: 0.8
+      loop: false

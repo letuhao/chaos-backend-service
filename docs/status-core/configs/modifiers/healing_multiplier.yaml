@@ -1,0 +1,96 @@
+# Healing Multiplier Modifier Configuration
+modifier_definition:
+  # Basic Info
+  modifier_id: "healing_multiplier"
+  modifier_name: "Healing Multiplier"
+  modifier_name_vi: "Hệ Số Nhân Hồi Máu"
+  
+  # Modifier Properties
+  modifier_type: "multiplier"
+  priority: 150
+  stackable: true
+  max_stacks: 5
+  stack_behavior: "stack_additive"
+  
+  # Modifier Description
+  description: "Multiplies healing based on magnitude and scaling factors"
+  description_vi: "Nhân hồi máu dựa trên cường độ và hệ số nhân"
+  
+  # Modifier Properties
+  properties:
+    value: 1.0
+    source: "base_healing"
+    scaling_factor: 0.0
+    scaling_stat: "none"
+    visual_effect: "healing_multiplier_indicator"
+    audio_effect: "healing_multiplier_sound"
+    
+  # Modifier Rules
+  rules:
+    - rule_id: "healing_multiplier_calculation"
+      rule_name: "Healing Multiplier Calculation"
+      rule_name_vi: "Tính Toán Hệ Số Nhân Hồi Máu"
+      rule_type: "multiplier_calculation"
+      rule_description: "Calculate healing multiplier based on value and scaling factors"
+      rule_formula: "healing_multiplier = base_value * (1 + scaling_factor * stat_value)"
+      
+    - rule_id: "healing_multiplier_application"
+      rule_name: "Healing Multiplier Application"
+      rule_name_vi: "Áp Dụng Hệ Số Nhân Hồi Máu"
+      rule_type: "multiplier_application"
+      rule_description: "Apply healing multiplier to healing calculation"
+      rule_formula: "final_healing = base_healing * healing_multiplier"
+      
+    - rule_id: "healing_multiplier_stack_processing"
+      rule_name: "Healing Multiplier Stack Processing"
+      rule_name_vi: "Xử Lý Chồng Hệ Số Nhân Hồi Máu"
+      rule_type: "stack_processing"
+      rule_description: "Process healing multiplier stacking effects"
+      rule_formula: "total_multiplier = sum(individual_multipliers) * stack_multiplier"
+      
+  # Modifier Interactions
+  interactions:
+    - interaction_id: "healing_multiplier_with_damage"
+      interaction_name: "Healing Multiplier with Damage"
+      interaction_name_vi: "Hệ Số Nhân Hồi Máu với Sát Thương"
+      interaction_type: "conflict"
+      target_modifier: "damage_multiplier"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.5
+      
+    - interaction_id: "healing_multiplier_with_resistance"
+      interaction_name: "Healing Multiplier with Resistance"
+      interaction_name_vi: "Hệ Số Nhân Hồi Máu với Kháng Cự"
+      interaction_type: "resistance"
+      target_modifier: "resistance_modifier"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.7
+      
+  # Modifier Immunity
+  immunity:
+    - immunity_id: "healing_multiplier_immunity"
+      immunity_name: "Healing Multiplier Immunity"
+      immunity_name_vi: "Miễn Nhiễm Hệ Số Nhân Hồi Máu"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Modifier Visual Effects
+  visual_effects:
+    - effect_id: "healing_multiplier_indicator"
+      effect_name: "Healing Multiplier Indicator"
+      effect_name_vi: "Chỉ Báo Hệ Số Nhân Hồi Máu"
+      effect_type: "indicator_effect"
+      indicator_type: "multiplier"
+      indicator_color: "#ffd700"
+      indicator_intensity: 0.8
+      
+  # Modifier Audio Effects
+  audio_effects:
+    - effect_id: "healing_multiplier_sound"
+      effect_name: "Healing Multiplier Sound"
+      effect_name_vi: "Âm Thanh Hệ Số Nhân Hồi Máu"
+      effect_type: "ambient_sound"
+      sound_type: "healing"
+      volume: 0.5
+      loop: true

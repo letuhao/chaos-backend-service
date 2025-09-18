@@ -1,0 +1,118 @@
+# Loop Sound Audio Effect Configuration
+audio_effect_definition:
+  # Basic Info
+  effect_id: "loop_sound"
+  effect_name: "Loop Sound"
+  effect_name_vi: "Âm Thanh Lặp"
+  
+  # Effect Properties
+  effect_type: "loop"
+  priority: 150
+  stackable: true
+  max_stacks: 3
+  stack_behavior: "stack_additive"
+  
+  # Effect Description
+  description: "Creates looping sound effects for status audio representation"
+  description_vi: "Tạo hiệu ứng âm thanh lặp cho biểu diễn âm thanh của trạng thái"
+  
+  # Effect Properties
+  properties:
+    sound_type: "healing"
+    sound_volume: 0.5
+    sound_loop: true
+    sound_fade: true
+    sound_pitch: 1.0
+    sound_pan: 0.0
+    sound_priority: 150
+    sound_category: "status_effect"
+    visual_effect: "loop_sound_indicator"
+    audio_effect: "loop_sound_sound"
+    
+  # Effect Rules
+  rules:
+    - rule_id: "loop_sound_calculation"
+      rule_name: "Loop Sound Calculation"
+      rule_name_vi: "Tính Toán Âm Thanh Lặp"
+      rule_type: "sound_calculation"
+      rule_description: "Calculate loop sound properties based on status magnitude and duration"
+      rule_formula: "sound_volume = base_volume * status_magnitude * duration_multiplier"
+      
+    - rule_id: "loop_sound_application"
+      rule_name: "Loop Sound Application"
+      rule_name_vi: "Áp Dụng Âm Thanh Lặp"
+      rule_type: "sound_application"
+      rule_description: "Apply loop sound effects to status audio representation"
+      rule_formula: "loop_sound = sound_system * sound_volume * sound_loop"
+      
+    - rule_id: "loop_sound_animation"
+      rule_name: "Loop Sound Animation"
+      rule_name_vi: "Hoạt Hình Âm Thanh Lặp"
+      rule_type: "sound_animation"
+      rule_description: "Animate loop sound effects over time"
+      rule_formula: "sound_animation = loop_sound * time_multiplier * animation_speed"
+      
+  # Effect Modifiers
+  modifiers:
+    - modifier_id: "loop_sound_volume_multiplier"
+      modifier_name: "Loop Sound Volume Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Âm Lượng Âm Thanh Lặp"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "intelligence"
+      
+    - modifier_id: "loop_sound_pitch_multiplier"
+      modifier_name: "Loop Sound Pitch Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Cao Độ Âm Thanh Lặp"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.005
+      scaling_stat: "wisdom"
+      
+  # Effect Interactions
+  interactions:
+    - interaction_id: "loop_sound_with_healing"
+      interaction_name: "Loop Sound with Healing"
+      interaction_name_vi: "Âm Thanh Lặp với Hồi Máu"
+      interaction_type: "conflict"
+      target_effect: "healing_audio_effect"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.5
+      
+    - interaction_id: "loop_sound_with_resistance"
+      interaction_name: "Loop Sound with Resistance"
+      interaction_name_vi: "Âm Thanh Lặp với Kháng Cự"
+      interaction_type: "resistance"
+      target_effect: "resistance_audio_effect"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.7
+      
+  # Effect Immunity
+  immunity:
+    - immunity_id: "loop_sound_immunity"
+      immunity_name: "Loop Sound Immunity"
+      immunity_name_vi: "Miễn Nhiễm Âm Thanh Lặp"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Effect Visual Effects
+  visual_effects:
+    - effect_id: "loop_sound_indicator"
+      effect_name: "Loop Sound Indicator"
+      effect_name_vi: "Chỉ Báo Âm Thanh Lặp"
+      effect_type: "indicator_effect"
+      indicator_type: "sound"
+      indicator_color: "#ffd700"
+      indicator_intensity: 0.8
+      
+  # Effect Audio Effects
+  audio_effects:
+    - effect_id: "loop_sound_sound"
+      effect_name: "Loop Sound Sound"
+      effect_name_vi: "Âm Thanh Âm Thanh Lặp"
+      effect_type: "ambient_sound"
+      sound_type: "loop"
+      volume: 0.5
+      loop: true

@@ -1,0 +1,113 @@
+# Healing Over Time Effect Configuration
+effect_definition:
+  # Basic Info
+  effect_id: "healing_over_time"
+  effect_name: "Healing Over Time"
+  effect_name_vi: "Hồi Máu Theo Thời Gian"
+  
+  # Effect Properties
+  effect_type: "healing"
+  priority: 150
+  stackable: true
+  max_stacks: 5
+  stack_behavior: "stack_additive"
+  
+  # Effect Description
+  description: "Provides healing over time based on magnitude and wisdom"
+  description_vi: "Cung cấp hồi máu theo thời gian dựa trên cường độ và trí tuệ"
+  
+  # Effect Properties
+  properties:
+    healing_type: "life_energy"
+    visual_effect: "healing_aura"
+    audio_effect: "healing_sound"
+    element_binding: true
+    resistance_calculation: false
+    
+  # Effect Rules
+  rules:
+    - rule_id: "healing_calculation"
+      rule_name: "Healing Calculation"
+      rule_name_vi: "Tính Toán Hồi Máu"
+      rule_type: "healing_calculation"
+      rule_description: "Calculate healing amount based on magnitude and wisdom"
+      rule_formula: "healing = base_magnitude * wisdom_bonus * element_mastery_bonus"
+      
+    - rule_id: "healing_tick_processing"
+      rule_name: "Healing Tick Processing"
+      rule_name_vi: "Xử Lý Tick Hồi Máu"
+      rule_type: "tick_processing"
+      rule_description: "Process healing on each tick based on tick_interval"
+      rule_formula: "tick_healing = total_healing / tick_count"
+      
+    - rule_id: "healing_element_interaction"
+      rule_name: "Healing Element Interaction"
+      rule_name_vi: "Tương Tác Nguyên Tố Hồi Máu"
+      rule_type: "element_interaction"
+      rule_description: "Apply element interactions for healing effects"
+      rule_formula: "final_healing = healing * element_interaction_modifier"
+      
+  # Effect Modifiers
+  modifiers:
+    - modifier_id: "healing_multiplier"
+      modifier_name: "Healing Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Hồi Máu"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "wisdom"
+      
+    - modifier_id: "healing_duration_multiplier"
+      modifier_name: "Healing Duration Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Thời Gian Hồi Máu"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.005
+      scaling_stat: "constitution"
+      
+  # Effect Interactions
+  interactions:
+    - interaction_id: "healing_with_damage"
+      interaction_name: "Healing with Damage"
+      interaction_name_vi: "Hồi Máu với Sát Thương"
+      interaction_type: "conflict"
+      target_effect: "damage_over_time"
+      interaction_behavior: "reduce_damage"
+      interaction_modifier: 0.3
+      
+    - interaction_id: "healing_with_debuff"
+      interaction_name: "Healing with Debuff"
+      interaction_name_vi: "Hồi Máu với Giảm Sát"
+      interaction_type: "conflict"
+      target_effect: "stat_modifier"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.5
+      
+  # Effect Immunity
+  immunity:
+    - immunity_id: "healing_immunity"
+      immunity_name: "Healing Immunity"
+      immunity_name_vi: "Miễn Nhiễm Hồi Máu"
+      immunity_type: "complete"
+      immunity_condition: "health_at_maximum"
+      immunity_duration: "temporary"
+      
+  # Effect Visual Effects
+  visual_effects:
+    - effect_id: "healing_aura"
+      effect_name: "Healing Aura"
+      effect_name_vi: "Hào Quang Hồi Máu"
+      effect_type: "aura_effect"
+      aura_type: "circular"
+      aura_color: "#ffd700"
+      aura_intensity: 0.8
+      
+  # Effect Audio Effects
+  audio_effects:
+    - effect_id: "healing_sound"
+      effect_name: "Healing Sound"
+      effect_name_vi: "Âm Thanh Hồi Máu"
+      effect_type: "ambient_sound"
+      sound_type: "healing"
+      volume: 0.5
+      loop: true

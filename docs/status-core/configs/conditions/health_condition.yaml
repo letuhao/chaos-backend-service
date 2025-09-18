@@ -1,0 +1,113 @@
+# Health Condition Configuration
+condition_definition:
+  # Basic Info
+  condition_id: "health_condition"
+  condition_name: "Health Condition"
+  condition_name_vi: "Điều Kiện Sức Khỏe"
+  
+  # Condition Properties
+  condition_type: "health"
+  priority: 140
+  stackable: true
+  max_stacks: 5
+  stack_behavior: "stack_additive"
+  
+  # Condition Description
+  description: "Condition based on health percentage and thresholds"
+  description_vi: "Điều kiện dựa trên phần trăm sức khỏe và ngưỡng"
+  
+  # Condition Properties
+  properties:
+    health_percentage: 0.95
+    condition_type: "below"
+    health_type: "current_hp"
+    visual_effect: "health_indicator"
+    audio_effect: "health_sound"
+    
+  # Condition Rules
+  rules:
+    - rule_id: "health_percentage_check"
+      rule_name: "Health Percentage Check"
+      rule_name_vi: "Kiểm Tra Phần Trăm Sức Khỏe"
+      rule_type: "percentage_check"
+      rule_description: "Check if health meets percentage requirements"
+      rule_formula: "health_check = (current_hp / max_hp) condition_type threshold"
+      
+    - rule_id: "health_threshold_calculation"
+      rule_name: "Health Threshold Calculation"
+      rule_name_vi: "Tính Toán Ngưỡng Sức Khỏe"
+      rule_type: "threshold_calculation"
+      rule_description: "Calculate health thresholds based on condition type"
+      rule_formula: "threshold = max_hp * health_percentage"
+      
+    - rule_id: "health_condition_processing"
+      rule_name: "Health Condition Processing"
+      rule_name_vi: "Xử Lý Điều Kiện Sức Khỏe"
+      rule_type: "condition_processing"
+      rule_description: "Process health condition and trigger effects"
+      rule_formula: "condition_trigger = health_check && condition_active"
+      
+  # Condition Modifiers
+  modifiers:
+    - modifier_id: "health_percentage_multiplier"
+      modifier_name: "Health Percentage Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Phần Trăm Sức Khỏe"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "constitution"
+      
+    - modifier_id: "health_threshold_modifier"
+      modifier_name: "Health Threshold Modifier"
+      modifier_name_vi: "Sửa Đổi Ngưỡng Sức Khỏe"
+      modifier_type: "threshold"
+      base_value: 0.0
+      scaling_factor: 0.01
+      scaling_stat: "wisdom"
+      
+  # Condition Interactions
+  interactions:
+    - interaction_id: "health_with_healing"
+      interaction_name: "Health with Healing"
+      interaction_name_vi: "Sức Khỏe với Hồi Máu"
+      interaction_type: "conflict"
+      target_condition: "healing_condition"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.5
+      
+    - interaction_id: "health_with_damage"
+      interaction_name: "Health with Damage"
+      interaction_name_vi: "Sức Khỏe với Sát Thương"
+      interaction_type: "conflict"
+      target_condition: "damage_condition"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.3
+      
+  # Condition Immunity
+  immunity:
+    - immunity_id: "health_immunity"
+      immunity_name: "Health Immunity"
+      immunity_name_vi: "Miễn Nhiễm Sức Khỏe"
+      immunity_type: "complete"
+      immunity_condition: "health_at_maximum"
+      immunity_duration: "temporary"
+      
+  # Condition Visual Effects
+  visual_effects:
+    - effect_id: "health_indicator"
+      effect_name: "Health Indicator"
+      effect_name_vi: "Chỉ Báo Sức Khỏe"
+      effect_type: "indicator_effect"
+      indicator_type: "health"
+      indicator_color: "#ff6b6b"
+      indicator_intensity: 1.0
+      
+  # Condition Audio Effects
+  audio_effects:
+    - effect_id: "health_sound"
+      effect_name: "Health Sound"
+      effect_name_vi: "Âm Thanh Sức Khỏe"
+      effect_type: "ambient_sound"
+      sound_type: "health"
+      volume: 0.7
+      loop: true

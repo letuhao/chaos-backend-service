@@ -1,0 +1,96 @@
+# Action Execution Duration Multiplier Modifier Configuration
+modifier_definition:
+  # Basic Info
+  modifier_id: "action_execution_duration_multiplier"
+  modifier_name: "Action Execution Duration Multiplier"
+  modifier_name_vi: "Hệ Số Nhân Thời Gian Thực Hiện Hành Động"
+  
+  # Modifier Properties
+  modifier_type: "multiplier"
+  priority: 180
+  stackable: false
+  max_stacks: 1
+  stack_behavior: "replace_all"
+  
+  # Modifier Description
+  description: "Multiplies action execution duration based on magnitude and scaling factors"
+  description_vi: "Nhân thời gian thực hiện hành động dựa trên cường độ và hệ số nhân"
+  
+  # Modifier Properties
+  properties:
+    value: 1.5
+    source: "bone_broken_effect"
+    scaling_factor: 0.1
+    scaling_stat: "constitution"
+    visual_effect: "action_execution_duration_multiplier_indicator"
+    audio_effect: "action_execution_duration_multiplier_sound"
+    
+  # Modifier Rules
+  rules:
+    - rule_id: "action_execution_duration_multiplier_calculation"
+      rule_name: "Action Execution Duration Multiplier Calculation"
+      rule_name_vi: "Tính Toán Hệ Số Nhân Thời Gian Thực Hiện Hành Động"
+      rule_type: "multiplier_calculation"
+      rule_description: "Calculate action execution duration multiplier based on value and scaling factors"
+      rule_formula: "duration_multiplier = base_value * (1 + scaling_factor * stat_value)"
+      
+    - rule_id: "action_execution_duration_multiplier_application"
+      rule_name: "Action Execution Duration Multiplier Application"
+      rule_name_vi: "Áp Dụng Hệ Số Nhân Thời Gian Thực Hiện Hành Động"
+      rule_type: "multiplier_application"
+      rule_description: "Apply action execution duration multiplier to execution calculation"
+      rule_formula: "final_duration = base_duration * duration_multiplier"
+      
+    - rule_id: "action_execution_duration_multiplier_break_processing"
+      rule_name: "Action Execution Duration Multiplier Break Processing"
+      rule_name_vi: "Xử Lý Phá Vỡ Hệ Số Nhân Thời Gian Thực Hiện Hành Động"
+      rule_type: "break_processing"
+      rule_description: "Process action execution duration multiplier break conditions"
+      rule_formula: "multiplier_broken = (constitution + strength) / 200.0 > break_threshold"
+      
+  # Modifier Interactions
+  interactions:
+    - interaction_id: "action_execution_duration_multiplier_with_healing"
+      interaction_name: "Action Execution Duration Multiplier with Healing"
+      interaction_name_vi: "Hệ Số Nhân Thời Gian Thực Hiện Hành Động với Hồi Máu"
+      interaction_type: "conflict"
+      target_modifier: "healing_multiplier"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.7
+      
+    - interaction_id: "action_execution_duration_multiplier_with_resistance"
+      interaction_name: "Action Execution Duration Multiplier with Resistance"
+      interaction_name_vi: "Hệ Số Nhân Thời Gian Thực Hiện Hành Động với Kháng Cự"
+      interaction_type: "resistance"
+      target_modifier: "resistance_modifier"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.5
+      
+  # Modifier Immunity
+  immunity:
+    - immunity_id: "action_execution_duration_multiplier_immunity"
+      immunity_name: "Action Execution Duration Multiplier Immunity"
+      immunity_name_vi: "Miễn Nhiễm Hệ Số Nhân Thời Gian Thực Hiện Hành Động"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Modifier Visual Effects
+  visual_effects:
+    - effect_id: "action_execution_duration_multiplier_indicator"
+      effect_name: "Action Execution Duration Multiplier Indicator"
+      effect_name_vi: "Chỉ Báo Hệ Số Nhân Thời Gian Thực Hiện Hành Động"
+      effect_type: "indicator_effect"
+      indicator_type: "multiplier"
+      indicator_color: "#8b4513"
+      indicator_intensity: 1.0
+      
+  # Modifier Audio Effects
+  audio_effects:
+    - effect_id: "action_execution_duration_multiplier_sound"
+      effect_name: "Action Execution Duration Multiplier Sound"
+      effect_name_vi: "Âm Thanh Hệ Số Nhân Thời Gian Thực Hiện Hành Động"
+      effect_type: "instant_sound"
+      sound_type: "action"
+      volume: 0.7
+      loop: false

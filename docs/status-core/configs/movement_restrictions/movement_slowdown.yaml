@@ -1,0 +1,114 @@
+# Movement Slowdown Movement Restriction Configuration
+movement_restriction_definition:
+  # Basic Info
+  restriction_id: "movement_slowdown"
+  restriction_name: "Movement Slowdown"
+  restriction_name_vi: "Làm Chậm Di Chuyển"
+  
+  # Restriction Properties
+  restriction_type: "slowdown"
+  priority: 180
+  stackable: true
+  max_stacks: 5
+  stack_behavior: "stack_additive"
+  
+  # Restriction Description
+  description: "Reduces actor movement speed"
+  description_vi: "Giảm tốc độ di chuyển của diễn viên"
+  
+  # Restriction Properties
+  properties:
+    movement_type: "all"
+    restriction_value: 0.5
+    restriction_duration: "temporary"
+    restriction_condition: "status_active"
+    visual_effect: "movement_slowdown_indicator"
+    audio_effect: "movement_slowdown_sound"
+    
+  # Restriction Rules
+  rules:
+    - rule_id: "movement_slowdown_calculation"
+      rule_name: "Movement Slowdown Calculation"
+      rule_name_vi: "Tính Toán Làm Chậm Di Chuyển"
+      rule_type: "slowdown_calculation"
+      rule_description: "Calculate movement slowdown based on restriction value and conditions"
+      rule_formula: "movement_speed = base_speed * (1 - restriction_value) * restriction_multiplier"
+      
+    - rule_id: "movement_slowdown_application"
+      rule_name: "Movement Slowdown Application"
+      rule_name_vi: "Áp Dụng Làm Chậm Di Chuyển"
+      rule_type: "slowdown_application"
+      rule_description: "Apply movement slowdown to actor movement"
+      rule_formula: "final_movement_speed = base_movement_speed * movement_speed"
+      
+    - rule_id: "movement_slowdown_break_processing"
+      rule_name: "Movement Slowdown Break Processing"
+      rule_name_vi: "Xử Lý Phá Vỡ Làm Chậm Di Chuyển"
+      rule_type: "break_processing"
+      rule_description: "Process movement slowdown break conditions"
+      rule_formula: "slowdown_broken = (constitution + willpower) / 200.0 > break_threshold"
+      
+  # Restriction Modifiers
+  modifiers:
+    - modifier_id: "movement_slowdown_value_multiplier"
+      modifier_name: "Movement Slowdown Value Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Giá Trị Làm Chậm Di Chuyển"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "constitution"
+      
+    - modifier_id: "movement_slowdown_condition_modifier"
+      modifier_name: "Movement Slowdown Condition Modifier"
+      modifier_name_vi: "Sửa Đổi Điều Kiện Làm Chậm Di Chuyển"
+      modifier_type: "condition"
+      base_value: 0.0
+      scaling_factor: 0.01
+      scaling_stat: "wisdom"
+      
+  # Restriction Interactions
+  interactions:
+    - interaction_id: "movement_slowdown_with_healing"
+      interaction_name: "Movement Slowdown with Healing"
+      interaction_name_vi: "Làm Chậm Di Chuyển với Hồi Máu"
+      interaction_type: "conflict"
+      target_restriction: "healing_movement_restriction"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.5
+      
+    - interaction_id: "movement_slowdown_with_resistance"
+      interaction_name: "Movement Slowdown with Resistance"
+      interaction_name_vi: "Làm Chậm Di Chuyển với Kháng Cự"
+      interaction_type: "resistance"
+      target_restriction: "resistance_movement_restriction"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.7
+      
+  # Restriction Immunity
+  immunity:
+    - immunity_id: "movement_slowdown_immunity"
+      immunity_name: "Movement Slowdown Immunity"
+      immunity_name_vi: "Miễn Nhiễm Làm Chậm Di Chuyển"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Restriction Visual Effects
+  visual_effects:
+    - effect_id: "movement_slowdown_indicator"
+      effect_name: "Movement Slowdown Indicator"
+      effect_name_vi: "Chỉ Báo Làm Chậm Di Chuyển"
+      effect_type: "indicator_effect"
+      indicator_type: "movement"
+      indicator_color: "#8b4513"
+      indicator_intensity: 1.0
+      
+  # Restriction Audio Effects
+  audio_effects:
+    - effect_id: "movement_slowdown_sound"
+      effect_name: "Movement Slowdown Sound"
+      effect_name_vi: "Âm Thanh Làm Chậm Di Chuyển"
+      effect_type: "instant_sound"
+      sound_type: "movement"
+      volume: 0.7
+      loop: false

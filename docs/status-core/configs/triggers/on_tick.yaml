@@ -1,0 +1,113 @@
+# On Tick Trigger Configuration
+trigger_definition:
+  # Basic Info
+  trigger_id: "on_tick"
+  trigger_name: "On Tick"
+  trigger_name_vi: "Khi Tick"
+  
+  # Trigger Properties
+  trigger_type: "tick"
+  priority: 100
+  stackable: true
+  max_stacks: 10
+  stack_behavior: "replace_oldest"
+  
+  # Trigger Description
+  description: "Trigger based on tick intervals and counts"
+  description_vi: "Kích hoạt dựa trên khoảng thời gian tick và số lượng tick"
+  
+  # Trigger Properties
+  properties:
+    tick_interval: 1.0
+    tick_count: 10
+    tick_type: "fixed"
+    visual_effect: "tick_trigger"
+    audio_effect: "tick_trigger_sound"
+    
+  # Trigger Rules
+  rules:
+    - rule_id: "tick_trigger_calculation"
+      rule_name: "Tick Trigger Calculation"
+      rule_name_vi: "Tính Toán Kích Hoạt Tick"
+      rule_type: "trigger_calculation"
+      rule_description: "Calculate tick trigger based on interval and count"
+      rule_formula: "tick_trigger = (current_time - last_tick) >= tick_interval"
+      
+    - rule_id: "tick_count_processing"
+      rule_name: "Tick Count Processing"
+      rule_name_vi: "Xử Lý Số Lượng Tick"
+      rule_type: "count_processing"
+      rule_description: "Process tick count and trigger effects"
+      rule_formula: "count_trigger = current_tick_count < max_tick_count"
+      
+    - rule_id: "tick_effect_application"
+      rule_name: "Tick Effect Application"
+      rule_name_vi: "Áp Dụng Hiệu Ứng Tick"
+      rule_type: "effect_application"
+      rule_description: "Apply effects when tick trigger is activated"
+      rule_formula: "effect_applied = tick_trigger && count_trigger"
+      
+  # Trigger Modifiers
+  modifiers:
+    - modifier_id: "tick_interval_multiplier"
+      modifier_name: "Tick Interval Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Khoảng Thời Gian Tick"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "wisdom"
+      
+    - modifier_id: "tick_count_multiplier"
+      modifier_name: "Tick Count Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Số Lượng Tick"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.005
+      scaling_stat: "constitution"
+      
+  # Trigger Interactions
+  interactions:
+    - interaction_id: "tick_with_healing"
+      interaction_name: "Tick with Healing"
+      interaction_name_vi: "Tick với Hồi Máu"
+      interaction_type: "conflict"
+      target_trigger: "healing_trigger"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.5
+      
+    - interaction_id: "tick_with_resistance"
+      interaction_name: "Tick with Resistance"
+      interaction_name_vi: "Tick với Kháng Cự"
+      interaction_type: "resistance"
+      target_trigger: "resistance_trigger"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.7
+      
+  # Trigger Immunity
+  immunity:
+    - immunity_id: "tick_immunity"
+      immunity_name: "Tick Immunity"
+      immunity_name_vi: "Miễn Nhiễm Tick"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Trigger Visual Effects
+  visual_effects:
+    - effect_id: "tick_trigger"
+      effect_name: "Tick Trigger"
+      effect_name_vi: "Kích Hoạt Tick"
+      effect_type: "trigger_effect"
+      trigger_type: "timer"
+      trigger_color: "#4ecdc4"
+      trigger_intensity: 1.0
+      
+  # Trigger Audio Effects
+  audio_effects:
+    - effect_id: "tick_trigger_sound"
+      effect_name: "Tick Trigger Sound"
+      effect_name_vi: "Âm Thanh Kích Hoạt Tick"
+      effect_type: "ambient_sound"
+      sound_type: "tick"
+      volume: 0.5
+      loop: true

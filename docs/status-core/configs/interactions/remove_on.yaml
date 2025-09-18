@@ -1,0 +1,113 @@
+# Remove On Interaction Configuration
+interaction_definition:
+  # Basic Info
+  interaction_id: "remove_on"
+  interaction_name: "Remove On"
+  interaction_name_vi: "Loại Bỏ Khi"
+  
+  # Interaction Properties
+  interaction_type: "removal"
+  priority: 200
+  stackable: false
+  max_stacks: 1
+  stack_behavior: "replace_all"
+  
+  # Interaction Description
+  description: "Removes status effects when specific conditions are met"
+  description_vi: "Loại bỏ trạng thái khi điều kiện cụ thể được đáp ứng"
+  
+  # Interaction Properties
+  properties:
+    target_status: "water_heal"
+    remove_condition: "any_tick"
+    remove_type: "immediate"
+    visual_effect: "remove_on_indicator"
+    audio_effect: "remove_on_sound"
+    
+  # Interaction Rules
+  rules:
+    - rule_id: "remove_on_calculation"
+      rule_name: "Remove On Calculation"
+      rule_name_vi: "Tính Toán Loại Bỏ Khi"
+      rule_type: "removal_calculation"
+      rule_description: "Calculate removal effects based on target status and conditions"
+      rule_formula: "remove_effect = target_status_active && remove_condition_met"
+      
+    - rule_id: "remove_on_application"
+      rule_name: "Remove On Application"
+      rule_name_vi: "Áp Dụng Loại Bỏ Khi"
+      rule_type: "removal_application"
+      rule_description: "Apply removal effects when conditions are met"
+      rule_formula: "status_removed = remove_effect && remove_type == immediate"
+      
+    - rule_id: "remove_on_condition_processing"
+      rule_name: "Remove On Condition Processing"
+      rule_name_vi: "Xử Lý Điều Kiện Loại Bỏ Khi"
+      rule_type: "condition_processing"
+      rule_description: "Process removal conditions and trigger effects"
+      rule_formula: "condition_trigger = remove_condition && condition_active"
+      
+  # Interaction Modifiers
+  modifiers:
+    - modifier_id: "remove_on_multiplier"
+      modifier_name: "Remove On Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Loại Bỏ Khi"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "intelligence"
+      
+    - modifier_id: "remove_on_condition_modifier"
+      modifier_name: "Remove On Condition Modifier"
+      modifier_name_vi: "Sửa Đổi Điều Kiện Loại Bỏ Khi"
+      modifier_type: "condition"
+      base_value: 0.0
+      scaling_factor: 0.01
+      scaling_stat: "wisdom"
+      
+  # Interaction Interactions
+  interactions:
+    - interaction_id: "remove_on_with_healing"
+      interaction_name: "Remove On with Healing"
+      interaction_name_vi: "Loại Bỏ Khi với Hồi Máu"
+      interaction_type: "conflict"
+      target_interaction: "healing_interaction"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.3
+      
+    - interaction_id: "remove_on_with_resistance"
+      interaction_name: "Remove On with Resistance"
+      interaction_name_vi: "Loại Bỏ Khi với Kháng Cự"
+      interaction_type: "resistance"
+      target_interaction: "resistance_interaction"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.5
+      
+  # Interaction Immunity
+  immunity:
+    - immunity_id: "remove_on_immunity"
+      immunity_name: "Remove On Immunity"
+      immunity_name_vi: "Miễn Nhiễm Loại Bỏ Khi"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Interaction Visual Effects
+  visual_effects:
+    - effect_id: "remove_on_indicator"
+      effect_name: "Remove On Indicator"
+      effect_name_vi: "Chỉ Báo Loại Bỏ Khi"
+      effect_type: "indicator_effect"
+      indicator_type: "removal"
+      indicator_color: "#ff6b6b"
+      indicator_intensity: 1.0
+      
+  # Interaction Audio Effects
+  audio_effects:
+    - effect_id: "remove_on_sound"
+      effect_name: "Remove On Sound"
+      effect_name_vi: "Âm Thanh Loại Bỏ Khi"
+      effect_type: "instant_sound"
+      sound_type: "removal"
+      volume: 0.8
+      loop: false

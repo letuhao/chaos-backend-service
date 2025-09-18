@@ -1,0 +1,191 @@
+# Bone Broken Status Configuration
+# Negate Status - Physical Element
+status_definition:
+  # Basic Info
+  status_id: "bone_broken"
+  status_guid: "550e8400-e29b-41d4-a716-446655440005"
+  world_id: "chaos_world_001"
+  status_name: "Bone Broken"
+  status_name_vi: "Gãy Xương"
+  
+  # Categories (multiple)
+  categories: ["negate", "physical_element", "debuff"]
+  
+  # Element Binding
+  elements:
+    primary_element: "physical"
+    secondary_elements: ["injury", "negate"]
+    element_affinity: 0.9
+    
+  # Basic Properties
+  effect_type: "debuff"
+  priority: 180
+  stackable: false
+  max_stacks: 1
+  stack_behavior: "replace_all"
+  
+  # Immunity System
+  immunity_system:
+    mechanical_immunity:
+      - condition: "already_bone_broken"
+        immunity_type: "bone_broken"
+        reason: "Cannot be bone broken while already bone broken"
+      - condition: "dead"
+        immunity_type: "all_negate_status"
+        reason: "Dead actors cannot receive negate status"
+        
+    logical_immunity:
+      - condition: "physical_element_mastery_above_100"
+        immunity_type: "bone_broken"
+        reason: "High physical mastery provides natural bone broken resistance"
+        
+    temporary_immunity:
+      - condition: "just_removed_bone_broken"
+        immunity_type: "bone_broken"
+        duration: 15.0
+        reason: "Temporary immunity after bone broken removal"
+  
+  # Status Effects
+  effects:
+    - effect_id: "action_slowdown"
+      effect_type: "action_modifier"
+      magnitude:
+        base_value: 0.5
+        scaling_factor: 0.1
+        scaling_stat: "constitution"
+      duration:
+        base_duration: 30.0
+        scaling_factor: 0.2
+        scaling_stat: "constitution"
+      conditions:
+        - condition_type: "action_category_condition"
+          action_categories: ["physical", "movement", "attack", "defense"]
+          restriction_type: "slowdown"
+      triggers:
+        - trigger_type: "on_action_execution"
+          trigger_data:
+            action_categories: ["physical", "movement", "attack", "defense"]
+      modifiers:
+        - modifier_type: "action_execution_duration_multiplier"
+          value: 1.5
+          source: "bone_broken_effect"
+        - modifier_type: "action_cooldown_multiplier"
+          value: 1.5
+          source: "bone_broken_effect"
+      interactions:
+        - interaction_type: "remove_on"
+          target_status: "healing_potion"
+          remove_condition: "immediate"
+      immunity_list:
+        - "bone_broken_immunity"
+        - "physical_impairment_immunity"
+      movement_restrictions:
+        - "movement_slowdown"
+        - "action_slowdown"
+      visual_effects:
+        - effect_type: "overlay_effect"
+          effect_name: "bone_crack"
+          duration: 30.0
+          intensity: 1.0
+      audio_effects:
+        - effect_type: "instant_sound"
+          sound_name: "bone_crack_sound"
+          volume: 0.7
+          loop: false
+            
+    - effect_id: "movement_damage"
+      effect_type: "damage_on_action"
+      magnitude:
+        base_value: 5.0
+        scaling_factor: 0.1
+        scaling_stat: "constitution"
+      duration:
+        base_duration: 30.0
+        scaling_factor: 0.2
+        scaling_stat: "constitution"
+      conditions:
+        - condition_type: "action_category_condition"
+          action_categories: ["movement", "attack", "defense"]
+          restriction_type: "damage_on_execution"
+      triggers:
+        - trigger_type: "on_action_execution"
+          trigger_data:
+            action_categories: ["movement", "attack", "defense"]
+      modifiers:
+        - modifier_type: "damage_multiplier"
+          value: 1.0
+          source: "base_movement_damage"
+        - modifier_type: "constitution_reduction"
+          scaling_factor: 0.1
+      interactions:
+        - interaction_type: "remove_on"
+          target_status: "healing_potion"
+          remove_condition: "immediate"
+      immunity_list:
+        - "bone_broken_immunity"
+        - "physical_impairment_immunity"
+      movement_restrictions: []
+      visual_effects:
+        - effect_type: "instant_effect"
+          effect_name: "bone_crack"
+          duration: 0.5
+          intensity: 1.0
+      audio_effects:
+        - effect_type: "instant_sound"
+          sound_name: "bone_crack_sound"
+          volume: 0.7
+          loop: false
+
+  # Dynamic Scaling System
+  scaling_system:
+    level_scaling:
+      base_level: 1
+      max_level: 100
+      scaling_formula: "exponential"
+      scaling_factor: 1.1
+      
+    stat_scaling:
+      primary_stat: "constitution"
+      secondary_stat: "strength"
+      tertiary_stat: "endurance"
+      scaling_weights: [0.5, 0.3, 0.2]
+
+  # Conditional Effects
+  conditional_effects:
+    - condition: "target_constitution_above_50"
+      effect_modifier: 0.7
+      effect_type: "magnitude_multiplier"
+      
+    - condition: "target_physical_mastery_above_100"
+      effect_modifier: 0.5
+      effect_type: "magnitude_multiplier"
+
+  # Environment Interactions
+  environment_interactions:
+    - environment: "physical_realm"
+      effect_modifier: 1.2
+      effect_type: "magnitude_multiplier"
+      
+    - environment: "spiritual_realm"
+      effect_modifier: 0.8
+      effect_type: "magnitude_multiplier"
+
+  # Time-based Modifiers
+  time_modifiers:
+    - time_period: "day"
+      effect_modifier: 1.0
+      effect_type: "magnitude_multiplier"
+      
+    - time_period: "night"
+      effect_modifier: 1.1
+      effect_type: "magnitude_multiplier"
+
+  # Relationship-based Effects
+  relationship_effects:
+    - relationship: "ally"
+      effect_modifier: 0.0
+      effect_type: "magnitude_multiplier"
+      
+    - relationship: "enemy"
+      effect_modifier: 1.0
+      effect_type: "magnitude_multiplier"

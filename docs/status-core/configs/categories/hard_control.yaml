@@ -1,0 +1,112 @@
+# Hard Control Category Configuration
+category_definition:
+  # Basic Info
+  category_id: "hard_control"
+  category_name: "Hard Control"
+  category_name_vi: "Kiểm Soát Cứng"
+  
+  # Category Properties
+  priority: 200
+  stackable: false
+  max_stacks: 1
+  stack_behavior: "replace_all"
+  
+  # Category Description
+  description: "Status effects that completely restrict actor actions"
+  description_vi: "Trạng thái hạn chế hoàn toàn hành động của diễn viên"
+  
+  # Category Properties
+  properties:
+    control_type: "complete_restriction"
+    visual_effect: "control_overlay"
+    audio_effect: "control_sound"
+    element_binding: true
+    resistance_calculation: true
+    
+  # Category Rules
+  rules:
+    - rule_id: "hard_control_application"
+      rule_name: "Hard Control Application"
+      rule_name_vi: "Áp Dụng Kiểm Soát Cứng"
+      rule_type: "control_application"
+      rule_description: "Apply hard control effects that block all actions"
+      rule_formula: "control_success = (attacker_mastery - target_resistance) / 100.0"
+      
+    - rule_id: "hard_control_duration"
+      rule_name: "Hard Control Duration"
+      rule_name_vi: "Thời Gian Kiểm Soát Cứng"
+      rule_type: "duration_calculation"
+      rule_description: "Calculate control duration based on mastery and resistance"
+      rule_formula: "duration = base_duration * (1 + mastery_bonus - resistance_modifier)"
+      
+    - rule_id: "hard_control_break"
+      rule_name: "Hard Control Break"
+      rule_name_vi: "Phá Vỡ Kiểm Soát Cứng"
+      rule_type: "control_break"
+      rule_description: "Break control effects based on actor stats and external factors"
+      rule_formula: "break_chance = (constitution + willpower) / 200.0"
+      
+  # Category Modifiers
+  modifiers:
+    - modifier_id: "control_duration_multiplier"
+      modifier_name: "Control Duration Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Thời Gian Kiểm Soát"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.02
+      scaling_stat: "intelligence"
+      
+    - modifier_id: "control_resistance_modifier"
+      modifier_name: "Control Resistance Modifier"
+      modifier_name_vi: "Sửa Đổi Kháng Kiểm Soát"
+      modifier_type: "resistance"
+      base_value: 0.0
+      scaling_factor: 0.01
+      scaling_stat: "constitution"
+      
+  # Category Interactions
+  interactions:
+    - interaction_id: "control_with_healing"
+      interaction_name: "Control with Healing"
+      interaction_name_vi: "Kiểm Soát với Hồi Máu"
+      interaction_type: "conflict"
+      target_category: "healing"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.3
+      
+    - interaction_id: "control_with_resistance"
+      interaction_name: "Control with Resistance"
+      interaction_name_vi: "Kiểm Soát với Kháng Cự"
+      interaction_type: "resistance"
+      target_category: "resistance"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.5
+      
+  # Category Immunity
+  immunity:
+    - immunity_id: "control_immunity"
+      immunity_name: "Control Immunity"
+      immunity_name_vi: "Miễn Nhiễm Kiểm Soát"
+      immunity_type: "complete"
+      immunity_condition: "mental_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Category Visual Effects
+  visual_effects:
+    - effect_id: "control_overlay"
+      effect_name: "Control Overlay"
+      effect_name_vi: "Lớp Phủ Kiểm Soát"
+      effect_type: "overlay_effect"
+      overlay_type: "stars"
+      overlay_color: "#ffff00"
+      overlay_intensity: 1.0
+      
+  # Category Audio Effects
+  audio_effects:
+    - effect_id: "control_sound"
+      effect_name: "Control Sound"
+      effect_name_vi: "Âm Thanh Kiểm Soát"
+      effect_type: "instant_sound"
+      sound_type: "control"
+      volume: 0.8
+      loop: false

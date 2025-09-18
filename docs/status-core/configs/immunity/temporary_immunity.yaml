@@ -1,0 +1,114 @@
+# Temporary Immunity Configuration
+immunity_definition:
+  # Basic Info
+  immunity_id: "temporary_immunity"
+  immunity_name: "Temporary Immunity"
+  immunity_name_vi: "Miễn Nhiễm Tạm Thời"
+  
+  # Immunity Properties
+  immunity_type: "temporary"
+  priority: 160
+  stackable: true
+  max_stacks: 3
+  stack_behavior: "stack_additive"
+  
+  # Immunity Description
+  description: "Provides temporary immunity for a short duration after status removal"
+  description_vi: "Cung cấp miễn nhiễm tạm thời trong thời gian ngắn sau khi loại bỏ trạng thái"
+  
+  # Immunity Properties
+  properties:
+    immunity_condition: "just_removed_burning"
+    immunity_type: "burning"
+    immunity_duration: 3.0
+    immunity_reason: "Temporary immunity after burning removal"
+    visual_effect: "temporary_immunity_indicator"
+    audio_effect: "temporary_immunity_sound"
+    
+  # Immunity Rules
+  rules:
+    - rule_id: "temporary_immunity_calculation"
+      rule_name: "Temporary Immunity Calculation"
+      rule_name_vi: "Tính Toán Miễn Nhiễm Tạm Thời"
+      rule_type: "immunity_calculation"
+      rule_description: "Calculate temporary immunity based on duration and conditions"
+      rule_formula: "temporary_immunity = immunity_condition_met && time_elapsed < immunity_duration"
+      
+    - rule_id: "temporary_immunity_application"
+      rule_name: "Temporary Immunity Application"
+      rule_name_vi: "Áp Dụng Miễn Nhiễm Tạm Thời"
+      rule_type: "immunity_application"
+      rule_description: "Apply temporary immunity to status effect application"
+      rule_formula: "status_blocked = temporary_immunity && target_status in immune_statuses"
+      
+    - rule_id: "temporary_immunity_duration_processing"
+      rule_name: "Temporary Immunity Duration Processing"
+      rule_name_vi: "Xử Lý Thời Lượng Miễn Nhiễm Tạm Thời"
+      rule_type: "duration_processing"
+      rule_description: "Process temporary immunity duration and expiration"
+      rule_formula: "immunity_expired = time_elapsed >= immunity_duration"
+      
+  # Immunity Modifiers
+  modifiers:
+    - modifier_id: "temporary_immunity_duration_multiplier"
+      modifier_name: "Temporary Immunity Duration Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Thời Lượng Miễn Nhiễm Tạm Thời"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "constitution"
+      
+    - modifier_id: "temporary_immunity_condition_modifier"
+      modifier_name: "Temporary Immunity Condition Modifier"
+      modifier_name_vi: "Sửa Đổi Điều Kiện Miễn Nhiễm Tạm Thời"
+      modifier_type: "condition"
+      base_value: 0.0
+      scaling_factor: 0.01
+      scaling_stat: "wisdom"
+      
+  # Immunity Interactions
+  interactions:
+    - interaction_id: "temporary_immunity_with_healing"
+      interaction_name: "Temporary Immunity with Healing"
+      interaction_name_vi: "Miễn Nhiễm Tạm Thời với Hồi Máu"
+      interaction_type: "conflict"
+      target_immunity: "healing_immunity"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.3
+      
+    - interaction_id: "temporary_immunity_with_resistance"
+      interaction_name: "Temporary Immunity with Resistance"
+      interaction_name_vi: "Miễn Nhiễm Tạm Thời với Kháng Cự"
+      interaction_type: "resistance"
+      target_immunity: "resistance_immunity"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.5
+      
+  # Immunity Immunity
+  immunity:
+    - immunity_id: "temporary_immunity_immunity"
+      immunity_name: "Temporary Immunity Immunity"
+      immunity_name_vi: "Miễn Nhiễm Miễn Nhiễm Tạm Thời"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Immunity Visual Effects
+  visual_effects:
+    - effect_id: "temporary_immunity_indicator"
+      effect_name: "Temporary Immunity Indicator"
+      effect_name_vi: "Chỉ Báo Miễn Nhiễm Tạm Thời"
+      effect_type: "indicator_effect"
+      indicator_type: "immunity"
+      indicator_color: "#ffd700"
+      indicator_intensity: 0.8
+      
+  # Immunity Audio Effects
+  audio_effects:
+    - effect_id: "temporary_immunity_sound"
+      effect_name: "Temporary Immunity Sound"
+      effect_name_vi: "Âm Thanh Miễn Nhiễm Tạm Thời"
+      effect_type: "ambient_sound"
+      sound_type: "immunity"
+      volume: 0.5
+      loop: true

@@ -1,0 +1,118 @@
+# Stacking Sound Audio Effect Configuration
+audio_effect_definition:
+  # Basic Info
+  effect_id: "stacking_sound"
+  effect_name: "Stacking Sound"
+  effect_name_vi: "Âm Thanh Chồng Chất"
+  
+  # Effect Properties
+  effect_type: "stacking"
+  priority: 110
+  stackable: true
+  max_stacks: 10
+  stack_behavior: "stack_additive"
+  
+  # Effect Description
+  description: "Creates stacking sound effects for status audio representation"
+  description_vi: "Tạo hiệu ứng âm thanh chồng chất cho biểu diễn âm thanh của trạng thái"
+  
+  # Effect Properties
+  properties:
+    sound_type: "damage"
+    sound_volume: 0.6
+    sound_loop: true
+    sound_fade: true
+    sound_pitch: 1.0
+    sound_pan: 0.0
+    sound_priority: 110
+    sound_category: "status_effect"
+    visual_effect: "stacking_sound_indicator"
+    audio_effect: "stacking_sound_sound"
+    
+  # Effect Rules
+  rules:
+    - rule_id: "stacking_sound_calculation"
+      rule_name: "Stacking Sound Calculation"
+      rule_name_vi: "Tính Toán Âm Thanh Chồng Chất"
+      rule_type: "sound_calculation"
+      rule_description: "Calculate stacking sound properties based on status magnitude and stack count"
+      rule_formula: "sound_volume = base_volume * status_magnitude * stack_count_multiplier"
+      
+    - rule_id: "stacking_sound_application"
+      rule_name: "Stacking Sound Application"
+      rule_name_vi: "Áp Dụng Âm Thanh Chồng Chất"
+      rule_type: "sound_application"
+      rule_description: "Apply stacking sound effects to status audio representation"
+      rule_formula: "stacking_sound = sound_system * sound_volume * stack_count"
+      
+    - rule_id: "stacking_sound_animation"
+      rule_name: "Stacking Sound Animation"
+      rule_name_vi: "Hoạt Hình Âm Thanh Chồng Chất"
+      rule_type: "sound_animation"
+      rule_description: "Animate stacking sound effects over time"
+      rule_formula: "sound_animation = stacking_sound * time_multiplier * animation_speed"
+      
+  # Effect Modifiers
+  modifiers:
+    - modifier_id: "stacking_sound_volume_multiplier"
+      modifier_name: "Stacking Sound Volume Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Âm Lượng Âm Thanh Chồng Chất"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "intelligence"
+      
+    - modifier_id: "stacking_sound_stack_multiplier"
+      modifier_name: "Stacking Sound Stack Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Chồng Âm Thanh Chồng Chất"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.005
+      scaling_stat: "wisdom"
+      
+  # Effect Interactions
+  interactions:
+    - interaction_id: "stacking_sound_with_healing"
+      interaction_name: "Stacking Sound with Healing"
+      interaction_name_vi: "Âm Thanh Chồng Chất với Hồi Máu"
+      interaction_type: "conflict"
+      target_effect: "healing_audio_effect"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.5
+      
+    - interaction_id: "stacking_sound_with_resistance"
+      interaction_name: "Stacking Sound with Resistance"
+      interaction_name_vi: "Âm Thanh Chồng Chất với Kháng Cự"
+      interaction_type: "resistance"
+      target_effect: "resistance_audio_effect"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.7
+      
+  # Effect Immunity
+  immunity:
+    - immunity_id: "stacking_sound_immunity"
+      immunity_name: "Stacking Sound Immunity"
+      immunity_name_vi: "Miễn Nhiễm Âm Thanh Chồng Chất"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Effect Visual Effects
+  visual_effects:
+    - effect_id: "stacking_sound_indicator"
+      effect_name: "Stacking Sound Indicator"
+      effect_name_vi: "Chỉ Báo Âm Thanh Chồng Chất"
+      effect_type: "indicator_effect"
+      indicator_type: "sound"
+      indicator_color: "#2c1810"
+      indicator_intensity: 0.6
+      
+  # Effect Audio Effects
+  audio_effects:
+    - effect_id: "stacking_sound_sound"
+      effect_name: "Stacking Sound Sound"
+      effect_name_vi: "Âm Thanh Âm Thanh Chồng Chất"
+      effect_type: "ambient_sound"
+      sound_type: "stacking"
+      volume: 0.6
+      loop: true

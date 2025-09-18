@@ -1,0 +1,113 @@
+# Immunity With Interaction Configuration
+interaction_definition:
+  # Basic Info
+  interaction_id: "immunity_with"
+  interaction_name: "Immunity With"
+  interaction_name_vi: "Miễn Nhiễm Với"
+  
+  # Interaction Properties
+  interaction_type: "immunity"
+  priority: 200
+  stackable: false
+  max_stacks: 1
+  stack_behavior: "replace_all"
+  
+  # Interaction Description
+  description: "Provides complete immunity against status effects based on immunity conditions"
+  description_vi: "Cung cấp miễn nhiễm hoàn toàn chống lại trạng thái dựa trên điều kiện miễn nhiễm"
+  
+  # Interaction Properties
+  properties:
+    target_status: "all_status"
+    immunity_type: "complete"
+    immunity_condition: "element_mastery_above_100"
+    visual_effect: "immunity_with_indicator"
+    audio_effect: "immunity_with_sound"
+    
+  # Interaction Rules
+  rules:
+    - rule_id: "immunity_with_calculation"
+      rule_name: "Immunity With Calculation"
+      rule_name_vi: "Tính Toán Miễn Nhiễm Với"
+      rule_type: "immunity_calculation"
+      rule_description: "Calculate immunity effects based on target status and immunity type"
+      rule_formula: "immunity_effect = immunity_condition_met && immunity_type == complete"
+      
+    - rule_id: "immunity_with_application"
+      rule_name: "Immunity With Application"
+      rule_name_vi: "Áp Dụng Miễn Nhiễm Với"
+      rule_type: "immunity_application"
+      rule_description: "Apply immunity effects when status effects are blocked"
+      rule_formula: "status_blocked = immunity_effect && target_status in immune_statuses"
+      
+    - rule_id: "immunity_with_condition_processing"
+      rule_name: "Immunity With Condition Processing"
+      rule_name_vi: "Xử Lý Điều Kiện Miễn Nhiễm Với"
+      rule_type: "condition_processing"
+      rule_description: "Process immunity conditions and trigger effects"
+      rule_formula: "condition_trigger = immunity_condition && condition_active"
+      
+  # Interaction Modifiers
+  modifiers:
+    - modifier_id: "immunity_with_multiplier"
+      modifier_name: "Immunity With Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Miễn Nhiễm Với"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "element_mastery"
+      
+    - modifier_id: "immunity_with_immunity_modifier"
+      modifier_name: "Immunity With Immunity Modifier"
+      modifier_name_vi: "Sửa Đổi Miễn Nhiễm Miễn Nhiễm Với"
+      modifier_type: "immunity"
+      base_value: 0.0
+      scaling_factor: 0.01
+      scaling_stat: "constitution"
+      
+  # Interaction Interactions
+  interactions:
+    - interaction_id: "immunity_with_with_healing"
+      interaction_name: "Immunity With with Healing"
+      interaction_name_vi: "Miễn Nhiễm Với với Hồi Máu"
+      interaction_type: "conflict"
+      target_interaction: "healing_interaction"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.0
+      
+    - interaction_id: "immunity_with_with_resistance"
+      interaction_name: "Immunity With with Resistance"
+      interaction_name_vi: "Miễn Nhiễm Với với Kháng Cự"
+      interaction_type: "resistance"
+      target_interaction: "resistance_interaction"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.0
+      
+  # Interaction Immunity
+  immunity:
+    - immunity_id: "immunity_with_immunity"
+      immunity_name: "Immunity With Immunity"
+      immunity_name_vi: "Miễn Nhiễm Miễn Nhiễm Với"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Interaction Visual Effects
+  visual_effects:
+    - effect_id: "immunity_with_indicator"
+      effect_name: "Immunity With Indicator"
+      effect_name_vi: "Chỉ Báo Miễn Nhiễm Với"
+      effect_type: "indicator_effect"
+      indicator_type: "immunity"
+      indicator_color: "#ffd700"
+      indicator_intensity: 1.0
+      
+  # Interaction Audio Effects
+  audio_effects:
+    - effect_id: "immunity_with_sound"
+      effect_name: "Immunity With Sound"
+      effect_name_vi: "Âm Thanh Miễn Nhiễm Với"
+      effect_type: "instant_sound"
+      sound_type: "immunity"
+      volume: 0.9
+      loop: false

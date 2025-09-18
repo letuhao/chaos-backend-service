@@ -1,0 +1,114 @@
+# Movement Block Movement Restriction Configuration
+movement_restriction_definition:
+  # Basic Info
+  restriction_id: "movement_block"
+  restriction_name: "Movement Block"
+  restriction_name_vi: "Chặn Di Chuyển"
+  
+  # Restriction Properties
+  restriction_type: "block"
+  priority: 200
+  stackable: false
+  max_stacks: 1
+  stack_behavior: "replace_all"
+  
+  # Restriction Description
+  description: "Completely blocks actor movement"
+  description_vi: "Chặn hoàn toàn di chuyển của diễn viên"
+  
+  # Restriction Properties
+  properties:
+    movement_type: "all"
+    restriction_value: 1.0
+    restriction_duration: "permanent"
+    restriction_condition: "status_active"
+    visual_effect: "movement_block_indicator"
+    audio_effect: "movement_block_sound"
+    
+  # Restriction Rules
+  rules:
+    - rule_id: "movement_block_calculation"
+      rule_name: "Movement Block Calculation"
+      rule_name_vi: "Tính Toán Chặn Di Chuyển"
+      rule_type: "block_calculation"
+      rule_description: "Calculate movement block based on restriction value and conditions"
+      rule_formula: "movement_blocked = restriction_value == 1.0 && restriction_condition_met"
+      
+    - rule_id: "movement_block_application"
+      rule_name: "Movement Block Application"
+      rule_name_vi: "Áp Dụng Chặn Di Chuyển"
+      rule_type: "block_application"
+      rule_description: "Apply movement block to actor movement"
+      rule_formula: "movement_allowed = !movement_blocked && movement_conditions_met"
+      
+    - rule_id: "movement_block_break_processing"
+      rule_name: "Movement Block Break Processing"
+      rule_name_vi: "Xử Lý Phá Vỡ Chặn Di Chuyển"
+      rule_type: "break_processing"
+      rule_description: "Process movement block break conditions"
+      rule_formula: "block_broken = (constitution + willpower) / 200.0 > break_threshold"
+      
+  # Restriction Modifiers
+  modifiers:
+    - modifier_id: "movement_block_value_multiplier"
+      modifier_name: "Movement Block Value Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Giá Trị Chặn Di Chuyển"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.0
+      scaling_stat: "none"
+      
+    - modifier_id: "movement_block_condition_modifier"
+      modifier_name: "Movement Block Condition Modifier"
+      modifier_name_vi: "Sửa Đổi Điều Kiện Chặn Di Chuyển"
+      modifier_type: "condition"
+      base_value: 0.0
+      scaling_factor: 0.0
+      scaling_stat: "none"
+      
+  # Restriction Interactions
+  interactions:
+    - interaction_id: "movement_block_with_healing"
+      interaction_name: "Movement Block with Healing"
+      interaction_name_vi: "Chặn Di Chuyển với Hồi Máu"
+      interaction_type: "conflict"
+      target_restriction: "healing_movement_restriction"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.3
+      
+    - interaction_id: "movement_block_with_resistance"
+      interaction_name: "Movement Block with Resistance"
+      interaction_name_vi: "Chặn Di Chuyển với Kháng Cự"
+      interaction_type: "resistance"
+      target_restriction: "resistance_movement_restriction"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.5
+      
+  # Restriction Immunity
+  immunity:
+    - immunity_id: "movement_block_immunity"
+      immunity_name: "Movement Block Immunity"
+      immunity_name_vi: "Miễn Nhiễm Chặn Di Chuyển"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Restriction Visual Effects
+  visual_effects:
+    - effect_id: "movement_block_indicator"
+      effect_name: "Movement Block Indicator"
+      effect_name_vi: "Chỉ Báo Chặn Di Chuyển"
+      effect_type: "indicator_effect"
+      indicator_type: "movement"
+      indicator_color: "#ffff00"
+      indicator_intensity: 1.0
+      
+  # Restriction Audio Effects
+  audio_effects:
+    - effect_id: "movement_block_sound"
+      effect_name: "Movement Block Sound"
+      effect_name_vi: "Âm Thanh Chặn Di Chuyển"
+      effect_type: "instant_sound"
+      sound_type: "movement"
+      volume: 0.8
+      loop: false

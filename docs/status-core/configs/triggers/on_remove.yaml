@@ -1,0 +1,112 @@
+# On Remove Trigger Configuration
+trigger_definition:
+  # Basic Info
+  trigger_id: "on_remove"
+  trigger_name: "On Remove"
+  trigger_name_vi: "Khi Loại Bỏ"
+  
+  # Trigger Properties
+  trigger_type: "remove"
+  priority: 200
+  stackable: false
+  max_stacks: 1
+  stack_behavior: "replace_all"
+  
+  # Trigger Description
+  description: "Trigger when status effect is removed"
+  description_vi: "Kích hoạt khi trạng thái được loại bỏ"
+  
+  # Trigger Properties
+  properties:
+    immediate_effect: true
+    remove_type: "instant"
+    visual_effect: "remove_trigger"
+    audio_effect: "remove_trigger_sound"
+    
+  # Trigger Rules
+  rules:
+    - rule_id: "remove_trigger_calculation"
+      rule_name: "Remove Trigger Calculation"
+      rule_name_vi: "Tính Toán Kích Hoạt Loại Bỏ"
+      rule_type: "trigger_calculation"
+      rule_description: "Calculate remove trigger based on removal conditions"
+      rule_formula: "remove_trigger = status_removed && immediate_effect"
+      
+    - rule_id: "remove_effect_processing"
+      rule_name: "Remove Effect Processing"
+      rule_name_vi: "Xử Lý Hiệu Ứng Loại Bỏ"
+      rule_type: "effect_processing"
+      rule_description: "Process effects when remove trigger is activated"
+      rule_formula: "effect_processed = remove_trigger && effect_conditions_met"
+      
+    - rule_id: "remove_instant_removal"
+      rule_name: "Remove Instant Removal"
+      rule_name_vi: "Loại Bỏ Tức Thời"
+      rule_type: "instant_removal"
+      rule_description: "Remove effects instantly when trigger is activated"
+      rule_formula: "instant_removed = remove_trigger && remove_type == instant"
+      
+  # Trigger Modifiers
+  modifiers:
+    - modifier_id: "remove_immediate_multiplier"
+      modifier_name: "Remove Immediate Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Loại Bỏ Tức Thời"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "intelligence"
+      
+    - modifier_id: "remove_instant_modifier"
+      modifier_name: "Remove Instant Modifier"
+      modifier_name_vi: "Sửa Đổi Loại Bỏ Tức Thời"
+      modifier_type: "instant"
+      base_value: 0.0
+      scaling_factor: 0.01
+      scaling_stat: "wisdom"
+      
+  # Trigger Interactions
+  interactions:
+    - interaction_id: "remove_with_healing"
+      interaction_name: "Remove with Healing"
+      interaction_name_vi: "Loại Bỏ với Hồi Máu"
+      interaction_type: "conflict"
+      target_trigger: "healing_trigger"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.3
+      
+    - interaction_id: "remove_with_resistance"
+      interaction_name: "Remove with Resistance"
+      interaction_name_vi: "Loại Bỏ với Kháng Cự"
+      interaction_type: "resistance"
+      target_trigger: "resistance_trigger"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.5
+      
+  # Trigger Immunity
+  immunity:
+    - immunity_id: "remove_immunity"
+      immunity_name: "Remove Immunity"
+      immunity_name_vi: "Miễn Nhiễm Loại Bỏ"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Trigger Visual Effects
+  visual_effects:
+    - effect_id: "remove_trigger"
+      effect_name: "Remove Trigger"
+      effect_name_vi: "Kích Hoạt Loại Bỏ"
+      effect_type: "trigger_effect"
+      trigger_type: "instant"
+      trigger_color: "#ff6b6b"
+      trigger_intensity: 1.0
+      
+  # Trigger Audio Effects
+  audio_effects:
+    - effect_id: "remove_trigger_sound"
+      effect_name: "Remove Trigger Sound"
+      effect_name_vi: "Âm Thanh Kích Hoạt Loại Bỏ"
+      effect_type: "instant_sound"
+      sound_type: "remove"
+      volume: 0.8
+      loop: false

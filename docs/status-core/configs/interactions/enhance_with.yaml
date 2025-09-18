@@ -1,0 +1,113 @@
+# Enhance With Interaction Configuration
+interaction_definition:
+  # Basic Info
+  interaction_id: "enhance_with"
+  interaction_name: "Enhance With"
+  interaction_name_vi: "Tăng Cường Với"
+  
+  # Interaction Properties
+  interaction_type: "enhancement"
+  priority: 150
+  stackable: true
+  max_stacks: 5
+  stack_behavior: "stack_additive"
+  
+  # Interaction Description
+  description: "Enhances status effects when specific conditions are met"
+  description_vi: "Tăng cường trạng thái khi điều kiện cụ thể được đáp ứng"
+  
+  # Interaction Properties
+  properties:
+    target_status: "life_spirits_gift"
+    enhancement_type: "magnitude_increase"
+    enhancement_value: 0.25
+    visual_effect: "enhance_with_indicator"
+    audio_effect: "enhance_with_sound"
+    
+  # Interaction Rules
+  rules:
+    - rule_id: "enhance_with_calculation"
+      rule_name: "Enhance With Calculation"
+      rule_name_vi: "Tính Toán Tăng Cường Với"
+      rule_type: "enhancement_calculation"
+      rule_description: "Calculate enhancement effects based on target status and enhancement type"
+      rule_formula: "enhance_effect = base_effect * (1 + enhancement_value * enhancement_multiplier)"
+      
+    - rule_id: "enhance_with_application"
+      rule_name: "Enhance With Application"
+      rule_name_vi: "Áp Dụng Tăng Cường Với"
+      rule_type: "enhancement_application"
+      rule_description: "Apply enhancement effects when conditions are met"
+      rule_formula: "final_effect = base_effect * enhance_effect"
+      
+    - rule_id: "enhance_with_condition_processing"
+      rule_name: "Enhance With Condition Processing"
+      rule_name_vi: "Xử Lý Điều Kiện Tăng Cường Với"
+      rule_type: "condition_processing"
+      rule_description: "Process enhancement conditions and trigger effects"
+      rule_formula: "condition_trigger = enhancement_condition && condition_active"
+      
+  # Interaction Modifiers
+  modifiers:
+    - modifier_id: "enhance_with_multiplier"
+      modifier_name: "Enhance With Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Tăng Cường Với"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "intelligence"
+      
+    - modifier_id: "enhance_with_enhancement_modifier"
+      modifier_name: "Enhance With Enhancement Modifier"
+      modifier_name_vi: "Sửa Đổi Tăng Cường Tăng Cường Với"
+      modifier_type: "enhancement"
+      base_value: 0.0
+      scaling_factor: 0.01
+      scaling_stat: "wisdom"
+      
+  # Interaction Interactions
+  interactions:
+    - interaction_id: "enhance_with_with_healing"
+      interaction_name: "Enhance With with Healing"
+      interaction_name_vi: "Tăng Cường Với với Hồi Máu"
+      interaction_type: "conflict"
+      target_interaction: "healing_interaction"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.5
+      
+    - interaction_id: "enhance_with_with_resistance"
+      interaction_name: "Enhance With with Resistance"
+      interaction_name_vi: "Tăng Cường Với với Kháng Cự"
+      interaction_type: "resistance"
+      target_interaction: "resistance_interaction"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.7
+      
+  # Interaction Immunity
+  immunity:
+    - immunity_id: "enhance_with_immunity"
+      immunity_name: "Enhance With Immunity"
+      immunity_name_vi: "Miễn Nhiễm Tăng Cường Với"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Interaction Visual Effects
+  visual_effects:
+    - effect_id: "enhance_with_indicator"
+      effect_name: "Enhance With Indicator"
+      effect_name_vi: "Chỉ Báo Tăng Cường Với"
+      effect_type: "indicator_effect"
+      indicator_type: "enhancement"
+      indicator_color: "#ffd700"
+      indicator_intensity: 0.8
+      
+  # Interaction Audio Effects
+  audio_effects:
+    - effect_id: "enhance_with_sound"
+      effect_name: "Enhance With Sound"
+      effect_name_vi: "Âm Thanh Tăng Cường Với"
+      effect_type: "ambient_sound"
+      sound_type: "enhancement"
+      volume: 0.6
+      loop: true

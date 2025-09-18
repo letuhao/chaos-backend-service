@@ -1,0 +1,112 @@
+# On Damage Taken Trigger Configuration
+trigger_definition:
+  # Basic Info
+  trigger_id: "on_damage_taken"
+  trigger_name: "On Damage Taken"
+  trigger_name_vi: "Khi Nhận Sát Thương"
+  
+  # Trigger Properties
+  trigger_type: "damage_taken"
+  priority: 160
+  stackable: true
+  max_stacks: 5
+  stack_behavior: "stack_additive"
+  
+  # Trigger Description
+  description: "Trigger when actor takes damage from specific sources"
+  description_vi: "Kích hoạt khi diễn viên nhận sát thương từ nguồn cụ thể"
+  
+  # Trigger Properties
+  properties:
+    damage_types: ["physical", "magical", "elemental"]
+    damage_source: "any"
+    visual_effect: "damage_taken_trigger"
+    audio_effect: "damage_taken_trigger_sound"
+    
+  # Trigger Rules
+  rules:
+    - rule_id: "damage_taken_trigger_calculation"
+      rule_name: "Damage Taken Trigger Calculation"
+      rule_name_vi: "Tính Toán Kích Hoạt Nhận Sát Thương"
+      rule_type: "trigger_calculation"
+      rule_description: "Calculate damage taken trigger based on damage types and sources"
+      rule_formula: "damage_trigger = damage_taken && damage_type in required_types"
+      
+    - rule_id: "damage_taken_effect_processing"
+      rule_name: "Damage Taken Effect Processing"
+      rule_name_vi: "Xử Lý Hiệu Ứng Nhận Sát Thương"
+      rule_type: "effect_processing"
+      rule_description: "Process effects when damage taken trigger is activated"
+      rule_formula: "effect_processed = damage_trigger && effect_conditions_met"
+      
+    - rule_id: "damage_taken_immediate_application"
+      rule_name: "Damage Taken Immediate Application"
+      rule_name_vi: "Áp Dụng Tức Thời Nhận Sát Thương"
+      rule_type: "immediate_application"
+      rule_description: "Apply effects immediately when damage taken trigger is activated"
+      rule_formula: "immediate_applied = damage_trigger && damage_source == any"
+      
+  # Trigger Modifiers
+  modifiers:
+    - modifier_id: "damage_taken_multiplier"
+      modifier_name: "Damage Taken Multiplier"
+      modifier_name_vi: "Hệ Số Nhân Nhận Sát Thương"
+      modifier_type: "multiplier"
+      base_value: 1.0
+      scaling_factor: 0.01
+      scaling_stat: "constitution"
+      
+    - modifier_id: "damage_taken_modifier"
+      modifier_name: "Damage Taken Modifier"
+      modifier_name_vi: "Sửa Đổi Nhận Sát Thương"
+      modifier_type: "damage"
+      base_value: 0.0
+      scaling_factor: 0.01
+      scaling_stat: "strength"
+      
+  # Trigger Interactions
+  interactions:
+    - interaction_id: "damage_taken_with_healing"
+      interaction_name: "Damage Taken with Healing"
+      interaction_name_vi: "Nhận Sát Thương với Hồi Máu"
+      interaction_type: "conflict"
+      target_trigger: "healing_trigger"
+      interaction_behavior: "reduce_effectiveness"
+      interaction_modifier: 0.7
+      
+    - interaction_id: "damage_taken_with_resistance"
+      interaction_name: "Damage Taken with Resistance"
+      interaction_name_vi: "Nhận Sát Thương với Kháng Cự"
+      interaction_type: "resistance"
+      target_trigger: "resistance_trigger"
+      interaction_behavior: "reduce_duration"
+      interaction_modifier: 0.5
+      
+  # Trigger Immunity
+  immunity:
+    - immunity_id: "damage_taken_immunity"
+      immunity_name: "Damage Taken Immunity"
+      immunity_name_vi: "Miễn Nhiễm Nhận Sát Thương"
+      immunity_type: "complete"
+      immunity_condition: "element_mastery_above_100"
+      immunity_duration: "permanent"
+      
+  # Trigger Visual Effects
+  visual_effects:
+    - effect_id: "damage_taken_trigger"
+      effect_name: "Damage Taken Trigger"
+      effect_name_vi: "Kích Hoạt Nhận Sát Thương"
+      effect_type: "trigger_effect"
+      trigger_type: "damage"
+      trigger_color: "#ff6b35"
+      trigger_intensity: 1.0
+      
+  # Trigger Audio Effects
+  audio_effects:
+    - effect_id: "damage_taken_trigger_sound"
+      effect_name: "Damage Taken Trigger Sound"
+      effect_name_vi: "Âm Thanh Kích Hoạt Nhận Sát Thương"
+      effect_type: "instant_sound"
+      sound_type: "damage"
+      volume: 0.7
+      loop: false
