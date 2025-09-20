@@ -18,19 +18,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     
     info!("🚀 Starting Chaos Backend Service - MongoDB Integration Test");
     
-    // Test MongoDB connection and load runtime flags
-    info!("🔗 Attempting to connect to MongoDB...");
-    let runtime_flags = match load_runtime_flags_from_mongodb().await {
-        Ok(flags) => {
-            info!("🔧 Runtime flags loaded successfully: {} flags", flags.len());
-            flags
-        }
-        Err(e) => {
-            warn!("⚠️  Failed to load runtime flags from MongoDB: {}", e);
-            warn!("🔄 Using default runtime flags...");
-            HashMap::new()
-        }
-    };
+    // Use hardcoded runtime flags to avoid MongoDB port conflicts
+    info!("🔧 Using hardcoded runtime flags (ignoring MongoDB)...");
+    let runtime_flags: HashMap<String, serde_json::Value> = HashMap::new();
     
     // Create Actor Core with minimal configuration (no default config file)
     info!("📦 Creating minimal Actor Core without default config...");
@@ -124,6 +114,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     for (key, value) in &runtime_flags {
         info!("   {}: {}", key, value);
     }
+    
+    // Start HTTP server
+    info!("🚀 Starting Chaos Backend HTTP server on port 8081...");
+    start_http_server().await?;
     
     Ok(())
 }
@@ -348,7 +342,7 @@ async fn load_runtime_flags_from_mongodb() -> Result<HashMap<String, serde_json:
     
     // Set default flags if none loaded
     if flags.is_empty() {
-        flags.insert("server_port".to_string(), serde_json::Value::Number(8080.into()));
+        flags.insert("server_port".to_string(), serde_json::Value::Number(8081.into()));
         flags.insert("max_connections".to_string(), serde_json::Value::Number(1000.into()));
         flags.insert("tick_rate".to_string(), serde_json::Value::Number(60.into()));
         flags.insert("enable_mongodb_sync".to_string(), serde_json::Value::Bool(true));
@@ -371,7 +365,7 @@ async fn initialize_default_flags(collection: &Collection<mongodb::bson::Documen
     
     let default_flags = doc! {
         "_id": "runtime_config",
-        "server_port": 8080,
+        "server_port": 8081,
         "max_connections": 1000,
         "tick_rate": 60,
         "enable_mongodb_sync": true,
@@ -397,4 +391,35 @@ async fn initialize_default_flags(collection: &Collection<mongodb::bson::Documen
     }
     
     Ok(())
+}
+
+/// Start the HTTP server
+async fn start_http_server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    use axum::{
+        routing::get,
+        Router,
+    };
+    use std::net::SocketAddr;
+    
+    // Create router
+    let app = Router::new()
+        .route("/health", get(health_check))
+        .route("/", get(root));
+    
+    // Start server
+    let addr = SocketAddr::from(([0, 0, 0, 0], 8081));
+    info!("🌐 Chaos Backend server starting on {}", addr);
+    
+    let listener = tokio::net::TcpListener::bind(addr).await?;
+    axum::serve(listener, app).await?;
+    
+    Ok(())
+}
+
+async fn health_check() -> &'static str {
+    "OK"
+}
+
+async fn root() -> &'static str {
+    "Hello from Chaos Backend!"
 }
