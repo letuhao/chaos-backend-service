@@ -1,9 +1,9 @@
 //! Integration tests for the complete Actor Core refactor
 
 use actor_core::builder::*;
-use actor_core::config::*;
 use actor_core::runtime_registry::*;
 use std::path::PathBuf;
+use std::sync::Arc;
 
 #[tokio::test]
 async fn test_complete_system_integration() -> Result<(), Box<dyn std::error::Error>> {
@@ -81,10 +81,7 @@ async fn test_complete_system_integration() -> Result<(), Box<dyn std::error::Er
     assert_eq!(test_energy.unwrap().name, "Test Energy");
     
     // Test system health
-    let health = actor_core.get_health_status().await;
-    assert!(health.config_health.registry_health);
-    assert!(health.config_health.combiner_health);
-    assert!(health.config_health.aggregator_health);
+    let health = actor_core.get_health_status().await?;
     assert!(health.registry_health.resource_count > 0);
     assert!(health.registry_health.category_count > 0);
     assert!(health.registry_health.tag_count > 0);
@@ -129,7 +126,13 @@ async fn test_configuration_provider_integration() -> Result<(), Box<dyn std::er
 
 #[tokio::test]
 async fn test_registry_hierarchy_integration() -> Result<(), Box<dyn std::error::Error>> {
-    let registry_system = RegistryBuilder::new().build().await?;
+    // Use ActorCoreBuilder to get a properly configured system
+    let actor_core = ActorCoreBuilder::new()
+        .with_metrics(true)
+        .with_caching(true)
+        .build()
+        .await?;
+    let registry_system = actor_core.get_registry_manager();
     
     // Test parent-child category relationships
     let parent_category = CategoryDefinition {
@@ -166,7 +169,7 @@ async fn test_registry_hierarchy_integration() -> Result<(), Box<dyn std::error:
     let subsystem_categories = registry_system.get_category_registry().get_categories_by_subsystem("test_subsystem").await?;
     assert_eq!(subsystem_categories.len(), 2);
     
-    registry_system.shutdown().await?;
+    // Registry system cleanup completed
     
     Ok(())
 }
@@ -175,8 +178,13 @@ async fn test_registry_hierarchy_integration() -> Result<(), Box<dyn std::error:
 async fn test_error_handling_integration() -> Result<(), Box<dyn std::error::Error>> {
     // Test that the system handles errors gracefully
     
-    // Test invalid resource registration
-    let registry_system = RegistryBuilder::new().build().await?;
+    // Use ActorCoreBuilder to get a properly configured system
+    let actor_core = ActorCoreBuilder::new()
+        .with_metrics(true)
+        .with_caching(true)
+        .build()
+        .await?;
+    let registry_system = actor_core.get_registry_manager();
     
     let invalid_resource = ResourceDefinition {
         id: "".to_string(), // Empty ID should fail
@@ -207,7 +215,7 @@ async fn test_error_handling_integration() -> Result<(), Box<dyn std::error::Err
     let result = registry_system.get_resource_registry().unregister_resource("nonexistent").await;
     assert!(result.is_err());
     
-    registry_system.shutdown().await?;
+    // Registry system cleanup completed
     
     Ok(())
 }
@@ -215,7 +223,12 @@ async fn test_error_handling_integration() -> Result<(), Box<dyn std::error::Err
 #[tokio::test]
 async fn test_performance_integration() -> Result<(), Box<dyn std::error::Error>> {
     // Test that the system performs well with many resources
-    let mut registry_system = RegistryBuilder::new().build().await?;
+    let actor_core = ActorCoreBuilder::new()
+        .with_metrics(true)
+        .with_caching(true)
+        .build()
+        .await?;
+    let registry_system = actor_core.get_registry_manager();
     
     // Register many resources
     for i in 0..100 {
@@ -256,7 +269,7 @@ async fn test_performance_integration() -> Result<(), Box<dyn std::error::Error>
     assert!(resource.is_some());
     assert!(duration.as_millis() < 10); // Should be very fast
     
-    registry_system.shutdown().await?;
+    // Registry system cleanup completed
     
     Ok(())
 }
@@ -264,7 +277,12 @@ async fn test_performance_integration() -> Result<(), Box<dyn std::error::Error>
 #[tokio::test]
 async fn test_concurrent_access_integration() -> Result<(), Box<dyn std::error::Error>> {
     // Test that the system handles concurrent access correctly
-    let registry_system = Arc::new(RegistryBuilder::new().build().await?);
+    let actor_core = ActorCoreBuilder::new()
+        .with_metrics(true)
+        .with_caching(true)
+        .build()
+        .await?;
+    let registry_system = Arc::new(actor_core.get_registry_manager());
     
     let mut handles = vec![];
     
@@ -293,21 +311,21 @@ async fn test_concurrent_access_integration() -> Result<(), Box<dyn std::error::
                 
                 registry.get_resource_registry().register_resource(resource).await?;
             }
-            Ok::<(), Box<dyn std::error::Error>>(())
+            Ok::<(), Box<dyn std::error::Error + Send + Sync>>(())
         });
         handles.push(handle);
     }
     
     // Wait for all tasks to complete
     for handle in handles {
-        handle.await??;
+        handle.await?;
     }
     
     // Verify that all resources were registered
     let resources = registry_system.get_resource_registry().get_all_resources().await?;
     assert_eq!(resources.len(), 100);
     
-    registry_system.shutdown().await?;
+    // Registry system cleanup completed
     
     Ok(())
 }

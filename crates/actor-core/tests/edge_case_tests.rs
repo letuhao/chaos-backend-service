@@ -169,31 +169,20 @@ fn test_bucket_processor_extreme_values() {
 /// Test validation edge cases
 #[test]
 fn test_validation_edge_cases() {
-    // Test with empty contributions
-    let contributions = vec![];
-    let result = validate_contributions(&contributions);
-    assert!(!result.has_errors());
-    
     // Test with single valid contribution
-    let contributions = vec![
-        Contribution::new("strength".to_string(), Bucket::Flat, 1.0, "equipment".to_string())
-    ];
-    let result = validate_contributions(&contributions);
-    assert!(!result.has_errors());
+    let contribution = Contribution::new("strength".to_string(), Bucket::Flat, 1.0, "equipment".to_string());
+    let result = validate_contribution(&contribution);
+    assert!(result.is_valid);
     
     // Test with single NaN contribution
-    let contributions = vec![
-        Contribution::new("strength".to_string(), Bucket::Flat, f64::NAN, "equipment".to_string())
-    ];
-    let result = validate_contributions(&contributions);
-    assert!(result.has_errors());
+    let contribution = Contribution::new("strength".to_string(), Bucket::Flat, f64::NAN, "equipment".to_string());
+    let result = validate_contribution(&contribution);
+    assert!(!result.is_valid);
     
     // Test with single infinite contribution
-    let contributions = vec![
-        Contribution::new("strength".to_string(), Bucket::Flat, f64::INFINITY, "equipment".to_string())
-    ];
-    let result = validate_contributions(&contributions);
-    assert!(result.has_errors());
+    let contribution = Contribution::new("strength".to_string(), Bucket::Flat, f64::INFINITY, "equipment".to_string());
+    let result = validate_contribution(&contribution);
+    assert!(!result.is_valid);
 }
 
 /// Test config loading edge cases

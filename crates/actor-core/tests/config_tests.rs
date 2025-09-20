@@ -3,6 +3,10 @@
 use actor_core::config::*;
 use actor_core::config::providers::*;
 use actor_core::config::loaders::*;
+use actor_core::config::registry::ConfigurationRegistryImpl;
+use actor_core::config::combiner::ConfigurationCombinerImpl;
+use actor_core::config::aggregator::ConfigurationAggregatorImpl;
+use actor_core::config::providers::database_provider::DatabaseConfig;
 use std::sync::Arc;
 use std::path::PathBuf;
 
@@ -40,13 +44,13 @@ async fn test_configuration_combiner() -> Result<(), Box<dyn std::error::Error>>
     // Test merging values
     let values = vec![
         ConfigurationValue::new(
-            serde_json::Value::Number(0.5.into()),
+            serde_json::Value::Number(serde_json::Number::from_f64(0.5).unwrap()),
             ConfigurationValueType::Float,
             "provider1".to_string(),
             100,
         ),
         ConfigurationValue::new(
-            serde_json::Value::Number(0.3.into()),
+            serde_json::Value::Number(serde_json::Number::from_f64(0.3).unwrap()),
             ConfigurationValueType::Float,
             "provider2".to_string(),
             200,
@@ -56,7 +60,7 @@ async fn test_configuration_combiner() -> Result<(), Box<dyn std::error::Error>>
     let merge_rule = ConfigurationMergeRule {
         strategy: ConfigurationMergeStrategy::Sum,
         use_pipeline: true,
-        default_value: Some(serde_json::Value::Number(0.0.into())),
+        default_value: Some(serde_json::Value::Number(serde_json::Number::from_f64(0.0).unwrap())),
         validation_rules: vec![],
     };
     
@@ -192,9 +196,19 @@ async fn test_environment_configuration_provider() -> Result<(), Box<dyn std::er
 
 #[tokio::test]
 async fn test_database_configuration_provider() -> Result<(), Box<dyn std::error::Error>> {
+    let database_config = DatabaseConfig {
+        connection_string: "test_connection".to_string(),
+        table_name: "test_table".to_string(),
+        category_column: "category".to_string(),
+        key_column: "key".to_string(),
+        value_column: "value".to_string(),
+        priority_column: "priority".to_string(),
+        enabled_column: "enabled".to_string(),
+    };
     let mut provider = DatabaseConfigurationProvider::new(
         "db_provider".to_string(),
         300,
+        database_config,
     );
     
     provider.load_from_database().await?;

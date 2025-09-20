@@ -1,0 +1,27 @@
+# Combiner Configuration
+# Defines how different cap layers are combined
+
+rules:
+  - id: "attack"
+    bucket_order: ["FLAT", "MULT", "POST_ADD", "OVERRIDE"]
+    clamp:
+      min: 0.0
+      max: 10000.0
+      
+  - id: "defense"
+    bucket_order: ["FLAT", "MULT", "POST_ADD", "OVERRIDE"]
+    clamp:
+      min: 0.0
+      max: 10000.0
+      
+  - id: "magic"
+    bucket_order: ["FLAT", "MULT", "POST_ADD", "OVERRIDE"]
+    clamp:
+      min: 0.0
+      max: 10000.0
+      
+  - id: "social"
+    bucket_order: ["FLAT", "MULT", "POST_ADD", "OVERRIDE"]
+    clamp:
+      min: 0.0
+      max: 10000.0

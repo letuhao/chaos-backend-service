@@ -98,15 +98,16 @@ impl ConfigurationManager {
         info!("💾 Saving configuration to MongoDB...");
         
         // Get all configuration data
-        let all_config = self.aggregator.get_all_config().await?;
+        let _all_config = self.aggregator.get_all_config().await?;
         
         // Find MongoDB provider and save each category
         let providers = self.aggregator.get_providers();
-        for provider in providers {
-            if let Some(mongodb_provider) = provider.as_any().downcast_ref::<crate::config::mongodb::MongoDBConfigurationProvider>() {
-                info!("💾 Found MongoDB provider, saving {} categories", all_config.len());
+        for _provider in providers {
+            #[cfg(feature = "mongodb-storage")]
+            if let Some(mongodb_provider) = _provider.as_any().downcast_ref::<crate::config::mongodb::MongoDBConfigurationProvider>() {
+                info!("💾 Found MongoDB provider, saving {} categories", _all_config.len());
                 
-                for (category, configs) in all_config {
+                for (category, configs) in _all_config {
                     info!("💾 Saving category '{}' with {} keys", category, configs.len());
                     for (key, value) in configs {
                         match mongodb_provider.save_to_database(&category, &key, &value).await {
@@ -121,6 +122,10 @@ impl ConfigurationManager {
                 }
                 info!("💾 Configuration save completed");
                 return Ok(());
+            }
+            #[cfg(not(feature = "mongodb-storage"))]
+            {
+                // MongoDB feature not enabled, skip this provider
             }
         }
         

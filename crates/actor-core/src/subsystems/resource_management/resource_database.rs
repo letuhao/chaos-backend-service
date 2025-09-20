@@ -38,10 +38,13 @@ impl Default for InMemoryResourceDatabase {
 #[cfg(feature = "mongodb-storage")]
 pub struct MongoResourceDatabase {
     /// MongoDB client
+    #[allow(dead_code)]
     client: mongodb::Client,
     /// Database name
+    #[allow(dead_code)]
     database_name: String,
     /// Collection name for actor resources
+    #[allow(dead_code)]
     collection_name: String,
 }
 

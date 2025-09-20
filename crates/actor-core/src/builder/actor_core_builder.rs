@@ -10,6 +10,7 @@ use crate::ActorCoreResult;
 
 /// Actor Core Builder for complex setup scenarios
 pub struct ActorCoreBuilder {
+    #[allow(dead_code)]
     config_manager: Option<Arc<ConfigurationManager>>,
     _registry_manager: Option<Arc<RegistryManager>>,
     #[cfg(feature = "mongodb-storage")]

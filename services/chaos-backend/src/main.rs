@@ -287,6 +287,7 @@ categories:
 }
 
 /// Load runtime flags from MongoDB
+#[allow(dead_code)]
 async fn load_runtime_flags_from_mongodb() -> Result<HashMap<String, serde_json::Value>, Box<dyn std::error::Error + Send + Sync>> {
     use mongodb::{Client, Collection};
     use mongodb::bson::doc;
@@ -358,6 +359,7 @@ async fn load_runtime_flags_from_mongodb() -> Result<HashMap<String, serde_json:
 }
 
 /// Initialize default runtime flags in MongoDB
+#[allow(dead_code)]
 async fn initialize_default_flags(collection: &Collection<mongodb::bson::Document>) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     use mongodb::bson::doc;
     
