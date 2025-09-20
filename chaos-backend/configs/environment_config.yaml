@@ -1,0 +1,68 @@
+# Environment Configuration
+# This file defines the configuration for environment variable provider
+
+# Environment prefix
+prefix: "ACTOR_CORE"
+
+# Default fallback type when parsing environment variables
+default_fallback_type: "string"
+
+# Merge rules for different categories
+merge_rules:
+  default:
+    strategy: "Override"
+    use_pipeline: false
+    default_value: null
+    
+  database:
+    strategy: "Override"
+    use_pipeline: false
+    default_value: null
+    
+  system:
+    strategy: "Override"
+    use_pipeline: false
+    default_value: null
+    
+  performance:
+    strategy: "Min"
+    use_pipeline: true
+    default_value: 1000000
+    
+  cache:
+    strategy: "Override"
+    use_pipeline: false
+    default_value: null
+
+# Validation rules for different categories
+validation_rules:
+  default:
+    required: false
+    pattern: null
+    min_length: null
+    max_length: null
+    
+  database:
+    required: false
+    pattern: "^[a-zA-Z0-9_]+$"
+    min_length: 1
+    max_length: 100
+    
+  system:
+    required: false
+    pattern: "^[a-zA-Z0-9_]+$"
+    min_length: 1
+    max_length: 50
+    
+  performance:
+    required: false
+    pattern: "^[0-9]+$"
+    min_length: 1
+    max_length: 10
+
+# Environment variable examples
+# ACTOR_CORE_DATABASE_HOST=localhost
+# ACTOR_CORE_DATABASE_PORT=5432
+# ACTOR_CORE_SYSTEM_MAX_ACTORS=10000
+# ACTOR_CORE_PERFORMANCE_CACHE_SIZE=1000
+# ACTOR_CORE_CACHE_TTL=3600

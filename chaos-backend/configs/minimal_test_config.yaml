@@ -1,0 +1,148 @@
+# Minimal test configuration
+categories:
+  defaults:
+    default_actor_health: 100
+    default_actor_level: 1
+    default_actor_experience: 0
+
+  logging:
+    level: debug
+
+  metrics:
+    enabled: true
+
+  # System IDs with correct format
+  system_ids:
+    supported_systems:
+      - "luyen_the"
+      - "kim_dan"
+      - "combat"
+      - "equipment"
+      - "buff"
+
+  # Context types
+  context_types:
+    supported_contexts:
+      - "damage"
+      - "healing"
+      - "experience_gain"
+
+  # Default resources for Registry Manager
+  default_resources:
+    resources:
+      health:
+        id: "health"
+        name: "Health"
+        description: "Actor health points"
+        category: "vital"
+        resource_type: "health"
+        base_value: 100.0
+        min_value: 0.0
+        max_value: 1000.0
+        regen_rate: 1.0
+        regen_type: "passive"
+      mana:
+        id: "mana"
+        name: "Mana"
+        description: "Actor mana points"
+        category: "vital"
+        resource_type: "mana"
+        base_value: 50.0
+        min_value: 0.0
+        max_value: 500.0
+        regen_rate: 0.5
+        regen_type: "passive"
+      stamina:
+        id: "stamina"
+        name: "Stamina"
+        description: "Actor stamina points"
+        category: "vital"
+        resource_type: "stamina"
+        base_value: 100.0
+        min_value: 0.0
+        max_value: 1000.0
+        regen_rate: 2.0
+        regen_type: "passive"
+
+  # Resource types configuration
+  resource_types:
+    definitions:
+      health:
+        name: "Health"
+        description: "Health points for actors"
+      mana:
+        name: "Mana"
+        description: "Mana points for actors"
+      stamina:
+        name: "Stamina"
+        description: "Stamina points for actors"
+
+  # Regen types configuration
+  regen_types:
+    definitions:
+      passive:
+        name: "Passive"
+        description: "Passive regeneration"
+      active:
+        name: "Active"
+        description: "Active regeneration"
+      none:
+        name: "None"
+        description: "No regeneration"
+
+  # Default categories configuration
+  default_categories:
+    categories:
+      vital:
+        id: "vital"
+        name: "Vital"
+        description: "Vital resources for actors"
+      combat:
+        id: "combat"
+        name: "Combat"
+        description: "Combat-related resources"
+      magic:
+        id: "magic"
+        name: "Magic"
+        description: "Magic-related resources"
+
+  # Default tags configuration
+  default_tags:
+    tags:
+      primary:
+        id: "primary"
+        name: "Primary"
+        description: "Primary resources"
+        category: "vital"
+      secondary:
+        id: "secondary"
+        name: "Secondary"
+        description: "Secondary resources"
+        category: "vital"
+      special:
+        id: "special"
+        name: "Special"
+        description: "Special resources"
+        category: "magic"
+
+  # Tag types configuration
+  tag_types:
+    definitions:
+      primary:
+        name: "Primary"
+        description: "Primary resource tags"
+      secondary:
+        name: "Secondary"
+        description: "Secondary resource tags"
+      special:
+        name: "Special"
+        description: "Special resource tags"
+      vital:
+        name: "Vital"
+        description: "Vital resource tags"
+      combat:
+        name: "Combat"
+        description: "Combat resource tags"
+      magic:
+        name: "Magic"
+        description: "Magic resource tags"

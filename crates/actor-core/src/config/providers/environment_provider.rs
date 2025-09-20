@@ -322,6 +322,10 @@ impl ConfigurationProvider for EnvironmentConfigurationProvider {
         
         Ok(())
     }
+    
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
 }
 
 impl EnvironmentConfigurationProvider {

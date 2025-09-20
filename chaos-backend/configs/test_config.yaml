@@ -1,0 +1,29 @@
+# Test configuration for MongoDB integration
+defaults:
+  default_actor_health: 100
+  default_actor_level: 1
+  default_actor_experience: 0
+  default_actor_mana: 50
+  default_actor_stamina: 100
+
+logging:
+  level: "info"
+  format: "json"
+  output: "console"
+
+metrics:
+  enabled: true
+  interval_seconds: 60
+  collect_memory: true
+  collect_cpu: true
+
+database:
+  connection_pool_size: 10
+  query_timeout_seconds: 30
+  retry_attempts: 3
+
+game:
+  max_players: 1000
+  tick_rate: 60
+  world_size: 10000
+  experience_rate: 1.0

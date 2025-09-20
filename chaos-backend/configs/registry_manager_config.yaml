@@ -1,0 +1,171 @@
+# Registry Manager Configuration
+# This file defines the registry manager settings for the Actor Core system
+
+# Basic settings
+default_subsystem_id: "actor_core"
+enable_validation: true
+enable_caching: true
+max_definitions_per_registry: 10000
+
+# Resource registry configuration
+resource_config:
+  enable_validation: true
+  enable_caching: true
+  max_resources: 10000
+  cache_ttl_seconds: 3600  # 1 hour
+
+# Category registry configuration
+category_config:
+  enable_validation: true
+  enable_caching: true
+  max_categories: 1000
+  cache_ttl_seconds: 3600  # 1 hour
+  default_registered_count: 0
+  default_registration_attempts: 0
+  default_unregistration_attempts: 0
+  default_lookup_attempts: 0
+
+# Tag registry configuration
+tag_config:
+  enable_validation: true
+  enable_caching: true
+  max_tags: 5000
+  cache_ttl_seconds: 3600  # 1 hour
+
+# Registry manager specific settings
+registry_manager:
+  # Whether to enable registry validation
+  enable_validation: true
+  
+  # Whether to enable registry caching
+  enable_caching: true
+  
+  # Maximum number of definitions per registry
+  max_definitions_per_registry: 10000
+  
+  # Default subsystem ID for new definitions
+  default_subsystem_id: "actor_core"
+  
+  # Whether to enable automatic initialization
+  enable_automatic_initialization: true
+  
+  # Whether to enable health monitoring
+  enable_health_monitoring: true
+  
+  # Health check interval in seconds
+  health_check_interval_seconds: 60
+
+# Initialization settings
+initialization:
+  # Whether to enable automatic initialization
+  enable_automatic_initialization: true
+  
+  # Whether to load default definitions
+  load_default_definitions: true
+  
+  # Whether to validate definitions during loading
+  validate_definitions: true
+  
+  # Whether to enable parallel loading
+  enable_parallel_loading: true
+  
+  # Maximum number of parallel loading operations
+  max_parallel_loading: 5
+
+# Validation settings
+validation:
+  # Whether to enable global validation
+  enable_global_validation: true
+  
+  # Whether to enable strict validation
+  enable_strict_validation: false
+  
+  # Whether to enable resource type validation
+  enable_resource_type_validation: true
+  
+  # Whether to enable regen type validation
+  enable_regen_type_validation: true
+  
+  # Whether to enable tag type validation
+  enable_tag_type_validation: true
+  
+  # Validation timeout in seconds
+  validation_timeout_seconds: 30
+
+# Caching settings
+caching:
+  # Whether to enable global caching
+  enable_global_caching: true
+  
+  # Global cache TTL in seconds
+  global_cache_ttl_seconds: 3600
+  
+  # Whether to enable cache warming
+  enable_cache_warming: false
+  
+  # Cache warming interval in seconds
+  warming_interval_seconds: 300
+  
+  # Whether to enable cache compression
+  enable_cache_compression: false
+  
+  # Cache compression level (1-9)
+  cache_compression_level: 6
+
+# Performance settings
+performance:
+  # Whether to enable performance optimizations
+  enable_performance_optimizations: true
+  
+  # Whether to enable async operations
+  enable_async_operations: true
+  
+  # Whether to enable batch operations
+  enable_batch_operations: true
+  
+  # Batch size for operations
+  batch_size: 100
+  
+  # Whether to enable parallel processing
+  enable_parallel_processing: true
+  
+  # Maximum number of parallel operations
+  max_parallel_operations: 10
+
+# Health monitoring settings
+health_monitoring:
+  # Whether to enable health monitoring
+  enable_health_monitoring: true
+  
+  # Health check interval in seconds
+  health_check_interval_seconds: 60
+  
+  # Whether to enable detailed health metrics
+  enable_detailed_health_metrics: true
+  
+  # Whether to enable health alerts
+  enable_health_alerts: false
+  
+  # Health alert threshold (percentage)
+  health_alert_threshold: 90.0
+
+# Error handling settings
+error_handling:
+  # Whether to enable error recovery
+  enable_error_recovery: true
+  
+  # Maximum retry attempts
+  max_retry_attempts: 3
+  
+  # Retry delay in seconds
+  retry_delay_seconds: 1
+  
+  # Whether to enable error logging
+  enable_error_logging: true
+  
+  # Whether to enable detailed error messages
+  enable_detailed_errors: true
+
+# Example usage:
+# This configuration defines the registry manager settings for the Actor Core system.
+# These settings can be customized by modifying this file or by providing runtime configuration.

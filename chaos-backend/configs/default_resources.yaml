@@ -1,0 +1,78 @@
+# Default Resource Definitions
+# This file contains the default resource definitions that are loaded at startup
+
+resources:
+  health:
+    id: "health"
+    name: "Health"
+    description: "Character health points"
+    category: "vital"
+    resource_type: "Health"
+    base_value: 100.0
+    min_value: 0.0
+    max_value: 1000.0
+    regen_rate: 1.0
+    regen_type: "Passive"
+    dependencies: []
+    tags: ["vital", "combat"]
+    subsystem_id: "actor_core"
+
+  mana:
+    id: "mana"
+    name: "Mana"
+    description: "Character mana points"
+    category: "vital"
+    resource_type: "Mana"
+    base_value: 50.0
+    min_value: 0.0
+    max_value: 500.0
+    regen_rate: 0.5
+    regen_type: "Passive"
+    dependencies: []
+    tags: ["vital", "magic"]
+    subsystem_id: "actor_core"
+
+  stamina:
+    id: "stamina"
+    name: "Stamina"
+    description: "Character stamina points"
+    category: "vital"
+    resource_type: "Stamina"
+    base_value: 100.0
+    min_value: 0.0
+    max_value: 1000.0
+    regen_rate: 2.0
+    regen_type: "Passive"
+    dependencies: []
+    tags: ["vital", "physical"]
+    subsystem_id: "actor_core"
+
+  energy:
+    id: "energy"
+    name: "Energy"
+    description: "Character energy points"
+    category: "vital"
+    resource_type: "Energy"
+    base_value: 80.0
+    min_value: 0.0
+    max_value: 800.0
+    regen_rate: 1.5
+    regen_type: "Passive"
+    dependencies: []
+    tags: ["vital", "general"]
+    subsystem_id: "actor_core"
+
+  spirit:
+    id: "spirit"
+    name: "Spirit"
+    description: "Character spirit points for cultivation"
+    category: "cultivation"
+    resource_type: "Spirit"
+    base_value: 0.0
+    min_value: 0.0
+    max_value: 10000.0
+    regen_rate: 0.1
+    regen_type: "Passive"
+    dependencies: []
+    tags: ["cultivation", "spiritual"]
+    subsystem_id: "actor_core"

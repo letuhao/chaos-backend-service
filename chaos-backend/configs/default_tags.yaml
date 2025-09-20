@@ -1,0 +1,83 @@
+# Default Tag Definitions
+# This file contains the default tag definitions that are loaded at startup
+
+tags:
+  vital:
+    id: "vital"
+    name: "Vital"
+    description: "Essential for survival"
+    category: "resource"
+    color: "#FF0000"
+    subsystem_id: "actor_core"
+
+  combat:
+    id: "combat"
+    name: "Combat"
+    description: "Combat-related"
+    category: "action"
+    color: "#8B0000"
+    subsystem_id: "actor_core"
+
+  magic:
+    id: "magic"
+    name: "Magic"
+    description: "Magic-related"
+    category: "elemental"
+    color: "#4B0082"
+    subsystem_id: "actor_core"
+
+  physical:
+    id: "physical"
+    name: "Physical"
+    description: "Physical attributes"
+    category: "body"
+    color: "#FFA500"
+    subsystem_id: "actor_core"
+
+  mental:
+    id: "mental"
+    name: "Mental"
+    description: "Mental attributes"
+    category: "mind"
+    color: "#0000FF"
+    subsystem_id: "actor_core"
+
+  social:
+    id: "social"
+    name: "Social"
+    description: "Social attributes"
+    category: "interaction"
+    color: "#32CD32"
+    subsystem_id: "actor_core"
+
+  cultivation:
+    id: "cultivation"
+    name: "Cultivation"
+    description: "Cultivation-related"
+    category: "spiritual"
+    color: "#FFD700"
+    subsystem_id: "actor_core"
+
+  elemental:
+    id: "elemental"
+    name: "Elemental"
+    description: "Element-based"
+    category: "magic"
+    color: "#FF69B4"
+    subsystem_id: "actor_core"
+
+  action:
+    id: "action"
+    name: "Action"
+    description: "Action-related"
+    category: "behavior"
+    color: "#DC143C"
+    subsystem_id: "actor_core"
+
+  resource:
+    id: "resource"
+    name: "Resource"
+    description: "Resource type"
+    category: "type"
+    color: "#20B2AA"
+    subsystem_id: "actor_core"

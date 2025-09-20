@@ -1,0 +1,95 @@
+# Default Migration Guides Configuration
+# This file defines the default migration guides for Actor Core
+
+- id: "v0_1_to_v0_2"
+  from_version: "0.1.0"
+  to_version: "0.2.0"
+  title: "Migration from Actor Core v0.1 to v0.2"
+  description: "This guide covers the migration from Actor Core v0.1 to v0.2, including the new async API and improved validation system"
+  complexity: "Medium"
+  estimated_time: "Short"
+  breaking_changes:
+    - change_type: "ApiSignature"
+      description: "Aggregator API is now async"
+      affected_components:
+        - "aggregator"
+      impact: "Medium"
+      migration_strategy: "Update all calls to use async/await syntax"
+    - change_type: "DataStructure"
+      description: "Contribution structure has new required fields"
+      affected_components:
+        - "types"
+        - "subsystems"
+      impact: "Low"
+      migration_strategy: "Update Contribution creation to include new fields"
+  steps:
+    - step_number: 1
+      title: "Update Dependencies"
+      instructions: "Update your Cargo.toml to use Actor Core v0.2"
+      commands:
+        - "cargo update actor-core"
+      expected_outcome: "Dependencies updated successfully"
+      validation_criteria: "cargo check passes"
+      estimated_time: "5 minutes"
+      optional: false
+      prerequisites: []
+    - step_number: 2
+      title: "Update Aggregator Usage"
+      instructions: "Update all aggregator calls to use async/await"
+      commands: []
+      expected_outcome: "All aggregator calls are now async"
+      validation_criteria: "Code compiles without errors"
+      estimated_time: "30 minutes"
+      optional: false
+      prerequisites:
+        - "Step 1 completed"
+    - step_number: 3
+      title: "Update Contribution Creation"
+      instructions: "Update Contribution struct usage to include new fields"
+      commands: []
+      expected_outcome: "All Contribution instances include required fields"
+      validation_criteria: "All tests pass"
+      estimated_time: "15 minutes"
+      optional: false
+      prerequisites:
+        - "Step 2 completed"
+  code_examples:
+    - title: "Async Aggregator Usage"
+      description: "Example of updating aggregator calls to async"
+      language: "rust"
+      before_code: |
+        // Before (v0.1)
+        let snapshot = aggregator.resolve(&actor)?;
+      after_code: |
+        // After (v0.2)
+        let snapshot = aggregator.resolve(&actor).await?;
+      explanation: "The resolve method is now async and must be awaited"
+  pitfalls:
+    - title: "Forgetting to await async calls"
+      description: "Not awaiting async aggregator calls will result in compilation errors"
+      avoidance_strategy: "Use async/await syntax consistently and enable async-related compiler warnings"
+      consequences: "Compilation failures and runtime errors"
+  rollback_instructions: "To rollback, revert to v0.1 and remove async/await syntax from aggregator calls"
+  resources:
+    - title: "Async Programming in Rust"
+      resource_type: "Documentation"
+      url: "https://rust-lang.github.io/async-book/"
+      description: "Official Rust async programming guide"
+  checklist:
+    - item: "Update Cargo.toml dependencies"
+      critical: true
+      category: "CodeChanges"
+    - item: "Update all aggregator.resolve() calls to async"
+      critical: true
+      category: "CodeChanges"
+    - item: "Update Contribution struct usage"
+      critical: false
+      category: "CodeChanges"
+    - item: "Run full test suite"
+      critical: true
+      category: "Testing"
+
+# Example usage:
+# This file contains the default migration guides that are loaded when the
+# migration guide manager starts. Each guide includes comprehensive information
+# for migrating between different versions of Actor Core.

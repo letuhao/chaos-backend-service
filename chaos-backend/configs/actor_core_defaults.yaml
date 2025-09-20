@@ -1,0 +1,182 @@
+# Actor Core Default Configuration
+# This file contains all default values that were previously hardcoded
+
+# System defaults
+defaults:
+  # Resource defaults
+  resources:
+    health:
+      base_value: 100.0
+      min_value: 0.0
+      max_value: 1000.0
+      regen_rate: 1.0
+      regen_type: "passive"
+    mana:
+      base_value: 50.0
+      min_value: 0.0
+      max_value: 500.0
+      regen_rate: 0.5
+      regen_type: "passive"
+    stamina:
+      base_value: 100.0
+      min_value: 0.0
+      max_value: 1000.0
+      regen_rate: 2.0
+      regen_type: "passive"
+  
+  # Stat defaults
+  stats:
+    strength:
+      base_value: 10.0
+      min_value: 0.0
+      max_value: 100.0
+    agility:
+      base_value: 10.0
+      min_value: 0.0
+      max_value: 100.0
+    intelligence:
+      base_value: 10.0
+      min_value: 0.0
+      max_value: 100.0
+    constitution:
+      base_value: 10.0
+      min_value: 0.0
+      max_value: 100.0
+    wisdom:
+      base_value: 10.0
+      min_value: 0.0
+      max_value: 100.0
+    charisma:
+      base_value: 10.0
+      min_value: 0.0
+      max_value: 100.0
+  
+  # Element defaults
+  elements:
+    fire:
+      base_affinity: 0.0
+      min_affinity: 0.0
+      max_affinity: 1.0
+    water:
+      base_affinity: 0.0
+      min_affinity: 0.0
+      max_affinity: 1.0
+    earth:
+      base_affinity: 0.0
+      min_affinity: 0.0
+      max_affinity: 1.0
+    air:
+      base_affinity: 0.0
+      min_affinity: 0.0
+      max_affinity: 1.0
+    light:
+      base_affinity: 0.0
+      min_affinity: 0.0
+      max_affinity: 1.0
+    dark:
+      base_affinity: 0.0
+      min_affinity: 0.0
+      max_affinity: 1.0
+
+# Timeouts (in seconds)
+timeouts:
+  cache_ttl: 3600
+  aggregation_timeout: 5.0
+  validation_timeout: 1.0
+  regeneration_interval: 1.0
+  subsystem_timeout: 10.0
+
+# Performance thresholds
+performance_thresholds:
+  max_actors: 10000
+  max_contributions_per_actor: 1000
+  max_caps_per_actor: 100
+  max_subsystems: 50
+  cache_size_mb: 100
+  memory_usage_mb: 500
+  cpu_usage_percent: 80.0
+
+# Validation rules
+validation_rules:
+  resource_values:
+    min_value: 0.0
+    max_value: 1000000.0
+  stat_values:
+    min_value: 0.0
+    max_value: 1000.0
+  element_affinities:
+    min_value: 0.0
+    max_value: 1.0
+  contribution_values:
+    min_value: -1000.0
+    max_value: 1000.0
+
+# Cache keys
+cache_keys:
+  actor_snapshot: "actor_snapshot"
+  resource_regeneration: "resource_regeneration"
+  stat_aggregation: "stat_aggregation"
+  subsystem_data: "subsystem_data"
+
+# Log levels
+log_levels:
+  actor_core: "info"
+  config: "info"
+  registry: "info"
+  cache: "warn"
+  performance: "debug"
+
+# Cache policies
+cache_policies:
+  actor_snapshot:
+    ttl: 3600
+    max_size: 1000
+    eviction_policy: "lru"
+  resource_regeneration:
+    ttl: 300
+    max_size: 500
+    eviction_policy: "lru"
+  stat_aggregation:
+    ttl: 1800
+    max_size: 2000
+    eviction_policy: "lru"
+
+# System IDs
+system_ids:
+  supported_systems:
+    - "luyen_the"
+    - "kim_dan"
+    - "combat"
+    - "equipment"
+    - "buff"
+    - "guild"
+    - "event"
+    - "world"
+    - "magic"
+    - "cultivation"
+    - "experience"
+    - "reputation"
+    - "trading"
+    - "weather"
+    - "location"
+    - "time"
+    - "stealth"
+    - "perception"
+
+# Context types
+context_types:
+  supported_contexts:
+    - "combat"
+    - "exploration"
+    - "social"
+    - "crafting"
+    - "cultivation"
+    - "trading"
+    - "guild"
+    - "event"
+    - "damage"
+    - "healing"
+    - "experience_gain"
+    - "item_drop"
+    - "movement"
+    - "casting"

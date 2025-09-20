@@ -1,0 +1,123 @@
+# Registry Loader Configuration
+# This file defines the registry loader settings for the Actor Core system
+
+# Environment variable for config directory
+config_dir_env_var: "ACTOR_CORE_CONFIG_DIR"
+
+# File names for different registry types
+cap_layers_yaml_file: "cap_layers.yaml"
+cap_layers_json_file: "cap_layers.json"
+combiner_yaml_file: "combiner.yaml"
+combiner_json_file: "combiner.json"
+
+# Default values for caps
+default_cap_min: -inf
+default_cap_max: inf
+
+# Default across layer policy
+default_across_layer_policy: "Intersect"
+
+# Default merge rule settings
+default_use_pipeline: true
+default_operator: "Sum"
+
+# Registry loader settings
+loader:
+  # Whether to enable auto-reload of configuration files
+  enable_auto_reload: false
+  
+  # Auto-reload interval in seconds
+  auto_reload_interval_seconds: 60
+  
+  # Whether to enable file watching
+  enable_file_watching: false
+  
+  # Whether to enable validation on load
+  enable_validation: true
+  
+  # Whether to enable strict validation
+  enable_strict_validation: false
+  
+  # Whether to enable caching of loaded configurations
+  enable_caching: true
+  
+  # Cache TTL in seconds
+  cache_ttl_seconds: 300
+
+# File loading settings
+file_loading:
+  # Whether to prefer YAML over JSON
+  prefer_yaml: true
+  
+  # Whether to enable JSON fallback
+  enable_json_fallback: true
+  
+  # Whether to enable file existence checking
+  enable_file_existence_check: true
+  
+  # Whether to enable file type detection
+  enable_file_type_detection: true
+  
+  # Maximum file size in bytes
+  max_file_size_bytes: 10485760  # 10MB
+  
+  # Whether to enable file backup before loading
+  enable_file_backup: false
+  
+  # Backup directory
+  backup_directory: "backups"
+
+# Validation settings
+validation:
+  # Whether to enable configuration validation
+  enable_validation: true
+  
+  # Whether to enable strict validation
+  enable_strict_validation: false
+  
+  # Whether to enable duplicate checking
+  enable_duplicate_checking: true
+  
+  # Whether to enable range validation
+  enable_range_validation: true
+  
+  # Whether to enable type validation
+  enable_type_validation: true
+  
+  # Validation timeout in seconds
+  validation_timeout_seconds: 30
+
+# Error handling settings
+error_handling:
+  # Whether to enable detailed error messages
+  enable_detailed_errors: true
+  
+  # Whether to enable error logging
+  enable_error_logging: true
+  
+  # Whether to enable error recovery
+  enable_error_recovery: false
+  
+  # Maximum retry attempts
+  max_retry_attempts: 3
+  
+  # Retry delay in seconds
+  retry_delay_seconds: 1
+
+# Performance settings
+performance:
+  # Whether to enable performance monitoring
+  enable_performance_monitoring: false
+  
+  # Whether to enable loading time tracking
+  enable_loading_time_tracking: false
+  
+  # Whether to enable memory usage tracking
+  enable_memory_tracking: false
+  
+  # Performance monitoring interval in seconds
+  monitoring_interval_seconds: 30
+
+# Example usage:
+# This configuration defines the registry loader settings for the Actor Core system.
+# These settings can be customized by modifying this file or by providing runtime configuration.

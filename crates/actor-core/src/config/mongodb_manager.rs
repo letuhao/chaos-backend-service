@@ -4,16 +4,25 @@
 //! synchronization between files and MongoDB database.
 
 // use std::collections::HashMap; // Unused import
+
+#[cfg(feature = "mongodb-storage")]
 use std::sync::Arc;
+#[cfg(feature = "mongodb-storage")]
 use std::time::Duration;
+#[cfg(feature = "mongodb-storage")]
 use tokio::sync::RwLock;
+#[cfg(feature = "mongodb-storage")]
 use tokio::time::interval;
+#[cfg(feature = "mongodb-storage")]
 use tracing::{info, warn, error};
 
 #[cfg(feature = "mongodb-storage")]
 use crate::config::mongodb::{MongoDBConfigurationProvider, MongoDBConfig};
+#[cfg(feature = "mongodb-storage")]
 use crate::config::types::*;
+#[cfg(feature = "mongodb-storage")]
 use crate::ActorCoreResult;
+#[cfg(feature = "mongodb-storage")]
 use crate::ActorCoreError;
 
 #[cfg(feature = "mongodb-storage")]

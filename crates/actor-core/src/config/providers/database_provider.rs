@@ -300,6 +300,10 @@ impl ConfigurationProvider for DatabaseConfigurationProvider {
         
         Ok(())
     }
+    
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
 }
 
 impl DatabaseConfigurationProvider {

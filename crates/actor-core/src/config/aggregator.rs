@@ -8,6 +8,7 @@ use tracing::{info, debug};
 
 use crate::config::types::*;
 use crate::config::registry::ConfigurationRegistry;
+use crate::config::provider::ConfigurationProvider;
 use crate::config::combiner::ConfigurationCombiner;
 use crate::ActorCoreResult;
 
@@ -31,6 +32,9 @@ pub trait ConfigurationAggregator: Send + Sync {
     
     /// Get aggregator metrics
     async fn get_metrics(&self) -> ConfigurationAggregatorMetrics;
+    
+    /// Get all providers
+    fn get_providers(&self) -> Vec<Arc<dyn ConfigurationProvider>>;
 }
 
 /// Configuration aggregator implementation
@@ -239,5 +243,9 @@ impl ConfigurationAggregator for ConfigurationAggregatorImpl {
     async fn get_metrics(&self) -> ConfigurationAggregatorMetrics {
         let metrics = self.metrics.read();
         metrics.clone()
+    }
+    
+    fn get_providers(&self) -> Vec<Arc<dyn ConfigurationProvider>> {
+        self.registry.get_all_providers()
     }
 }

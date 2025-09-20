@@ -1,0 +1,66 @@
+# Dashboard Configuration
+# This file defines the default settings for the observability dashboard
+
+# Refresh interval for the dashboard (in seconds)
+refresh_interval_seconds: 30
+
+# Whether to include detailed metrics in the dashboard
+include_detailed_metrics: true
+
+# Whether to include SLO status in the dashboard
+include_slo_status: true
+
+# Whether to include system health information
+include_system_health: true
+
+# Maximum number of recent measurements to show
+max_recent_measurements: 10
+
+# Whether to enable auto-refresh
+auto_refresh: true
+
+# Dashboard display settings
+display:
+  # Whether to show emojis in text reports
+  show_emojis: true
+  
+  # Whether to show timestamps
+  show_timestamps: true
+  
+  # Whether to show detailed error information
+  show_detailed_errors: true
+  
+  # Maximum number of alerts to display
+  max_alerts_display: 50
+
+# Health thresholds
+health_thresholds:
+  # Critical threshold (percentage of unhealthy SLOs)
+  critical_threshold: 50.0
+  
+  # Warning threshold (percentage of unhealthy SLOs)
+  warning_threshold: 25.0
+  
+  # Healthy threshold (percentage of healthy SLOs)
+  healthy_threshold: 90.0
+
+# Report generation settings
+reports:
+  # Whether to enable text report generation
+  enable_text_reports: true
+  
+  # Whether to enable JSON report generation
+  enable_json_reports: true
+  
+  # Whether to enable HTML report generation
+  enable_html_reports: false
+  
+  # Report output directory
+  output_directory: "reports"
+  
+  # Whether to include timestamps in filenames
+  include_timestamps_in_filenames: true
+
+# Example usage:
+# This configuration defines the default settings for the observability dashboard.
+# These settings can be overridden at runtime through the configuration system.

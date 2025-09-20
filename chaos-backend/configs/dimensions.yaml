@@ -1,0 +1,80 @@
+# Dimensions Configuration
+# This file defines all supported dimensions in the Actor Core system
+
+supported_dimensions:
+  # Basic RPG resources
+  - "health"
+  - "mana"
+  - "stamina"
+  
+  # Basic RPG stats
+  - "strength"
+  - "agility"
+  - "intelligence"
+  - "constitution"
+  - "wisdom"
+  - "charisma"
+  
+  # Element affinities
+  - "fire_affinity"
+  - "water_affinity"
+  - "earth_affinity"
+  - "air_affinity"
+  - "light_affinity"
+  - "dark_affinity"
+  
+  # Cultivation resources (Kim Đan system)
+  - "qi_capacity"
+  - "qi_regen"
+  - "spiritual_power"
+  - "body_refinement"
+  - "mental_defense"
+  - "hp_max"
+  
+  # Primary stats (Kim Đan)
+  - "vital_essence"
+  - "qi_control"
+  - "meridian_strength"
+  - "body_constitution"
+  - "soul_consciousness"
+  - "dao_comprehension"
+  - "fortune"
+  
+  # Derived stats (Kim Đan)
+  - "element_mastery"
+  - "realm_progression"
+  - "power_tier"
+  - "cultivation_level"
+  
+  # Status effect dimensions
+  - "burning_damage"
+  - "stun_duration"
+  - "life_spirit_gift"
+  - "curse_power"
+  - "bone_broken_severity"
+  
+  # Combat dimensions
+  - "damage_dealt"
+  - "damage_taken"
+  - "healing_received"
+  - "critical_chance"
+  - "critical_damage"
+  
+  # Movement dimensions
+  - "movement_speed"
+  - "jump_height"
+  - "swim_speed"
+  - "climb_speed"
+  
+  # Social dimensions
+  - "reputation"
+  - "charisma_bonus"
+  - "persuasion"
+  - "intimidation"
+  
+  # Economic dimensions
+  - "gold"
+  - "silver"
+  - "copper"
+  - "gems"
+  - "materials"

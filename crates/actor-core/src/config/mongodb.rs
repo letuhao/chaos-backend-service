@@ -3,8 +3,6 @@
 //! This module provides functionality to load and save configuration
 //! from MongoDB database, with fallback to file-based configuration.
 
-use async_trait::async_trait;
-use std::collections::HashMap;
 // use std::sync::Arc; // Unused import
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "mongodb-storage")]
@@ -13,18 +11,30 @@ use mongodb::{
     bson::doc,
     options::{ClientOptions, FindOptions, ReplaceOptions},
 };
+
+#[cfg(feature = "mongodb-storage")]
+use async_trait::async_trait;
+#[cfg(feature = "mongodb-storage")]
+use std::collections::HashMap;
+#[cfg(feature = "mongodb-storage")]
 use tracing::{info, warn};
 
+#[cfg(feature = "mongodb-storage")]
 use crate::config::provider::{ConfigurationProvider, BaseConfigurationProvider};
+#[cfg(feature = "mongodb-storage")]
 use crate::config::types::*;
+#[cfg(feature = "mongodb-storage")]
 use crate::ActorCoreResult;
+#[cfg(feature = "mongodb-storage")]
 use crate::ActorCoreError;
 
 #[cfg(feature = "mongodb-storage")]
 /// MongoDB configuration provider
 pub struct MongoDBConfigurationProvider {
     base: BaseConfigurationProvider,
+    #[allow(dead_code)]
     client: Client,
+    #[allow(dead_code)]
     database: Database,
     collection: Collection<ConfigurationDocument>,
     config_data: HashMap<String, HashMap<String, ConfigurationValue>>,
@@ -332,5 +342,9 @@ impl ConfigurationProvider for MongoDBConfigurationProvider {
         }
         
         Ok(())
+    }
+    
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
     }
 }

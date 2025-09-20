@@ -33,6 +33,9 @@ pub trait ConfigurationRegistry: Send + Sync {
     
     /// Get registry metrics
     async fn get_metrics(&self) -> ConfigurationRegistryMetrics;
+    
+    /// Get all providers
+    fn get_all_providers(&self) -> Vec<Arc<dyn ConfigurationProvider>>;
 }
 
 /// Configuration registry implementation
@@ -281,5 +284,10 @@ impl ConfigurationRegistry for ConfigurationRegistryImpl {
     async fn get_metrics(&self) -> ConfigurationRegistryMetrics {
         let metrics = self.metrics.read();
         metrics.clone()
+    }
+    
+    fn get_all_providers(&self) -> Vec<Arc<dyn ConfigurationProvider>> {
+        let providers = self.providers.read();
+        providers.values().cloned().collect()
     }
 }

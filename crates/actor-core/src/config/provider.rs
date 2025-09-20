@@ -47,6 +47,9 @@ pub trait ConfigurationProvider: Send + Sync {
             last_updated: chrono::Utc::now(),
         }
     }
+    
+    /// Get provider as Any for downcasting
+    fn as_any(&self) -> &dyn std::any::Any;
 }
 
 /// Configuration provider metadata
@@ -204,5 +207,9 @@ impl ConfigurationProvider for BaseConfigurationProvider {
         }
 
         Ok(())
+    }
+    
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
     }
 }

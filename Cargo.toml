@@ -16,7 +16,7 @@ members = [
     # "crates/api",
     
     # Services (binaries)
-    # "services/chaos-backend",
+    "chaos-backend",
     # "services/actor-service",
     # "services/combat-service",
     # "services/world-service",
@@ -29,6 +29,7 @@ members = [
     # "tools/admin-cli",
     
 ]
+
 
 [workspace.package]
 version = "0.1.0"
@@ -73,6 +74,8 @@ tracing-opentelemetry = "0.21"
 # Database
 sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid"] }
 redis = { version = "0.24", features = ["tokio-comp"] }
+mongodb = "2.8"
+bson = "2.8"
 
 # Networking
 tonic = "0.10"

@@ -1,0 +1,84 @@
+# File Configuration Provider Settings
+# This file defines the configuration for the file-based configuration provider
+
+# Provider settings
+provider_id: "file_provider"
+priority: 200
+
+# Default fallback type for null values
+default_fallback_type: "string"
+
+# Supported file types
+supported_file_types:
+  - "yaml"
+  - "json"
+  - "toml"
+
+# Auto-reload settings
+auto_reload: false
+watch_interval_ms: 1000
+
+# Merge rules for different categories
+merge_rules:
+  default:
+    strategy: "Override"
+    use_pipeline: false
+    default_value: null
+    
+  element_affinities:
+    strategy: "Sum"
+    use_pipeline: true
+    default_value: 0.0
+    
+  primary_stats:
+    strategy: "Sum"
+    use_pipeline: true
+    default_value: 0.0
+    
+  derived_formulas:
+    strategy: "Override"
+    use_pipeline: false
+    default_value: null
+    
+  performance:
+    strategy: "Override"
+    use_pipeline: false
+    default_value: null
+
+# Validation rules for different categories
+validation_rules:
+  default:
+    required: false
+    min_length: null
+    max_length: null
+    pattern: null
+    
+  element_affinities:
+    required: false
+    min_length: null
+    max_length: null
+    pattern: "^[a-z_]+$"  # Only lowercase letters and underscores
+    
+  primary_stats:
+    required: true
+    min_length: null
+    max_length: null
+    pattern: "^[a-z_]+$"  # Only lowercase letters and underscores
+    
+  derived_formulas:
+    required: true
+    min_length: 1
+    max_length: 1000
+    pattern: "^[a-zA-Z0-9_+\\-*/()\\s]+$"  # Formula pattern
+    
+  performance:
+    required: false
+    min_length: null
+    max_length: null
+    pattern: null
+
+# Example usage:
+# This provider loads configuration from YAML/JSON files and applies
+# category-specific merge rules and validation rules as defined above.
+# The provider supports auto-reload functionality and can watch for
+# file changes to automatically reload configuration.

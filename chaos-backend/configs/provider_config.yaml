@@ -1,0 +1,105 @@
+# Configuration Provider Settings
+# This file defines the configuration for the base configuration provider
+
+# Provider limits and settings
+default_priority: 100
+max_categories: 50
+enable_metadata: true
+validation_enabled: true
+cache_enabled: false
+cache_ttl_ms: 300000  # 5 minutes
+
+# Default provider information
+default_provider_type: "base"
+default_version: "1.0.0"
+
+# Provider type configurations
+provider_types:
+  base:
+    priority: 100
+    max_categories: 50
+    validation_enabled: true
+    cache_enabled: false
+    
+  database:
+    priority: 300
+    max_categories: 20
+    validation_enabled: true
+    cache_enabled: true
+    cache_ttl_ms: 600000  # 10 minutes
+    
+  environment:
+    priority: 400
+    max_categories: 30
+    validation_enabled: true
+    cache_enabled: false
+    
+  file:
+    priority: 200
+    max_categories: 100
+    validation_enabled: true
+    cache_enabled: true
+    cache_ttl_ms: 300000  # 5 minutes
+    
+  example:
+    priority: 100
+    max_categories: 10
+    validation_enabled: true
+    cache_enabled: false
+
+# Validation rules
+validation_rules:
+  provider_id:
+    min_length: 1
+    max_length: 50
+    pattern: "^[a-zA-Z0-9_-]+$"
+    required: true
+    
+  priority:
+    min_value: 0
+    max_value: 1000
+    required: true
+    
+  categories:
+    max_count: 50
+    min_count: 0
+    name_pattern: "^[a-zA-Z0-9_-]+$"
+
+# Error messages
+error_messages:
+  empty_provider_id: "Provider ID cannot be empty"
+  invalid_priority: "Provider priority must be between 0 and 1000, got: {}"
+  too_many_categories: "Too many categories: {} (max: {})"
+  empty_category_name: "Category name cannot be empty"
+  invalid_category_name: "Category name must match pattern: {}"
+  validation_disabled: "Validation is disabled for this provider"
+  cache_disabled: "Cache is disabled for this provider"
+
+# Performance settings
+performance:
+  enable_metrics: true
+  enable_profiling: false
+  log_slow_operations: true
+  slow_operation_threshold_ms: 1000
+  
+# Security settings
+security:
+  enable_audit_log: true
+  log_sensitive_data: false
+  max_config_size_bytes: 1048576  # 1MB
+  allowed_config_types:
+    - "yaml"
+    - "json"
+    - "toml"
+
+# Example usage:
+# This configuration applies to all base configuration providers.
+# Individual providers can override these settings as needed.
+# The validation_enabled flag controls whether the base provider
+# performs validation on its configuration data.
+# 
+# Provider types can have different configurations for different
+# use cases (database, file, environment, etc.).
+# 
+# Validation rules ensure data integrity and security.
+# Performance settings help monitor and optimize provider behavior.

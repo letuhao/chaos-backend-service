@@ -1,0 +1,188 @@
+# Runtime Registry Configuration
+# This file defines the runtime registry settings for the Actor Core system
+
+# Global settings
+enable_caching: true
+enable_statistics: true
+max_entries_per_registry: 10000
+
+# Resource registry settings
+resource_config:
+  enable_validation: true
+  enable_caching: true
+  max_resources: 10000
+  cache_ttl_seconds: 3600  # 1 hour
+
+# Category registry settings
+category_config:
+  enable_validation: true
+  enable_caching: true
+  max_categories: 1000
+  cache_ttl_seconds: 3600  # 1 hour
+
+# Tag registry settings
+tag_config:
+  enable_validation: true
+  enable_caching: true
+  max_tags: 5000
+  cache_ttl_seconds: 3600  # 1 hour
+
+# Registry-specific settings
+registries:
+  # Resource registry specific settings
+  resource:
+    # Whether to enable resource validation
+    enable_validation: true
+    
+    # Whether to enable resource caching
+    enable_caching: true
+    
+    # Maximum number of resources
+    max_resources: 10000
+    
+    # Cache TTL in seconds
+    cache_ttl_seconds: 3600
+    
+    # Whether to enable resource dependencies validation
+    enable_dependency_validation: true
+    
+    # Whether to enable resource type validation
+    enable_type_validation: true
+    
+    # Whether to enable resource range validation
+    enable_range_validation: true
+
+  # Category registry specific settings
+  category:
+    # Whether to enable category validation
+    enable_validation: true
+    
+    # Whether to enable category caching
+    enable_caching: true
+    
+    # Maximum number of categories
+    max_categories: 1000
+    
+    # Cache TTL in seconds
+    cache_ttl_seconds: 3600
+    
+    # Whether to enable hierarchical category validation
+    enable_hierarchical_validation: true
+    
+    # Whether to enable category tag validation
+    enable_tag_validation: true
+
+  # Tag registry specific settings
+  tag:
+    # Whether to enable tag validation
+    enable_validation: true
+    
+    # Whether to enable tag caching
+    enable_caching: true
+    
+    # Maximum number of tags
+    max_tags: 5000
+    
+    # Cache TTL in seconds
+    cache_ttl_seconds: 3600
+    
+    # Whether to enable tag type validation
+    enable_type_validation: true
+    
+    # Whether to enable tag color validation
+    enable_color_validation: true
+
+# Performance settings
+performance:
+  # Whether to enable performance optimizations
+  enable_performance_optimizations: true
+  
+  # Whether to enable async operations
+  enable_async_operations: true
+  
+  # Whether to enable batch operations
+  enable_batch_operations: true
+  
+  # Batch size for operations
+  batch_size: 100
+  
+  # Whether to enable parallel processing
+  enable_parallel_processing: true
+  
+  # Maximum number of parallel operations
+  max_parallel_operations: 10
+
+# Caching settings
+caching:
+  # Whether to enable global caching
+  enable_global_caching: true
+  
+  # Global cache TTL in seconds
+  global_cache_ttl_seconds: 3600
+  
+  # Whether to enable cache warming
+  enable_cache_warming: false
+  
+  # Cache warming interval in seconds
+  warming_interval_seconds: 300
+  
+  # Whether to enable cache compression
+  enable_cache_compression: false
+  
+  # Cache compression level (1-9)
+  cache_compression_level: 6
+
+# Statistics settings
+statistics:
+  # Whether to enable detailed statistics
+  enable_detailed_stats: true
+  
+  # Whether to enable performance metrics
+  enable_performance_metrics: true
+  
+  # Whether to enable memory usage tracking
+  enable_memory_tracking: false
+  
+  # Statistics collection interval in seconds
+  collection_interval_seconds: 30
+  
+  # Statistics retention period in seconds
+  retention_period_seconds: 86400  # 24 hours
+
+# Validation settings
+validation:
+  # Whether to enable global validation
+  enable_global_validation: true
+  
+  # Whether to enable strict validation
+  enable_strict_validation: false
+  
+  # Whether to enable dependency validation
+  enable_dependency_validation: true
+  
+  # Whether to enable type validation
+  enable_type_validation: true
+  
+  # Validation timeout in seconds
+  validation_timeout_seconds: 30
+
+# Error handling settings
+error_handling:
+  # Whether to enable error recovery
+  enable_error_recovery: true
+  
+  # Maximum retry attempts
+  max_retry_attempts: 3
+  
+  # Retry delay in seconds
+  retry_delay_seconds: 1
+  
+  # Whether to enable error logging
+  enable_error_logging: true
+  
+  # Whether to enable detailed error messages
+  enable_detailed_errors: true
+
+# Example usage:
+# This configuration defines the runtime registry settings for the Actor Core system.
+# These settings can be customized by modifying this file or by providing runtime configuration.

@@ -1,0 +1,17 @@
+# Cache Policies Configuration
+# This file defines cache policies for different data types
+
+actor_snapshot:
+  ttl: 3600
+  max_size: 1000
+  eviction_policy: "lru"
+
+resource_regeneration:
+  ttl: 300
+  max_size: 500
+  eviction_policy: "lru"
+
+stat_aggregation:
+  ttl: 1800
+  max_size: 2000
+  eviction_policy: "lru"

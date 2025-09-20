@@ -1,0 +1,58 @@
+# Metrics Configuration
+# This file defines the default values for various metrics structures
+
+# Subsystem metrics configuration
+subsystem:
+  default_contributions_count: 0
+  default_avg_processing_time: 0
+  default_max_processing_time: 0
+  default_error_count: 0
+
+# Aggregator metrics configuration
+aggregator:
+  default_total_resolutions: 0
+  default_cache_hits: 0
+  default_cache_misses: 0
+  default_avg_resolution_time: 0
+  default_max_resolution_time: 0
+  default_error_count: 0
+  default_active_subsystems: 0
+
+# Cap statistics configuration
+cap_statistics:
+  default_total_calculations: 0
+  default_dimensions_with_caps: 0
+  default_avg_calculation_time: 0
+  default_max_calculation_time: 0
+
+# Cache stats configuration
+cache_stats:
+  default_hits: 0
+  default_misses: 0
+  default_sets: 0
+  default_deletes: 0
+  default_memory_usage: 0
+  default_max_memory_usage: 0
+
+# Metrics collection settings
+collection:
+  enable_metrics: true
+  collection_interval_ms: 1000
+  max_metrics_history: 1000
+  enable_performance_metrics: true
+  enable_memory_metrics: true
+  enable_cache_metrics: true
+
+# Metrics export settings
+export:
+  enable_export: false
+  export_format: "json"
+  export_interval_ms: 5000
+  export_endpoint: "http://localhost:8080/metrics"
+  enable_prometheus: false
+  prometheus_port: 9090
+
+# Example usage:
+# This configuration defines the default values for all metrics structures.
+# These values are used when initializing metrics objects and can be
+# overridden at runtime through the configuration system.

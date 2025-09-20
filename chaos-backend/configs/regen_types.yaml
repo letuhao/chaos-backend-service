@@ -1,0 +1,18 @@
+# Regeneration Type Definitions
+# This file defines all available regeneration types
+
+definitions:
+  Passive:
+    name: "Passive"
+    description: "Passive regeneration over time"
+    builtin: true
+    
+  Active:
+    name: "Active"
+    description: "Active regeneration through actions"
+    builtin: true
+    
+  Conditional:
+    name: "Conditional"
+    description: "Conditional regeneration based on conditions"
+    builtin: true

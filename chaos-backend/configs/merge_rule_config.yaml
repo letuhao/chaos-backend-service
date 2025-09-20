@@ -1,0 +1,55 @@
+# Merge Rule Configuration
+# This file defines the default merge rules for different dimensions
+
+# Default merge rule settings
+use_pipeline: false
+operator: "Sum"
+clamp_default: null
+
+# Dimension-specific merge rules
+dimension_rules:
+  health:
+    use_pipeline: true
+    operator: "Sum"
+    clamp_default:
+      min: 0.0
+      max: 1000.0
+  
+  mana:
+    use_pipeline: true
+    operator: "Sum"
+    clamp_default:
+      min: 0.0
+      max: 500.0
+  
+  strength:
+    use_pipeline: false
+    operator: "Max"
+    clamp_default:
+      min: 1.0
+      max: 100.0
+  
+  agility:
+    use_pipeline: false
+    operator: "Max"
+    clamp_default:
+      min: 1.0
+      max: 100.0
+  
+  intelligence:
+    use_pipeline: false
+    operator: "Max"
+    clamp_default:
+      min: 1.0
+      max: 100.0
+
+# Pipeline settings
+pipeline:
+  enabled: true
+  max_stages: 10
+  timeout_ms: 1000
+  enable_parallel_processing: true
+
+# Example usage:
+# This configuration defines how different stat dimensions should be merged.
+# Each dimension can have its own merge strategy and clamping rules.

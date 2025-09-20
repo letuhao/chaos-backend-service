@@ -1,0 +1,159 @@
+# Production Configuration
+# This file defines the production settings for the Actor Core system
+
+# Readiness probe settings
+readiness_probe_key: "actor_core:readiness_probe"
+readiness_probe_ttl: 30
+
+# Health check settings
+enable_readiness_check: true
+enable_health_check: true
+health_check_interval_seconds: 30
+
+# Monitoring settings
+enable_metrics: true
+enable_logging: true
+log_level: "info"
+
+# Production-specific settings
+production:
+  # Whether to enable production mode
+  enable_production_mode: true
+  
+  # Whether to enable strict validation
+  enable_strict_validation: true
+  
+  # Whether to enable performance monitoring
+  enable_performance_monitoring: true
+  
+  # Whether to enable error tracking
+  enable_error_tracking: true
+  
+  # Whether to enable audit logging
+  enable_audit_logging: true
+
+# Health check settings
+health_check:
+  # Health check timeout in seconds
+  timeout_seconds: 10
+  
+  # Health check retry count
+  retry_count: 3
+  
+  # Health check retry delay in seconds
+  retry_delay_seconds: 1
+  
+  # Whether to enable detailed health checks
+  enable_detailed_checks: true
+  
+  # Health check endpoints
+  endpoints:
+    - "/health"
+    - "/readiness"
+    - "/liveness"
+
+# Readiness probe settings
+readiness_probe:
+  # Readiness probe timeout in seconds
+  timeout_seconds: 5
+  
+  # Readiness probe retry count
+  retry_count: 3
+  
+  # Readiness probe retry delay in seconds
+  retry_delay_seconds: 1
+  
+  # Whether to enable readiness probe
+  enable_probe: true
+  
+  # Readiness probe endpoints
+  endpoints:
+    - "/readiness"
+    - "/health"
+
+# Monitoring settings
+monitoring:
+  # Whether to enable metrics collection
+  enable_metrics: true
+  
+  # Whether to enable performance metrics
+  enable_performance_metrics: true
+  
+  # Whether to enable system metrics
+  enable_system_metrics: true
+  
+  # Metrics collection interval in seconds
+  collection_interval_seconds: 30
+  
+  # Metrics retention period in seconds
+  retention_period_seconds: 3600
+
+# Logging settings
+logging:
+  # Log level (trace, debug, info, warn, error)
+  log_level: "info"
+  
+  # Whether to enable structured logging
+  enable_structured_logging: true
+  
+  # Whether to enable JSON logging
+  enable_json_logging: true
+  
+  # Whether to include timestamps in logs
+  include_timestamps: true
+  
+  # Whether to include thread IDs in logs
+  include_thread_ids: false
+  
+  # Log file path (if file logging is enabled)
+  log_file_path: "logs/actor_core.log"
+  
+  # Maximum log file size in MB
+  max_log_file_size_mb: 100
+  
+  # Number of log files to keep
+  max_log_files: 10
+
+# Security settings
+security:
+  # Whether to enable security features
+  enable_security: true
+  
+  # Whether to enable input validation
+  enable_input_validation: true
+  
+  # Whether to enable output sanitization
+  enable_output_sanitization: true
+  
+  # Whether to enable rate limiting
+  enable_rate_limiting: true
+  
+  # Rate limit requests per second
+  rate_limit_rps: 1000
+  
+  # Rate limit burst size
+  rate_limit_burst: 2000
+
+# Performance settings
+performance:
+  # Whether to enable performance optimizations
+  enable_performance_optimizations: true
+  
+  # Whether to enable caching
+  enable_caching: true
+  
+  # Cache TTL in seconds
+  cache_ttl_seconds: 300
+  
+  # Whether to enable connection pooling
+  enable_connection_pooling: true
+  
+  # Connection pool size
+  connection_pool_size: 100
+  
+  # Whether to enable async processing
+  enable_async_processing: true
+
+# Example usage:
+# This configuration defines the production settings for the Actor Core system.
+# These settings can be customized by modifying this file or by providing runtime configuration.

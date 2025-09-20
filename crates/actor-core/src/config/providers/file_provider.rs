@@ -94,8 +94,23 @@ impl FileConfigurationProvider {
 
     /// Load file configuration from file
     fn load_file_config_from_file(path: &std::path::Path) -> ActorCoreResult<FileConfig> {
+        tracing::info!("📄 Loading file configuration from: {:?}", path);
         let content = std::fs::read_to_string(path)?;
-        let config: FileConfig = serde_yaml::from_str(&content)?;
+        tracing::info!("📄 File content loaded, size: {} bytes", content.len());
+        
+        let config: FileConfig = match serde_yaml::from_str(&content) {
+            Ok(data) => {
+                tracing::info!("✅ Successfully parsed YAML file configuration from {:?}", path);
+                data
+            }
+            Err(e) => {
+                tracing::error!("❌ Failed to parse YAML file configuration from {:?}", path);
+                tracing::error!("🔍 YAML parsing error: {}", e);
+                tracing::error!("🔍 Error location: line {}, column {}", e.location().map(|l| l.line()).unwrap_or(0), e.location().map(|l| l.column()).unwrap_or(0));
+                tracing::error!("🔍 File content preview (first 500 chars):\n{}", &content.chars().take(500).collect::<String>());
+                return Err(e.into());
+            }
+        };
         Ok(config)
     }
 
@@ -130,19 +145,43 @@ impl FileConfigurationProvider {
 
     /// Load configuration from file
     pub async fn load_from_file(&self) -> ActorCoreResult<()> {
+        tracing::info!("📄 Loading configuration from file: {:?}", self.config_path);
+        
         if !self.config_path.exists() {
+            tracing::error!("❌ Configuration file not found: {:?}", self.config_path);
             return Err(crate::ActorCoreError::ConfigurationError(
                 format!("Configuration file not found: {:?}", self.config_path)
             ));
         }
 
         let content = fs::read_to_string(&self.config_path).await?;
-        let config: serde_yaml::Value = serde_yaml::from_str(&content)?;
+        tracing::info!("📄 File content loaded, size: {} bytes", content.len());
+        
+        let config: serde_yaml::Value = match serde_yaml::from_str(&content) {
+            Ok(data) => {
+                tracing::info!("✅ Successfully parsed YAML configuration from {:?}", self.config_path);
+                data
+            }
+            Err(e) => {
+                tracing::error!("❌ Failed to parse YAML configuration from {:?}", self.config_path);
+                tracing::error!("🔍 YAML parsing error: {}", e);
+                tracing::error!("🔍 Error location: line {}, column {}", e.location().map(|l| l.line()).unwrap_or(0), e.location().map(|l| l.column()).unwrap_or(0));
+                tracing::error!("🔍 File content preview (first 500 chars):\n{}", &content.chars().take(500).collect::<String>());
+                return Err(e.into());
+            }
+        };
 
         let mut config_data = self.config_data.write();
         config_data.clear();
 
+        tracing::debug!("🔍 File Provider: Parsing YAML config structure");
+        tracing::debug!("🔍 File Provider: Looking for 'categories' key in config");
+        
         if let Some(categories) = config.get("categories").and_then(|v| v.as_mapping()) {
+            tracing::debug!("✅ File Provider: Found 'categories' key with {} categories", categories.len());
+            for (category_key, _) in categories {
+                tracing::debug!("   Category: {}", category_key.as_str().unwrap_or("unknown"));
+            }
             for (category_key, category_value) in categories {
                 let category_name = category_key.as_str().unwrap_or("unknown");
                 let mut category_data = HashMap::new();
@@ -165,6 +204,19 @@ impl FileConfigurationProvider {
 
                 config_data.insert(category_name.to_string(), category_data);
             }
+        } else {
+            tracing::warn!("⚠️  File Provider: No 'categories' key found in config");
+            tracing::debug!("🔍 File Provider: Available keys in config:");
+            if let Some(mapping) = config.as_mapping() {
+                for (key, _) in mapping {
+                    tracing::debug!("   Key: {}", key.as_str().unwrap_or("unknown"));
+                }
+            }
+        }
+
+        tracing::debug!("📊 File Provider: Loaded {} categories into config_data", config_data.len());
+        for (category_name, category_data) in &*config_data {
+            tracing::debug!("   Category '{}': {} keys", category_name, category_data.len());
         }
 
         info!("Loaded configuration from file: {:?}", self.config_path);
@@ -338,6 +390,10 @@ impl ConfigurationProvider for FileConfigurationProvider {
         }
         
         Ok(())
+    }
+    
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
     }
 }
 

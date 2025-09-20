@@ -1,0 +1,35 @@
+# Integration Test Configuration
+# This file defines the configuration for integration tests
+
+# Test settings
+timeout_seconds: 30
+iterations: 100
+enable_performance_tests: true
+test_data_dir: "test_data"
+verbose_logging: false
+
+# Performance test settings
+performance:
+  max_avg_time_ms: 100.0
+  min_iterations: 10
+  max_iterations: 1000
+  enable_memory_profiling: false
+  enable_cpu_profiling: false
+
+# Test data settings
+test_data:
+  generate_test_data: true
+  test_data_size: 1000
+  cleanup_after_tests: true
+  preserve_failed_tests: false
+
+# Logging settings
+logging:
+  log_level: "info"
+  log_to_file: false
+  log_file_path: "integration_tests.log"
+  log_format: "json"
+
+# Example usage:
+# This configuration controls how integration tests are run.
+# It defines timeouts, iterations, performance thresholds, and logging settings.

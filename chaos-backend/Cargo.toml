@@ -1,0 +1,60 @@
+[package]
+name = "chaos-backend"
+version = "0.1.0"
+edition = "2021"
+authors = ["Chaos World Team"]
+license = "MIT"
+description = "Chaos World MMORPG Backend Service - Main Game Server"
+repository = "https://github.com/chaos-world/chaos-backend-service"
+
+[[bin]]
+name = "chaos-backend"
+path = "src/main.rs"
+
+[[bin]]
+name = "check_mongodb"
+path = "src/check_mongodb.rs"
+
+[features]
+default = []
+mongodb-storage = ["actor-core/mongodb-storage"]
+
+[dependencies]
+# Core dependencies
+actor-core = { path = "../crates/actor-core", features = ["mongodb-storage"] }
+shared = { path = "../crates/shared" }
+
+# Async Runtime
+tokio = { workspace = true }
+async-trait = { workspace = true }
+futures = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Concurrency
+parking_lot = { workspace = true }
+
+# Error Handling
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+
+# Logging & Monitoring
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+# Networking
+axum = { workspace = true }
+tower = { workspace = true }
+tower-http = { workspace = true }
+
+# Utilities
+uuid = { workspace = true }
+chrono = { workspace = true }
+
+# Configuration
+clap = { workspace = true }
+
+# MongoDB
+mongodb = { workspace = true }

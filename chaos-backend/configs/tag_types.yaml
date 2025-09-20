@@ -1,0 +1,48 @@
+# Tag Type Definitions
+# This file defines all available tag types
+
+definitions:
+  Resource:
+    name: "Resource"
+    description: "Resource-related tags"
+    builtin: true
+    
+  Category:
+    name: "Category"
+    description: "Category-related tags"
+    builtin: true
+    
+  Action:
+    name: "Action"
+    description: "Action-related tags"
+    builtin: true
+    
+  Element:
+    name: "Element"
+    description: "Element-related tags"
+    builtin: true
+    
+  Status:
+    name: "Status"
+    description: "Status-related tags"
+    builtin: true
+    
+  Buff:
+    name: "Buff"
+    description: "Buff-related tags"
+    builtin: true
+    
+  Debuff:
+    name: "Debuff"
+    description: "Debuff-related tags"
+    builtin: true
+    
+  Behavior:
+    name: "Behavior"
+    description: "Behavior-related tags"
+    builtin: true
+    
+  Type:
+    name: "Type"
+    description: "Type-related tags"
+    builtin: true

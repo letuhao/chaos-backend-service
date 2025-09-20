@@ -1,0 +1,135 @@
+# Observability Configuration
+# This file defines the observability settings for the Actor Core system
+
+# General observability settings
+enable_detailed_tracing: true
+enable_metrics: true
+enable_performance_monitoring: true
+
+# Metrics collection settings
+metrics_interval_seconds: 5
+max_component_metrics: 100
+
+# Tracing settings
+tracing:
+  # Whether to enable structured logging
+  enable_structured_logging: true
+  
+  # Log level (trace, debug, info, warn, error)
+  log_level: "info"
+  
+  # Whether to include timestamps in logs
+  include_timestamps: true
+  
+  # Whether to include thread IDs in logs
+  include_thread_ids: false
+  
+  # Whether to include span information
+  include_span_info: true
+  
+  # Maximum log message length
+  max_message_length: 1000
+
+# Metrics settings
+metrics:
+  # Whether to enable operation counting
+  enable_operation_counting: true
+  
+  # Whether to enable timing measurements
+  enable_timing_measurements: true
+  
+  # Whether to enable memory usage tracking
+  enable_memory_tracking: true
+  
+  # Whether to enable error tracking
+  enable_error_tracking: true
+  
+  # Whether to enable cache statistics
+  enable_cache_statistics: true
+  
+  # Whether to enable subsystem statistics
+  enable_subsystem_statistics: true
+  
+  # Metrics retention period in seconds
+  retention_period_seconds: 3600
+
+# Performance monitoring settings
+performance_monitoring:
+  # Whether to enable CPU usage monitoring
+  enable_cpu_monitoring: false
+  
+  # Whether to enable memory usage monitoring
+  enable_memory_monitoring: true
+  
+  # Whether to enable disk I/O monitoring
+  enable_disk_monitoring: false
+  
+  # Whether to enable network I/O monitoring
+  enable_network_monitoring: false
+  
+  # Monitoring interval in seconds
+  monitoring_interval_seconds: 10
+  
+  # Performance thresholds
+  thresholds:
+    # CPU usage warning threshold (percentage)
+    cpu_warning_threshold: 80.0
+    
+    # CPU usage critical threshold (percentage)
+    cpu_critical_threshold: 95.0
+    
+    # Memory usage warning threshold (percentage)
+    memory_warning_threshold: 85.0
+    
+    # Memory usage critical threshold (percentage)
+    memory_critical_threshold: 95.0
+
+# Component-specific settings
+components:
+  # Aggregator component settings
+  aggregator:
+    enable_tracing: true
+    enable_metrics: true
+    trace_level: "debug"
+    
+  # Registry component settings
+  registry:
+    enable_tracing: true
+    enable_metrics: true
+    trace_level: "debug"
+    
+  # Cache component settings
+  cache:
+    enable_tracing: true
+    enable_metrics: true
+    trace_level: "debug"
+    
+  # Validation component settings
+  validation:
+    enable_tracing: true
+    enable_metrics: true
+    trace_level: "info"
+
+# Export settings
+export:
+  # Whether to enable metrics export
+  enable_export: false
+  
+  # Export format (json, prometheus, influxdb)
+  export_format: "json"
+  
+  # Export interval in seconds
+  export_interval_seconds: 60
+  
+  # Export endpoint
+  export_endpoint: "http://localhost:8080/metrics"
+  
+  # Whether to enable Prometheus metrics endpoint
+  enable_prometheus_endpoint: false
+  
+  # Prometheus endpoint port
+  prometheus_port: 9090
+
+# Example usage:
+# This configuration defines the observability settings for the Actor Core system.
+# These settings can be customized by modifying this file or by providing runtime configuration.

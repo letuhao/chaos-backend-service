@@ -66,7 +66,20 @@ impl ConfigurationManager {
 
     /// Get all configuration for a category
     pub async fn get_category_config(&self, category: &str) -> ActorCoreResult<HashMap<String, ConfigurationValue>> {
-        self.aggregator.get_category_config(category).await
+        tracing::debug!("🔍 Configuration Manager: Requesting category '{}'", category);
+        let result = self.aggregator.get_category_config(category).await;
+        match &result {
+            Ok(config) => {
+                tracing::debug!("✅ Configuration Manager: Found {} keys in category '{}'", config.len(), category);
+                for (key, value) in config {
+                    tracing::debug!("   {}: {:?}", key, value);
+                }
+            }
+            Err(e) => {
+                tracing::debug!("❌ Configuration Manager: Failed to load category '{}': {}", category, e);
+            }
+        }
+        result
     }
 
     /// Get all configuration
@@ -82,9 +95,36 @@ impl ConfigurationManager {
 
     /// Save configuration (for persistence)
     pub async fn save_configs(&self) -> ActorCoreResult<()> {
-        // This would require persistence providers
-        // For now, we'll just log the attempt
-        info!("Configuration save requested (not yet implemented)");
+        info!("💾 Saving configuration to MongoDB...");
+        
+        // Get all configuration data
+        let all_config = self.aggregator.get_all_config().await?;
+        
+        // Find MongoDB provider and save each category
+        let providers = self.aggregator.get_providers();
+        for provider in providers {
+            if let Some(mongodb_provider) = provider.as_any().downcast_ref::<crate::config::mongodb::MongoDBConfigurationProvider>() {
+                info!("💾 Found MongoDB provider, saving {} categories", all_config.len());
+                
+                for (category, configs) in all_config {
+                    info!("💾 Saving category '{}' with {} keys", category, configs.len());
+                    for (key, value) in configs {
+                        match mongodb_provider.save_to_database(&category, &key, &value).await {
+                            Ok(()) => {
+                                info!("✅ Saved {}.{} to MongoDB", category, key);
+                            }
+                            Err(e) => {
+                                warn!("❌ Failed to save {}.{} to MongoDB: {}", category, key, e);
+                            }
+                        }
+                    }
+                }
+                info!("💾 Configuration save completed");
+                return Ok(());
+            }
+        }
+        
+        warn!("⚠️  No MongoDB provider found, configuration not saved");
         Ok(())
     }
 

@@ -1,0 +1,16 @@
+# Simple configuration for testing
+defaults:
+  default_actor_health: 100
+  default_actor_level: 1
+  default_actor_experience: 0
+
+logging:
+  level: info
+
+metrics:
+  enabled: true
+
+actor_core:
+  enable_metrics: true
+  enable_caching: true
+  log_level: info

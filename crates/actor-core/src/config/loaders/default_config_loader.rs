@@ -148,8 +148,23 @@ pub struct DefaultConfigProvider {
 impl DefaultConfigProvider {
     pub fn new(config_path: PathBuf) -> ActorCoreResult<Self> {
         // Load configuration from file
+        tracing::info!("📄 Loading configuration from file: {:?}", config_path);
         let config_content = std::fs::read_to_string(&config_path)?;
-        let config_data: DefaultConfig = serde_yaml::from_str(&config_content)?;
+        tracing::info!("📄 File content loaded, size: {} bytes", config_content.len());
+        
+        let config_data: DefaultConfig = match serde_yaml::from_str(&config_content) {
+            Ok(data) => {
+                tracing::info!("✅ Successfully parsed YAML configuration from {:?}", config_path);
+                data
+            }
+            Err(e) => {
+                tracing::error!("❌ Failed to parse YAML configuration from {:?}", config_path);
+                tracing::error!("🔍 YAML parsing error: {}", e);
+                tracing::error!("🔍 Error location: line {}, column {}", e.location().map(|l| l.line()).unwrap_or(0), e.location().map(|l| l.column()).unwrap_or(0));
+                tracing::error!("🔍 File content preview (first 500 chars):\n{}", &config_content.chars().take(500).collect::<String>());
+                return Err(e.into());
+            }
+        };
         
         // Load provider configuration from config file
         let provider_config = Self::load_provider_config(&config_path)?;
@@ -459,5 +474,9 @@ impl ConfigurationProvider for DefaultConfigProvider {
         }
         
         Ok(())
+    }
+    
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
     }
 }

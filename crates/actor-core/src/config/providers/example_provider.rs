@@ -285,6 +285,10 @@ impl ConfigurationProvider for ExampleConfigurationProvider {
         
         Ok(())
     }
+    
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
 }
 
 impl ExampleConfigurationProvider {

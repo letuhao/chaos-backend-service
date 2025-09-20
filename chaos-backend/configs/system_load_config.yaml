@@ -1,0 +1,58 @@
+# System Load Configuration
+# This file defines the default system load information for the dashboard
+
+# CPU usage percentage (0.0 to 100.0)
+cpu_usage_percent: 25.0
+
+# Memory usage percentage (0.0 to 100.0)
+memory_usage_percent: 45.0
+
+# Number of active actors
+active_actors: 1000
+
+# Number of active subsystems
+active_subsystems: 25
+
+# System load thresholds
+thresholds:
+  # CPU usage warning threshold
+  cpu_warning_threshold: 70.0
+  
+  # CPU usage critical threshold
+  cpu_critical_threshold: 90.0
+  
+  # Memory usage warning threshold
+  memory_warning_threshold: 80.0
+  
+  # Memory usage critical threshold
+  memory_critical_threshold: 95.0
+  
+  # Active actors warning threshold
+  actors_warning_threshold: 5000
+  
+  # Active actors critical threshold
+  actors_critical_threshold: 10000
+  
+  # Active subsystems warning threshold
+  subsystems_warning_threshold: 50
+  
+  # Active subsystems critical threshold
+  subsystems_critical_threshold: 100
+
+# Load monitoring settings
+monitoring:
+  # Whether to enable real-time load monitoring
+  enable_real_time_monitoring: false
+  
+  # Load monitoring interval (in seconds)
+  monitoring_interval_seconds: 5
+  
+  # Whether to enable load alerts
+  enable_load_alerts: true
+  
+  # Load alert cooldown (in seconds)
+  alert_cooldown_seconds: 300
+
+# Example usage:
+# This configuration defines the default system load information.
+# These values are used as placeholders when real system metrics are not available.
