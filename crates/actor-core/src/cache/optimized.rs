@@ -188,8 +188,9 @@ impl Cache for OptimizedL1Cache {
         crate::metrics::CacheStats {
             hits: self.hits.load(std::sync::atomic::Ordering::Relaxed),
             misses: self.misses.load(std::sync::atomic::Ordering::Relaxed),
-            sets: 0, // TODO: Add sets counter
-            deletes: 0, // TODO: Add deletes counter
+            // TODO: Implement sets and deletes counters for complete metrics
+            sets: 0, // should be tracked with atomic counters
+            deletes: 0, // should be tracked with atomic counters
             memory_usage: self.current_size.load(std::sync::atomic::Ordering::Relaxed) as u64 * 1024, // Estimate
             max_memory_usage: self.max_size as u64 * 1024, // Estimate
         }

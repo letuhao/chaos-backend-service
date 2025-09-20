@@ -107,7 +107,7 @@ impl OptimizedExhaustionEngine {
     /// Build threshold cache for fast evaluation
     fn build_threshold_cache(&mut self) {
         // This would be called when configuration changes
-        // For now, we'll implement a placeholder
+        // TODO: Implement actual threshold cache building instead of placeholder
         // In a real implementation, this would parse the config and pre-compute checkers
     }
 
@@ -116,6 +116,7 @@ impl OptimizedExhaustionEngine {
         let start_time = Instant::now();
         
         // Get actor archetype (for future use)
+        // TODO: Load default archetype from configuration instead of hardcoding "default"
         let _archetype = actor.data.get("archetype")
             .and_then(|v| v.as_str())
             .unwrap_or("default");
@@ -146,10 +147,11 @@ impl OptimizedExhaustionEngine {
         // Check if resource values have changed significantly
         for (resource_name, current_value) in &snapshot.primary {
             if resource_name.ends_with("_current") {
-                let base_name = resource_name.strip_suffix("_current").unwrap();
-                if let Some(cached_value) = cached_state.resource_values.get(base_name) {
-                    if (current_value - cached_value).abs() > f64::EPSILON {
-                        return false;
+                if let Some(base_name) = resource_name.strip_suffix("_current") {
+                    if let Some(cached_value) = cached_state.resource_values.get(base_name) {
+                        if (current_value - cached_value).abs() > f64::EPSILON {
+                            return false;
+                        }
                     }
                 }
             }
@@ -158,10 +160,11 @@ impl OptimizedExhaustionEngine {
         // Check if max values have changed
         for (resource_name, max_value) in &snapshot.primary {
             if resource_name.ends_with("_max") {
-                let base_name = resource_name.strip_suffix("_max").unwrap();
-                if let Some(cached_max) = cached_state.resource_max_values.get(base_name) {
-                    if (max_value - cached_max).abs() > f64::EPSILON {
-                        return false;
+                if let Some(base_name) = resource_name.strip_suffix("_max") {
+                    if let Some(cached_max) = cached_state.resource_max_values.get(base_name) {
+                        if (max_value - cached_max).abs() > f64::EPSILON {
+                            return false;
+                        }
                     }
                 }
             }
@@ -178,11 +181,13 @@ impl OptimizedExhaustionEngine {
         // Extract resource values
         for (key, value) in &snapshot.primary {
             if key.ends_with("_current") {
-                let base_name = key.strip_suffix("_current").unwrap().to_string();
-                resource_values.insert(base_name, *value);
+                if let Some(base_name) = key.strip_suffix("_current") {
+                    resource_values.insert(base_name.to_string(), *value);
+                }
             } else if key.ends_with("_max") {
-                let base_name = key.strip_suffix("_max").unwrap().to_string();
-                resource_max_values.insert(base_name, *value);
+                if let Some(base_name) = key.strip_suffix("_max") {
+                    resource_max_values.insert(base_name.to_string(), *value);
+                }
             }
         }
         

@@ -426,6 +426,33 @@ pub mod default_migration_guides {
 
     /// Create default migration guides for Actor Core.
     pub fn create_default_migration_guides() -> Vec<MigrationGuide> {
+        // Try to load from configuration file first
+        match load_migration_guides_from_config() {
+            Ok(guides) => guides,
+            Err(_) => {
+                tracing::warn!("Failed to load migration guides from config, using hardcoded defaults");
+                create_hardcoded_migration_guides()
+            }
+        }
+    }
+
+    /// Load migration guides from configuration file
+    fn load_migration_guides_from_config() -> ActorCoreResult<Vec<MigrationGuide>> {
+        let config_path = std::path::Path::new("configs/migration_guides.yaml");
+        
+        if !config_path.exists() {
+            return Err(ActorCoreError::ConfigurationError(
+                "Migration guides configuration file not found".to_string()
+            ));
+        }
+
+        let content = std::fs::read_to_string(config_path)?;
+        let guides: Vec<MigrationGuide> = serde_yaml::from_str(&content)?;
+        Ok(guides)
+    }
+
+    /// Create hardcoded migration guides as fallback
+    fn create_hardcoded_migration_guides() -> Vec<MigrationGuide> {
         vec![
             MigrationGuide {
                 id: "v0_1_to_v0_2".to_string(),

@@ -53,6 +53,14 @@ pub enum ActorCoreError {
     /// Serialization error
     #[error("Serialization error: {0}")]
     Serialization(#[from] serde_json::Error),
+
+    /// YAML parsing error
+    #[error("YAML parsing error: {0}")]
+    YamlParsing(#[from] serde_yaml::Error),
+
+    /// Validation error
+    #[error("Validation error: {0}")]
+    ValidationError(String),
 }
 
 /// Result type for actor core operations.

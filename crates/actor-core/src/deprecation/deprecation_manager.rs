@@ -148,13 +148,50 @@ pub struct DeprecationConfig {
 
 impl Default for DeprecationConfig {
     fn default() -> Self {
-        Self {
+        // Load configuration from file or use hardcoded defaults
+        Self::load_config().unwrap_or_else(|_| {
+            tracing::warn!("Failed to load deprecation config, using hardcoded defaults");
+            Self {
+                default_deprecation_period: Duration::from_secs(365 * 24 * 60 * 60), // 1 year
+                warning_threshold_days: 90,
+                critical_threshold_days: 30,
+                enable_automatic_warnings: true,
+                log_deprecation_usage: true,
+            }
+        })
+    }
+}
+
+impl DeprecationConfig {
+    /// Load deprecation configuration from config file
+    pub fn load_config() -> ActorCoreResult<Self> {
+        // Try to load from deprecation_config.yaml first
+        let config_path = std::path::Path::new("configs/deprecation_config.yaml");
+            
+        if config_path.exists() {
+            match Self::load_config_from_file(config_path) {
+                Ok(config) => return Ok(config),
+                Err(e) => {
+                    tracing::warn!("Failed to load deprecation config from file: {}. Using hardcoded defaults.", e);
+                }
+            }
+        }
+        
+        // Fallback to hardcoded defaults
+        Ok(Self {
             default_deprecation_period: Duration::from_secs(365 * 24 * 60 * 60), // 1 year
             warning_threshold_days: 90,
             critical_threshold_days: 30,
             enable_automatic_warnings: true,
             log_deprecation_usage: true,
-        }
+        })
+    }
+
+    /// Load deprecation configuration from file
+    fn load_config_from_file(path: &std::path::Path) -> ActorCoreResult<Self> {
+        let content = std::fs::read_to_string(path)?;
+        let config: DeprecationConfig = serde_yaml::from_str(&content)?;
+        Ok(config)
     }
 }
 
@@ -396,6 +433,33 @@ pub mod default_deprecations {
 
     /// Create default deprecations for Actor Core.
     pub fn create_default_deprecations() -> Vec<DeprecationEntry> {
+        // Try to load from configuration file first
+        match load_deprecations_from_config() {
+            Ok(deprecations) => deprecations,
+            Err(_) => {
+                tracing::warn!("Failed to load deprecations from config, using hardcoded defaults");
+                create_hardcoded_deprecations()
+            }
+        }
+    }
+
+    /// Load deprecations from configuration file
+    fn load_deprecations_from_config() -> ActorCoreResult<Vec<DeprecationEntry>> {
+        let config_path = std::path::Path::new("configs/deprecations.yaml");
+        
+        if !config_path.exists() {
+            return Err(ActorCoreError::ConfigurationError(
+                "Deprecations configuration file not found".to_string()
+            ));
+        }
+
+        let content = std::fs::read_to_string(config_path)?;
+        let deprecations: Vec<DeprecationEntry> = serde_yaml::from_str(&content)?;
+        Ok(deprecations)
+    }
+
+    /// Create hardcoded deprecations as fallback
+    fn create_hardcoded_deprecations() -> Vec<DeprecationEntry> {
         vec![
             // Example deprecations - these would be real deprecations in production
             DeprecationEntry {
@@ -436,6 +500,33 @@ pub mod default_rollback_plans {
 
     /// Create default rollback plans for Actor Core.
     pub fn create_default_rollback_plans() -> Vec<RollbackPlan> {
+        // Try to load from configuration file first
+        match load_rollback_plans_from_config() {
+            Ok(plans) => plans,
+            Err(_) => {
+                tracing::warn!("Failed to load rollback plans from config, using hardcoded defaults");
+                create_hardcoded_rollback_plans()
+            }
+        }
+    }
+
+    /// Load rollback plans from configuration file
+    fn load_rollback_plans_from_config() -> ActorCoreResult<Vec<RollbackPlan>> {
+        let config_path = std::path::Path::new("configs/rollback_plans.yaml");
+        
+        if !config_path.exists() {
+            return Err(ActorCoreError::ConfigurationError(
+                "Rollback plans configuration file not found".to_string()
+            ));
+        }
+
+        let content = std::fs::read_to_string(config_path)?;
+        let plans: Vec<RollbackPlan> = serde_yaml::from_str(&content)?;
+        Ok(plans)
+    }
+
+    /// Create hardcoded rollback plans as fallback
+    fn create_hardcoded_rollback_plans() -> Vec<RollbackPlan> {
         vec![
             RollbackPlan {
                 id: "rollback_old_aggregator".to_string(),

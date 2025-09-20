@@ -1,0 +1,38 @@
+# Resource Type Definitions
+# This file defines all available resource types
+
+definitions:
+  Health:
+    name: "Health"
+    description: "Character health points"
+    builtin: true
+    
+  Mana:
+    name: "Mana"
+    description: "Character mana points"
+    builtin: true
+    
+  Stamina:
+    name: "Stamina"
+    description: "Character stamina points"
+    builtin: true
+    
+  Energy:
+    name: "Energy"
+    description: "Character energy points"
+    builtin: true
+    
+  Spirit:
+    name: "Spirit"
+    description: "Character spirit points for cultivation"
+    builtin: true
+    
+  Experience:
+    name: "Experience"
+    description: "Character experience points"
+    builtin: true
+    
+  Level:
+    name: "Level"
+    description: "Character level"
+    builtin: true

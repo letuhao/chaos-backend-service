@@ -1,0 +1,184 @@
+# Metrics Collector Configuration
+# This file defines the default metrics to be registered by the metrics collector
+
+metrics:
+  # Actor resolution metrics
+  - name: "actor_resolutions_total"
+    description: "Total number of actor stat resolutions"
+    metric_type: "Counter"
+    labels: {}
+    unit: "count"
+    enabled: true
+    initial_value: null
+    buckets: null
+
+  - name: "actor_resolution_errors_total"
+    description: "Total number of actor resolution errors"
+    metric_type: "Counter"
+    labels: {}
+    unit: "count"
+    enabled: true
+    initial_value: null
+    buckets: null
+
+  - name: "actor_resolution_duration_ms"
+    description: "Duration of actor stat resolutions in milliseconds"
+    metric_type: "Histogram"
+    labels: {}
+    unit: "milliseconds"
+    enabled: true
+    initial_value: null
+    buckets: [1.0, 5.0, 10.0, 25.0, 50.0, 100.0, 250.0, 500.0, 1000.0]
+
+  # Cache metrics
+  - name: "cache_operations_total"
+    description: "Total number of cache operations"
+    metric_type: "Counter"
+    labels: {}
+    unit: "count"
+    enabled: true
+    initial_value: null
+    buckets: null
+
+  - name: "cache_hits_total"
+    description: "Total number of cache hits"
+    metric_type: "Counter"
+    labels: {}
+    unit: "count"
+    enabled: true
+    initial_value: null
+    buckets: null
+
+  - name: "cache_misses_total"
+    description: "Total number of cache misses"
+    metric_type: "Counter"
+    labels: {}
+    unit: "count"
+    enabled: true
+    initial_value: null
+    buckets: null
+
+  - name: "cache_operation_duration_ms"
+    description: "Duration of cache operations in milliseconds"
+    metric_type: "Histogram"
+    labels: {}
+    unit: "milliseconds"
+    enabled: true
+    initial_value: null
+    buckets: [0.1, 0.5, 1.0, 2.5, 5.0, 10.0, 25.0, 50.0]
+
+  # Subsystem metrics
+  - name: "subsystem_contributions_total"
+    description: "Total number of subsystem contributions"
+    metric_type: "Counter"
+    labels: {}
+    unit: "count"
+    enabled: true
+    initial_value: null
+    buckets: null
+
+  - name: "subsystem_errors_total"
+    description: "Total number of subsystem errors"
+    metric_type: "Counter"
+    labels: {}
+    unit: "count"
+    enabled: true
+    initial_value: null
+    buckets: null
+
+  - name: "subsystem_processing_duration_ms"
+    description: "Duration of subsystem processing in milliseconds"
+    metric_type: "Histogram"
+    labels: {}
+    unit: "milliseconds"
+    enabled: true
+    initial_value: null
+    buckets: [0.1, 0.5, 1.0, 2.5, 5.0, 10.0, 25.0, 50.0]
+
+  # Memory metrics
+  - name: "memory_usage_bytes"
+    description: "Current memory usage in bytes"
+    metric_type: "Gauge"
+    labels: {}
+    unit: "bytes"
+    enabled: true
+    initial_value: 0
+    buckets: null
+
+  - name: "active_actors_count"
+    description: "Current number of active actors"
+    metric_type: "Gauge"
+    labels: {}
+    unit: "count"
+    enabled: true
+    initial_value: 0
+    buckets: null
+
+  # Validation metrics
+  - name: "validation_checks_total"
+    description: "Total number of validation checks performed"
+    metric_type: "Counter"
+    labels: {}
+    unit: "count"
+    enabled: true
+    initial_value: null
+    buckets: null
+
+  - name: "validation_failures_total"
+    description: "Total number of validation failures"
+    metric_type: "Counter"
+    labels: {}
+    unit: "count"
+    enabled: true
+    initial_value: null
+    buckets: null
+
+  - name: "validation_duration_ms"
+    description: "Duration of validation operations in milliseconds"
+    metric_type: "Histogram"
+    labels: {}
+    unit: "milliseconds"
+    enabled: true
+    initial_value: null
+    buckets: [0.1, 0.5, 1.0, 2.5, 5.0, 10.0, 25.0, 50.0]
+
+# Collection settings
+collection:
+  # Whether to enable automatic metric collection
+  enable_auto_collection: true
+  
+  # Collection interval in seconds
+  collection_interval_seconds: 1
+  
+  # Whether to enable metric aggregation
+  enable_aggregation: true
+  
+  # Whether to enable metric persistence
+  enable_persistence: false
+  
+  # Persistence interval in seconds
+  persistence_interval_seconds: 60
+
+# Export settings
+export:
+  # Whether to enable metric export
+  enable_export: false
+  
+  # Export format (json, prometheus, influxdb)
+  export_format: "json"
+  
+  # Export interval in seconds
+  export_interval_seconds: 30
+  
+  # Export endpoint
+  export_endpoint: "http://localhost:8080/metrics"
+  
+  # Whether to enable Prometheus metrics endpoint
+  enable_prometheus_endpoint: false
+  
+  # Prometheus endpoint port
+  prometheus_port: 9090
+
+# Example usage:
+# This configuration defines the default metrics to be registered by the metrics collector.
+# These metrics can be customized by modifying this file or by providing runtime configuration.

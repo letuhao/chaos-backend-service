@@ -61,12 +61,18 @@ impl MultiLayerConfig {
     /// Create a new multi-layer cache configuration.
     pub fn new() -> Self {
         Self {
+            // TODO: Load L1 max size from configuration
             l1_max_size: 1000,
             l1_eviction_policy: EvictionPolicy::Lru,
+            // TODO: Load L2 cache path from configuration
             l2_cache_path: "/tmp/actor_cache_l2".to_string(),
+            // TODO: Load L2 max size from configuration
             l2_max_size: 10000,
+            // TODO: Load L3 cache directory from configuration
             l3_cache_dir: "/tmp/actor_cache_l3".to_string(),
+            // TODO: Load L3 max size from configuration
             l3_max_size: 100000,
+            // TODO: Load sync interval from configuration
             sync_interval: Duration::from_secs(60),
             enable_background_sync: true,
             enable_metrics: true,

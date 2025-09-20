@@ -1,0 +1,138 @@
+# Actor Core Configuration
+# This file contains all configurable values for Actor Core system
+
+# Default values for various configurations
+defaults:
+  # Default actor lifespan (1 year in seconds)
+  actor_lifespan: 31536000  # 365 * 24 * 60 * 60
+  # Default actor age (0 seconds)
+  actor_age: 0
+  # Default subsystem priority
+  subsystem_priority: 100
+  # Default contribution priority
+  contribution_priority: 100
+  # Default cap priority
+  cap_priority: 100
+  # Default cache TTL (1 hour in seconds)
+  cache_ttl: 3600
+  # Default batch size
+  batch_size: 100
+  # Default max retries
+  max_retries: 3
+
+# Timeouts and intervals for various operations
+timeouts:
+  # Default aggregation timeout (5 seconds)
+  aggregation_timeout: 5000
+  # Default cache operation timeout (1 second)
+  cache_timeout: 1000
+  # Default database operation timeout (10 seconds)
+  database_timeout: 10000
+  # Default network operation timeout (30 seconds)
+  network_timeout: 30000
+  # Default subsystem timeout (2 seconds)
+  subsystem_timeout: 2000
+  # Default batch processing interval (100 milliseconds)
+  batch_interval: 100
+  # Default cache cleanup interval (1 hour)
+  cache_cleanup_interval: 3600
+
+# Performance thresholds for monitoring
+performance_thresholds:
+  # Maximum acceptable aggregation time (1 second)
+  max_aggregation_time: 1000000  # microseconds
+  # Maximum acceptable cache operation time (1 millisecond)
+  max_cache_time: 1000  # microseconds
+  # Maximum acceptable subsystem time (100 milliseconds)
+  max_subsystem_time: 100000  # microseconds
+  # Maximum memory usage per actor (1 MB)
+  max_memory_per_actor: 1048576  # bytes
+  # Maximum cache size (100 MB)
+  max_cache_size: 100048576  # bytes
+
+# Validation rules for different data types
+validation_rules:
+  # Minimum actor name length
+  min_actor_name_length: 3
+  # Maximum actor name length
+  max_actor_name_length: 32
+  # Minimum dimension name length
+  min_dimension_name_length: 1
+  # Maximum dimension name length
+  max_dimension_name_length: 64
+  # Minimum system ID length
+  min_system_id_length: 1
+  # Maximum system ID length
+  max_system_id_length: 32
+  # Maximum number of subsystems per actor
+  max_subsystems_per_actor: 100
+  # Maximum number of contributions per subsystem
+  max_contributions_per_subsystem: 1000
+
+# Cache keys for different types of data
+cache_keys:
+  # Actor snapshot cache key prefix
+  actor_snapshot_prefix: "actor_snapshot:"
+  # Subsystem output cache key prefix
+  subsystem_output_prefix: "subsystem_output:"
+  # Effective caps cache key prefix
+  effective_caps_prefix: "effective_caps:"
+  # Registry cache key prefix
+  registry_prefix: "registry:"
+  # Configuration cache key prefix
+  config_prefix: "config:"
+
+# Log levels for different components
+log_levels:
+  # Trace level
+  trace: "trace"
+  # Debug level
+  debug: "debug"
+  # Info level
+  info: "info"
+  # Warn level
+  warn: "warn"
+  # Error level
+  error: "error"
+
+# Cache policies for different scenarios
+cache_policies:
+  # LRU (Least Recently Used) policy
+  lru: "lru"
+  # LFU (Least Frequently Used) policy
+  lfu: "lfu"
+  # TTL (Time To Live) policy
+  ttl: "ttl"
+  # FIFO (First In, First Out) policy
+  fifo: "fifo"
+
+# System identifiers for various game systems
+system_ids:
+  - "luyen_the"
+  - "kim_dan"
+  - "combat"
+  - "equipment"
+  - "buff"
+  - "guild"
+  - "event"
+  - "world"
+  - "magic"
+  - "cultivation"
+  - "experience"
+  - "reputation"
+  - "trading"
+  - "weather"
+  - "location"
+  - "time"
+  - "stealth"
+  - "perception"
+
+# Context types for temporary effects
+context_types:
+  - "damage"
+  - "healing"
+  - "experience_gain"
+  - "item_drop"
+  - "combat"
+  - "movement"
+  - "casting"

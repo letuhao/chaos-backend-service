@@ -5,6 +5,8 @@
 
 pub mod loader;
 pub mod optimized;
+pub mod runtime_registries;
+// Legacy subsystem_registration moved to examples/legacy_subsystems/
 
 use async_trait::async_trait;
 use std::collections::HashMap;
@@ -14,7 +16,7 @@ use tracing::{info, warn};
 
 use crate::interfaces::{PluginRegistry, CombinerRegistry, CapLayerRegistry, CombinerRegistryAsync, CapLayerRegistryAsync, Subsystem as SubsystemTrait, MergeRule};
 use crate::enums::AcrossLayerPolicy;
-use crate::types::*;
+// use crate::types::*; // Unused import
 use crate::ActorCoreResult;
 
 
@@ -193,58 +195,17 @@ impl CombinerRegistryImpl {
     }
 
     /// Load default rules for common dimensions.
+    /// 
+    /// NOTE: This method is deprecated. Merge rules should now be registered
+    /// dynamically by subsystems through the Runtime Registry system.
+    /// 
+    /// Subsystems should register their dimensions and merge rules via:
+    /// - RegistryManager::register_resource()
+    /// - RegistryManager::register_category() 
+    /// - RegistryManager::register_tag()
     pub fn load_default_rules(&self) -> ActorCoreResult<()> {
-        let mut rules = self.rules.write();
-        
-        // Add default rules for primary dimensions
-        let primary_dims = [
-            crate::constants::primary_dimensions::STRENGTH,
-            crate::constants::primary_dimensions::AGILITY,
-            crate::constants::primary_dimensions::INTELLIGENCE,
-            crate::constants::primary_dimensions::VITALITY,
-            crate::constants::primary_dimensions::SPIRIT,
-            crate::constants::primary_dimensions::LUCK,
-            crate::constants::primary_dimensions::HEALTH,
-            crate::constants::primary_dimensions::MANA,
-            crate::constants::primary_dimensions::STAMINA,
-            crate::constants::primary_dimensions::EXPERIENCE,
-            crate::constants::primary_dimensions::LEVEL,
-        ];
-        
-        for dimension in primary_dims {
-            rules.insert(dimension.to_string(), MergeRule {
-                use_pipeline: true,
-                operator: crate::enums::Operator::Sum,
-                clamp_default: crate::constants::clamp_ranges::get_range(dimension)
-                    .map(|(min, max)| Caps::new(min, max)),
-            });
-        }
-        
-        // Add default rules for derived dimensions
-        let derived_dims = [
-            crate::constants::derived_dimensions::ATTACK_POWER,
-            crate::constants::derived_dimensions::DEFENSE_POWER,
-            crate::constants::derived_dimensions::CRITICAL_HIT_CHANCE,
-            crate::constants::derived_dimensions::CRITICAL_HIT_DAMAGE,
-            crate::constants::derived_dimensions::ATTACK_SPEED,
-            crate::constants::derived_dimensions::MOVEMENT_SPEED,
-            crate::constants::derived_dimensions::CASTING_SPEED,
-            crate::constants::derived_dimensions::COOLDOWN_REDUCTION,
-            crate::constants::derived_dimensions::LIFE_STEAL,
-            crate::constants::derived_dimensions::MANA_STEAL,
-            crate::constants::derived_dimensions::DAMAGE_REDUCTION,
-            crate::constants::derived_dimensions::ELEMENTAL_RESISTANCE,
-        ];
-        
-        for dimension in derived_dims {
-            rules.insert(dimension.to_string(), MergeRule {
-                use_pipeline: true,
-                operator: crate::enums::Operator::Sum,
-                clamp_default: crate::constants::clamp_ranges::get_range(dimension)
-                    .map(|(min, max)| Caps::new(min, max)),
-            });
-        }
-        
+        // No hardcoded rules - all rules are now registered by subsystems
+        // through the Runtime Registry system at startup
         Ok(())
     }
 }
@@ -368,8 +329,10 @@ impl CapLayerRegistryImpl {
     }
 
     /// Load default layer configuration.
+    /// TODO: Load layer order from configuration instead of hardcoded values
     pub fn load_default_config(&self) -> ActorCoreResult<()> {
         let mut layer_order = self.layer_order.write();
+        // TODO: Load these layer names from configuration
         *layer_order = vec![
             "realm".to_string(),
             "world".to_string(),
@@ -491,7 +454,7 @@ impl RegistryFactory {
     pub fn create_plugin_registry() -> Arc<dyn PluginRegistry> {
         let registry: Arc<dyn PluginRegistry> = Arc::new(PluginRegistryImpl::new());
         // Register default subsystems
-        let _ = crate::subsystems::resource_manager::register_with(&*registry);
+        // Legacy resource manager registration removed - use Runtime Registry System instead
         registry
     }
 
@@ -504,4 +467,20 @@ impl RegistryFactory {
     pub fn create_cap_layer_registry() -> Arc<dyn CapLayerRegistry> {
         Arc::new(CapLayerRegistryImpl::new())
     }
+    
+    /// Create a new registry manager instance.
+    pub fn create_registry_manager() -> runtime_registries::RegistryManager {
+        runtime_registries::RegistryManager::new()
+    }
 }
+
+// Re-export runtime registry types for convenience
+pub use runtime_registries::{
+    ResourceRegistry, CategoryRegistry, TagRegistry,
+    ResourceRegistryImpl, CategoryRegistryImpl, TagRegistryImpl,
+    ResourceDefinition, CategoryDefinition, TagDefinition,
+    ResourceType, RegenType, RegistryManager,
+};
+
+// Legacy subsystem_registration moved to examples/legacy_subsystems/
+// Use Runtime Registry System for dynamic registration instead

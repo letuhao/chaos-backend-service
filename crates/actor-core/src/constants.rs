@@ -1,7 +1,12 @@
-//! Constants for the Actor Core system.
+//! System-level constants for the Actor Core system.
 //!
-//! This module contains all the constant values used throughout the system,
-//! including dimension names, default values, and configuration constants.
+//! This module contains only system-level constants that are not game-specific.
+//! All configurable values are loaded from configuration files at runtime
+//! through the ConfigManager.
+
+use std::sync::Arc;
+use crate::config::manager::ConfigurationManager;
+use crate::config::loaders::*;
 
 /// System identifiers for various game systems.
 pub mod system_ids {
@@ -43,94 +48,6 @@ pub mod system_ids {
     pub const PERCEPTION: &str = "perception";
 }
 
-/// Primary stat dimensions.
-pub mod primary_dimensions {
-    /// Strength stat
-    pub const STRENGTH: &str = "strength";
-    /// Agility stat
-    pub const AGILITY: &str = "agility";
-    /// Intelligence stat
-    pub const INTELLIGENCE: &str = "intelligence";
-    /// Vitality stat
-    pub const VITALITY: &str = "vitality";
-    /// Spirit stat
-    pub const SPIRIT: &str = "spirit";
-    /// Luck stat
-    pub const LUCK: &str = "luck";
-    /// Health stat
-    pub const HEALTH: &str = "health";
-    /// Mana stat
-    pub const MANA: &str = "mana";
-    /// Stamina stat
-    pub const STAMINA: &str = "stamina";
-    /// Experience stat
-    pub const EXPERIENCE: &str = "experience";
-    /// Level stat
-    pub const LEVEL: &str = "level";
-}
-
-/// Derived stat dimensions.
-pub mod derived_dimensions {
-    /// Attack power
-    pub const ATTACK_POWER: &str = "attack_power";
-    /// Defense power
-    pub const DEFENSE_POWER: &str = "defense_power";
-    /// Critical hit chance
-    pub const CRITICAL_HIT_CHANCE: &str = "critical_hit_chance";
-    /// Critical hit damage
-    pub const CRITICAL_HIT_DAMAGE: &str = "critical_hit_damage";
-    /// Attack speed
-    pub const ATTACK_SPEED: &str = "attack_speed";
-    /// Movement speed
-    pub const MOVEMENT_SPEED: &str = "movement_speed";
-    /// Casting speed
-    pub const CASTING_SPEED: &str = "casting_speed";
-    /// Cooldown reduction
-    pub const COOLDOWN_REDUCTION: &str = "cooldown_reduction";
-    /// Life steal
-    pub const LIFE_STEAL: &str = "life_steal";
-    /// Mana steal
-    pub const MANA_STEAL: &str = "mana_steal";
-    /// Damage reduction
-    pub const DAMAGE_REDUCTION: &str = "damage_reduction";
-    /// Elemental resistance
-    pub const ELEMENTAL_RESISTANCE: &str = "elemental_resistance";
-}
-
-/// Meta/World dimensions.
-pub mod meta_dimensions {
-    /// Realm ID
-    pub const REALM_ID: &str = "realm_id";
-    /// World ID
-    pub const WORLD_ID: &str = "world_id";
-    /// Zone ID
-    pub const ZONE_ID: &str = "zone_id";
-    /// Guild ID
-    pub const GUILD_ID: &str = "guild_id";
-    /// Party ID
-    pub const PARTY_ID: &str = "party_id";
-    /// Event ID
-    pub const EVENT_ID: &str = "event_id";
-}
-
-/// Context types for temporary effects.
-pub mod context_types {
-    /// Damage context
-    pub const DAMAGE: &str = "damage";
-    /// Healing context
-    pub const HEALING: &str = "healing";
-    /// Experience gain context
-    pub const EXPERIENCE_GAIN: &str = "experience_gain";
-    /// Item drop context
-    pub const ITEM_DROP: &str = "item_drop";
-    /// Combat context
-    pub const COMBAT: &str = "combat";
-    /// Movement context
-    pub const MOVEMENT: &str = "movement";
-    /// Casting context
-    pub const CASTING: &str = "casting";
-}
-
 /// Error codes for the system.
 pub mod error_codes {
     /// Invalid actor
@@ -167,312 +84,518 @@ pub mod error_types {
     pub const CONFIGURATION: &str = "CONFIGURATION";
 }
 
-/// Default values for various configurations.
-pub mod defaults {
-    /// Default actor lifespan (1 year in seconds)
-    pub const ACTOR_LIFESPAN: i64 = 365 * 24 * 60 * 60;
-    /// Default actor age (0 seconds)
-    pub const ACTOR_AGE: i64 = 0;
-    /// Default subsystem priority
-    pub const SUBSYSTEM_PRIORITY: i64 = 100;
-    /// Default contribution priority
-    pub const CONTRIBUTION_PRIORITY: i64 = 100;
-    /// Default cap priority
-    pub const CAP_PRIORITY: i64 = 100;
-    /// Default cache TTL (1 hour in seconds)
-    pub const CACHE_TTL: u64 = 3600;
-    /// Default batch size
-    pub const BATCH_SIZE: usize = 100;
-    /// Default max retries
-    pub const MAX_RETRIES: u32 = 3;
-}
-
-/// Clamp ranges for different dimensions.
+/// Clamp ranges for various dimensions (loaded from configuration at runtime)
 pub mod clamp_ranges {
-    use super::*;
-
-    /// Get the default clamp range for a primary dimension.
-    pub fn primary_dimension_range(dimension: &str) -> Option<(f64, f64)> {
-        match dimension {
-            primary_dimensions::STRENGTH => Some((0.0, 10000.0)),
-            primary_dimensions::AGILITY => Some((0.0, 10000.0)),
-            primary_dimensions::INTELLIGENCE => Some((0.0, 10000.0)),
-            primary_dimensions::VITALITY => Some((0.0, 10000.0)),
-            primary_dimensions::SPIRIT => Some((0.0, 10000.0)),
-            primary_dimensions::LUCK => Some((0.0, 10000.0)),
-            primary_dimensions::HEALTH => Some((0.0, 1000000.0)),
-            primary_dimensions::MANA => Some((0.0, 1000000.0)),
-            primary_dimensions::STAMINA => Some((0.0, 1000000.0)),
-            primary_dimensions::EXPERIENCE => Some((0.0, f64::MAX)),
-            primary_dimensions::LEVEL => Some((1.0, 1000.0)),
-            _ => None,
+    use std::sync::Arc;
+    use crate::config::manager::ConfigurationManager;
+    use crate::ActorCoreResult;
+    
+    /// Get the clamp range for a dimension from configuration
+    /// 
+    /// # Errors
+    /// Returns `ActorCoreError::ConfigurationError` if:
+    /// - Configuration category "clamp_ranges" is not found
+    /// - Dimension is not configured
+    /// - Min/max values are missing or invalid
+    pub async fn get_range(
+        dimension: &str, 
+        config_manager: Arc<ConfigurationManager>
+    ) -> ActorCoreResult<(f64, f64)> {
+        // Load clamp ranges from configuration
+        let config = config_manager.get_category_config("clamp_ranges").await?;
+        
+        let ranges_config = config.get("ranges")
+            .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                format!("Clamp ranges configuration not found for category 'clamp_ranges'")
+            ))?;
+        
+        let dimension_config = ranges_config.value.get(dimension)
+            .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                format!("Clamp range not configured for dimension '{}'", dimension)
+            ))?;
+        
+        let min = dimension_config.get("min")
+            .and_then(|v| v.as_f64())
+            .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                format!("Missing or invalid 'min' value for dimension '{}'", dimension)
+            ))?;
+        
+        let max = dimension_config.get("max")
+            .and_then(|v| v.as_f64())
+            .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                format!("Missing or invalid 'max' value for dimension '{}'", dimension)
+            ))?;
+        
+        if min >= max {
+            return Err(crate::ActorCoreError::ConfigurationError(
+                format!("Invalid clamp range for dimension '{}': min ({}) must be less than max ({})", dimension, min, max)
+            ));
         }
+        
+        Ok((min, max))
+    }
+    
+}
+
+/// Configuration-based constants loader
+pub struct ConfigConstants {
+    config_manager: Arc<ConfigurationManager>,
+}
+
+impl ConfigConstants {
+    /// Create a new configuration constants loader
+    pub fn new(config_manager: Arc<ConfigurationManager>) -> Self {
+        Self { config_manager }
     }
 
-    /// Get the default clamp range for a derived dimension.
-    pub fn derived_dimension_range(dimension: &str) -> Option<(f64, f64)> {
-        match dimension {
-            derived_dimensions::ATTACK_POWER => Some((0.0, 100000.0)),
-            derived_dimensions::DEFENSE_POWER => Some((0.0, 100000.0)),
-            derived_dimensions::CRITICAL_HIT_CHANCE => Some((0.0, 100.0)),
-            derived_dimensions::CRITICAL_HIT_DAMAGE => Some((0.0, 1000.0)),
-            derived_dimensions::ATTACK_SPEED => Some((0.1, 10.0)),
-            derived_dimensions::MOVEMENT_SPEED => Some((0.1, 50.0)),
-            derived_dimensions::CASTING_SPEED => Some((0.1, 10.0)),
-            derived_dimensions::COOLDOWN_REDUCTION => Some((0.0, 90.0)),
-            derived_dimensions::LIFE_STEAL => Some((0.0, 100.0)),
-            derived_dimensions::MANA_STEAL => Some((0.0, 100.0)),
-            derived_dimensions::DAMAGE_REDUCTION => Some((0.0, 95.0)),
-            derived_dimensions::ELEMENTAL_RESISTANCE => Some((0.0, 100.0)),
-            _ => None,
+    /// Get default values from configuration
+    pub async fn get_defaults(&self) -> crate::ActorCoreResult<DefaultsConfig> {
+        let config = self.config_manager.get_category_config("defaults").await?;
+        
+        let mut resources = std::collections::HashMap::new();
+        let mut stats = std::collections::HashMap::new();
+        let mut elements = std::collections::HashMap::new();
+        
+        // Load resource defaults
+        if let Some(resources_config) = config.get("resources") {
+            for (key, value) in resources_config.value.as_object().unwrap_or(&serde_json::Map::new()) {
+                if let Some(resource_obj) = value.as_object() {
+                    let resource_defaults = ResourceDefaults {
+                        base_value: resource_obj.get("base_value")
+                            .and_then(|v| v.as_f64())
+                            .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                                format!("Missing or invalid 'base_value' for resource '{}'", key)
+                            ))?,
+                        min_value: resource_obj.get("min_value")
+                            .and_then(|v| v.as_f64())
+                            .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                                format!("Missing or invalid 'min_value' for resource '{}'", key)
+                            ))?,
+                        max_value: resource_obj.get("max_value")
+                            .and_then(|v| v.as_f64())
+                            .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                                format!("Missing or invalid 'max_value' for resource '{}'", key)
+                            ))?,
+                        regen_rate: resource_obj.get("regen_rate")
+                            .and_then(|v| v.as_f64())
+                            .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                                format!("Missing or invalid 'regen_rate' for resource '{}'", key)
+                            ))?,
+                        regen_type: resource_obj.get("regen_type")
+                            .and_then(|v| v.as_str())
+                            .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                                format!("Missing or invalid 'regen_type' for resource '{}'", key)
+                            ))?
+                            .to_string(),
+                    };
+                    resources.insert(key.clone(), resource_defaults);
+                }
+            }
         }
+        
+        // Load stat defaults
+        if let Some(stats_config) = config.get("stats") {
+            for (key, value) in stats_config.value.as_object().unwrap_or(&serde_json::Map::new()) {
+                if let Some(stat_obj) = value.as_object() {
+                    let stat_defaults = StatDefaults {
+                        base_value: stat_obj.get("base_value")
+                            .and_then(|v| v.as_f64())
+                            .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                                format!("Missing or invalid 'base_value' for stat '{}'", key)
+                            ))?,
+                        min_value: stat_obj.get("min_value")
+                            .and_then(|v| v.as_f64())
+                            .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                                format!("Missing or invalid 'min_value' for stat '{}'", key)
+                            ))?,
+                        max_value: stat_obj.get("max_value")
+                            .and_then(|v| v.as_f64())
+                            .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                                format!("Missing or invalid 'max_value' for stat '{}'", key)
+                            ))?,
+                    };
+                    stats.insert(key.clone(), stat_defaults);
+                }
+            }
+        }
+        
+        // Load element defaults
+        if let Some(elements_config) = config.get("elements") {
+            for (key, value) in elements_config.value.as_object().unwrap_or(&serde_json::Map::new()) {
+                if let Some(element_obj) = value.as_object() {
+                    let element_defaults = ElementDefaults {
+                        base_affinity: element_obj.get("base_affinity")
+                            .and_then(|v| v.as_f64())
+                            .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                                format!("Missing or invalid 'base_affinity' for element '{}'", key)
+                            ))?,
+                        min_affinity: element_obj.get("min_affinity")
+                            .and_then(|v| v.as_f64())
+                            .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                                format!("Missing or invalid 'min_affinity' for element '{}'", key)
+                            ))?,
+                        max_affinity: element_obj.get("max_affinity")
+                            .and_then(|v| v.as_f64())
+                            .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                                format!("Missing or invalid 'max_affinity' for element '{}'", key)
+                            ))?,
+                    };
+                    elements.insert(key.clone(), element_defaults);
+                }
+            }
+        }
+        
+        Ok(DefaultsConfig {
+            resources,
+            stats,
+            elements,
+        })
     }
 
-    /// Get the default clamp range for any dimension.
-    pub fn get_range(dimension: &str) -> Option<(f64, f64)> {
-        primary_dimension_range(dimension)
-            .or_else(|| derived_dimension_range(dimension))
+    /// Get timeouts from configuration
+    pub async fn get_timeouts(&self) -> crate::ActorCoreResult<TimeoutsConfig> {
+        let config = self.config_manager.get_category_config("timeouts").await?;
+        
+        Ok(TimeoutsConfig {
+            cache_ttl: config.get("cache_ttl")
+                .and_then(|v| v.value.as_u64())
+                .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                    "Missing or invalid 'cache_ttl' in timeouts configuration".to_string()
+                ))?,
+            aggregation_timeout: config.get("aggregation_timeout")
+                .and_then(|v| v.value.as_f64())
+                .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                    "Missing or invalid 'aggregation_timeout' in timeouts configuration".to_string()
+                ))?,
+            validation_timeout: config.get("validation_timeout")
+                .and_then(|v| v.value.as_f64())
+                .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                    "Missing or invalid 'validation_timeout' in timeouts configuration".to_string()
+                ))?,
+            regeneration_interval: config.get("regeneration_interval")
+                .and_then(|v| v.value.as_f64())
+                .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                    "Missing or invalid 'regeneration_interval' in timeouts configuration".to_string()
+                ))?,
+            subsystem_timeout: config.get("subsystem_timeout")
+                .and_then(|v| v.value.as_f64())
+                .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                    "Missing or invalid 'subsystem_timeout' in timeouts configuration".to_string()
+                ))?,
+        })
+    }
+
+    /// Get performance thresholds from configuration
+    pub async fn get_performance_thresholds(&self) -> crate::ActorCoreResult<PerformanceThresholdsConfig> {
+        let config = self.config_manager.get_category_config("performance_thresholds").await?;
+        
+        Ok(PerformanceThresholdsConfig {
+            max_actors: config.get("max_actors")
+                .and_then(|v| v.value.as_u64())
+                .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                    "Missing or invalid 'max_actors' in performance_thresholds configuration".to_string()
+                ))? as usize,
+            max_contributions_per_actor: config.get("max_contributions_per_actor")
+                .and_then(|v| v.value.as_u64())
+                .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                    "Missing or invalid 'max_contributions_per_actor' in performance_thresholds configuration".to_string()
+                ))? as usize,
+            max_caps_per_actor: config.get("max_caps_per_actor")
+                .and_then(|v| v.value.as_u64())
+                .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                    "Missing or invalid 'max_caps_per_actor' in performance_thresholds configuration".to_string()
+                ))? as usize,
+            max_subsystems: config.get("max_subsystems")
+                .and_then(|v| v.value.as_u64())
+                .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                    "Missing or invalid 'max_subsystems' in performance_thresholds configuration".to_string()
+                ))? as usize,
+            cache_size_mb: config.get("cache_size_mb")
+                .and_then(|v| v.value.as_u64())
+                .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                    "Missing or invalid 'cache_size_mb' in performance_thresholds configuration".to_string()
+                ))? as usize,
+            memory_usage_mb: config.get("memory_usage_mb")
+                .and_then(|v| v.value.as_u64())
+                .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                    "Missing or invalid 'memory_usage_mb' in performance_thresholds configuration".to_string()
+                ))? as usize,
+            cpu_usage_percent: config.get("cpu_usage_percent")
+                .and_then(|v| v.value.as_f64())
+                .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                    "Missing or invalid 'cpu_usage_percent' in performance_thresholds configuration".to_string()
+                ))?,
+        })
+    }
+
+    /// Get validation rules from configuration
+    pub async fn get_validation_rules(&self) -> crate::ActorCoreResult<ValidationRulesConfig> {
+        let config = self.config_manager.get_category_config("validation_rules").await?;
+        
+        let get_value_range = |key: &str| -> crate::ActorCoreResult<ValueRange> {
+            let range_config = config.get(key)
+                .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                    format!("Missing '{}' in validation_rules configuration", key)
+                ))?;
+            
+            let min_value = range_config.value.get("min")
+                .and_then(|v| v.as_f64())
+                .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                    format!("Missing or invalid 'min' value for '{}' in validation_rules configuration", key)
+                ))?;
+            
+            let max_value = range_config.value.get("max")
+                .and_then(|v| v.as_f64())
+                .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                    format!("Missing or invalid 'max' value for '{}' in validation_rules configuration", key)
+                ))?;
+            
+            if min_value >= max_value {
+                return Err(crate::ActorCoreError::ConfigurationError(
+                    format!("Invalid range for '{}': min ({}) must be less than max ({})", key, min_value, max_value)
+                ));
+            }
+            
+            Ok(ValueRange { min_value, max_value })
+        };
+        
+        Ok(ValidationRulesConfig {
+            resource_values: get_value_range("resource_values")?,
+            stat_values: get_value_range("stat_values")?,
+            element_affinities: get_value_range("element_affinities")?,
+            contribution_values: get_value_range("contribution_values")?,
+        })
+    }
+
+    /// Get cache keys from configuration
+    pub async fn get_cache_keys(&self) -> crate::ActorCoreResult<CacheKeysConfig> {
+        let config = self.config_manager.get_category_config("cache_keys").await?;
+        
+        Ok(CacheKeysConfig {
+            actor_snapshot: config.get("actor_snapshot")
+                .and_then(|v| v.value.as_str())
+                .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                    "Missing or invalid 'actor_snapshot' in cache_keys configuration".to_string()
+                ))?
+                .to_string(),
+            resource_regeneration: config.get("resource_regeneration")
+                .and_then(|v| v.value.as_str())
+                .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                    "Missing or invalid 'resource_regeneration' in cache_keys configuration".to_string()
+                ))?
+                .to_string(),
+            stat_aggregation: config.get("stat_aggregation")
+                .and_then(|v| v.value.as_str())
+                .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                    "Missing or invalid 'stat_aggregation' in cache_keys configuration".to_string()
+                ))?
+                .to_string(),
+            subsystem_data: config.get("subsystem_data")
+                .and_then(|v| v.value.as_str())
+                .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                    "Missing or invalid 'subsystem_data' in cache_keys configuration".to_string()
+                ))?
+                .to_string(),
+        })
+    }
+
+    /// Get log levels from configuration
+    pub async fn get_log_levels(&self) -> crate::ActorCoreResult<LogLevelsConfig> {
+        let config = self.config_manager.get_category_config("log_levels").await?;
+        
+        Ok(LogLevelsConfig {
+            actor_core: config.get("actor_core")
+                .and_then(|v| v.value.as_str())
+                .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                    "Missing or invalid 'actor_core' in log_levels configuration".to_string()
+                ))?
+                .to_string(),
+            config: config.get("config")
+                .and_then(|v| v.value.as_str())
+                .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                    "Missing or invalid 'config' in log_levels configuration".to_string()
+                ))?
+                .to_string(),
+            registry: config.get("registry")
+                .and_then(|v| v.value.as_str())
+                .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                    "Missing or invalid 'registry' in log_levels configuration".to_string()
+                ))?
+                .to_string(),
+            cache: config.get("cache")
+                .and_then(|v| v.value.as_str())
+                .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                    "Missing or invalid 'cache' in log_levels configuration".to_string()
+                ))?
+                .to_string(),
+            performance: config.get("performance")
+                .and_then(|v| v.value.as_str())
+                .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                    "Missing or invalid 'performance' in log_levels configuration".to_string()
+                ))?
+                .to_string(),
+        })
+    }
+
+    /// Get cache policies from configuration
+    pub async fn get_cache_policies(&self) -> crate::ActorCoreResult<CachePoliciesConfig> {
+        let config = self.config_manager.get_category_config("cache_policies").await?;
+        
+        let get_cache_policy = |key: &str| -> crate::ActorCoreResult<CachePolicy> {
+            let policy_config = config.get(key)
+                .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                    format!("Missing '{}' in cache_policies configuration", key)
+                ))?;
+            
+            let ttl = policy_config.value.get("ttl")
+                .and_then(|v| v.as_u64())
+                .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                    format!("Missing or invalid 'ttl' for '{}' in cache_policies configuration", key)
+                ))?;
+            
+            let max_size = policy_config.value.get("max_size")
+                .and_then(|v| v.as_u64())
+                .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                    format!("Missing or invalid 'max_size' for '{}' in cache_policies configuration", key)
+                ))? as usize;
+            
+            let eviction_policy = policy_config.value.get("eviction_policy")
+                .and_then(|v| v.as_str())
+                .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                    format!("Missing or invalid 'eviction_policy' for '{}' in cache_policies configuration", key)
+                ))?
+                .to_string();
+            
+            Ok(CachePolicy {
+                ttl,
+                max_size,
+                eviction_policy,
+            })
+        };
+        
+        Ok(CachePoliciesConfig {
+            actor_snapshot: get_cache_policy("actor_snapshot")?,
+            resource_regeneration: get_cache_policy("resource_regeneration")?,
+            stat_aggregation: get_cache_policy("stat_aggregation")?,
+        })
+    }
+
+    /// Get system IDs from configuration
+    pub async fn get_system_ids(&self) -> crate::ActorCoreResult<Vec<String>> {
+        let config = self.config_manager.get_category_config("system_ids").await?;
+        
+        let system_ids = config.get("supported_systems")
+            .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                "Missing 'supported_systems' in system_ids configuration".to_string()
+            ))?;
+        
+        let systems_array = system_ids.value.as_array()
+            .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                "Invalid system_ids configuration: 'supported_systems' must be an array".to_string()
+            ))?;
+        
+        let systems: Vec<String> = systems_array
+            .iter()
+            .filter_map(|v| v.as_str().map(|s| s.to_string()))
+            .collect();
+        
+        if systems.is_empty() {
+            return Err(crate::ActorCoreError::ConfigurationError(
+                "No valid system IDs found in configuration".to_string()
+            ));
+        }
+        
+        Ok(systems)
+    }
+
+    /// Get context types from configuration
+    pub async fn get_context_types(&self) -> crate::ActorCoreResult<Vec<String>> {
+        let config = self.config_manager.get_category_config("context_types").await?;
+        
+        let context_types = config.get("supported_contexts")
+            .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                "Missing 'supported_contexts' in context_types configuration".to_string()
+            ))?;
+        
+        let contexts_array = context_types.value.as_array()
+            .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+                "Invalid context_types configuration: 'supported_contexts' must be an array".to_string()
+            ))?;
+        
+        let contexts: Vec<String> = contexts_array
+            .iter()
+            .filter_map(|v| v.as_str().map(|s| s.to_string()))
+            .collect();
+        
+        if contexts.is_empty() {
+            return Err(crate::ActorCoreError::ConfigurationError(
+                "No valid context types found in configuration".to_string()
+            ));
+        }
+        
+        Ok(contexts)
     }
 }
 
-/// Timeouts and intervals for various operations.
-pub mod timeouts {
-    /// Default aggregation timeout (5 seconds)
-    pub const AGGREGATION_TIMEOUT: u64 = 5000;
-    /// Default cache operation timeout (1 second)
-    pub const CACHE_TIMEOUT: u64 = 1000;
-    /// Default database operation timeout (10 seconds)
-    pub const DATABASE_TIMEOUT: u64 = 10000;
-    /// Default network operation timeout (30 seconds)
-    pub const NETWORK_TIMEOUT: u64 = 30000;
-    /// Default subsystem timeout (2 seconds)
-    pub const SUBSYSTEM_TIMEOUT: u64 = 2000;
-    /// Default batch processing interval (100 milliseconds)
-    pub const BATCH_INTERVAL: u64 = 100;
-    /// Default cache cleanup interval (1 hour)
-    pub const CACHE_CLEANUP_INTERVAL: u64 = 3600;
+/// All supported system IDs (loaded from configuration at runtime)
+pub async fn all_system_ids(config_manager: Arc<ConfigurationManager>) -> crate::ActorCoreResult<Vec<String>> {
+    config_manager.get_system_ids().await
 }
 
-/// Cache keys for different types of data.
-pub mod cache_keys {
-    /// Actor snapshot cache key prefix
-    pub const ACTOR_SNAPSHOT_PREFIX: &str = "actor_snapshot:";
-    /// Subsystem output cache key prefix
-    pub const SUBSYSTEM_OUTPUT_PREFIX: &str = "subsystem_output:";
-    /// Effective caps cache key prefix
-    pub const EFFECTIVE_CAPS_PREFIX: &str = "effective_caps:";
-    /// Registry cache key prefix
-    pub const REGISTRY_PREFIX: &str = "registry:";
-    /// Configuration cache key prefix
-    pub const CONFIG_PREFIX: &str = "config:";
+/// All supported context types (loaded from configuration at runtime)
+pub async fn all_context_types(config_manager: Arc<ConfigurationManager>) -> crate::ActorCoreResult<Vec<String>> {
+    config_manager.get_context_types().await
 }
 
-/// Log levels for different components.
-pub mod log_levels {
-    /// Trace level
-    pub const TRACE: &str = "trace";
-    /// Debug level
-    pub const DEBUG: &str = "debug";
-    /// Info level
-    pub const INFO: &str = "info";
-    /// Warn level
-    pub const WARN: &str = "warn";
-    /// Error level
-    pub const ERROR: &str = "error";
-}
-
-/// Cache policies for different scenarios.
-pub mod cache_policies {
-    /// LRU (Least Recently Used) policy
-    pub const LRU: &str = "lru";
-    /// LFU (Least Frequently Used) policy
-    pub const LFU: &str = "lfu";
-    /// TTL (Time To Live) policy
-    pub const TTL: &str = "ttl";
-    /// FIFO (First In, First Out) policy
-    pub const FIFO: &str = "fifo";
-}
-
-/// Performance thresholds for monitoring.
-pub mod performance_thresholds {
-    /// Maximum acceptable aggregation time (1 second)
-    pub const MAX_AGGREGATION_TIME: u64 = 1_000_000; // microseconds
-    /// Maximum acceptable cache operation time (1 millisecond)
-    pub const MAX_CACHE_TIME: u64 = 1_000; // microseconds
-    /// Maximum acceptable subsystem time (100 milliseconds)
-    pub const MAX_SUBSYSTEM_TIME: u64 = 100_000; // microseconds
-    /// Maximum memory usage per actor (1 MB)
-    pub const MAX_MEMORY_PER_ACTOR: u64 = 1_048_576; // bytes
-    /// Maximum cache size (100 MB)
-    pub const MAX_CACHE_SIZE: u64 = 100_048_576; // bytes
-}
-
-/// Validation rules for different data types.
-pub mod validation_rules {
-    /// Minimum actor name length
-    pub const MIN_ACTOR_NAME_LENGTH: usize = 3;
-    /// Maximum actor name length
-    pub const MAX_ACTOR_NAME_LENGTH: usize = 32;
-    /// Minimum dimension name length
-    pub const MIN_DIMENSION_NAME_LENGTH: usize = 1;
-    /// Maximum dimension name length
-    pub const MAX_DIMENSION_NAME_LENGTH: usize = 64;
-    /// Minimum system ID length
-    pub const MIN_SYSTEM_ID_LENGTH: usize = 1;
-    /// Maximum system ID length
-    pub const MAX_SYSTEM_ID_LENGTH: usize = 32;
-    /// Maximum number of subsystems per actor
-    pub const MAX_SUBSYSTEMS_PER_ACTOR: usize = 100;
-    /// Maximum number of contributions per subsystem
-    pub const MAX_CONTRIBUTIONS_PER_SUBSYSTEM: usize = 1000;
-}
-
-/// All supported dimensions in the system.
-pub fn all_dimensions() -> Vec<&'static str> {
-    vec![
-        // Primary dimensions
-        primary_dimensions::STRENGTH,
-        primary_dimensions::AGILITY,
-        primary_dimensions::INTELLIGENCE,
-        primary_dimensions::VITALITY,
-        primary_dimensions::SPIRIT,
-        primary_dimensions::LUCK,
-        primary_dimensions::HEALTH,
-        primary_dimensions::MANA,
-        primary_dimensions::STAMINA,
-        primary_dimensions::EXPERIENCE,
-        primary_dimensions::LEVEL,
-        // Derived dimensions
-        derived_dimensions::ATTACK_POWER,
-        derived_dimensions::DEFENSE_POWER,
-        derived_dimensions::CRITICAL_HIT_CHANCE,
-        derived_dimensions::CRITICAL_HIT_DAMAGE,
-        derived_dimensions::ATTACK_SPEED,
-        derived_dimensions::MOVEMENT_SPEED,
-        derived_dimensions::CASTING_SPEED,
-        derived_dimensions::COOLDOWN_REDUCTION,
-        derived_dimensions::LIFE_STEAL,
-        derived_dimensions::MANA_STEAL,
-        derived_dimensions::DAMAGE_REDUCTION,
-        derived_dimensions::ELEMENTAL_RESISTANCE,
-        // Meta dimensions
-        meta_dimensions::REALM_ID,
-        meta_dimensions::WORLD_ID,
-        meta_dimensions::ZONE_ID,
-        meta_dimensions::GUILD_ID,
-        meta_dimensions::PARTY_ID,
-        meta_dimensions::EVENT_ID,
-    ]
-}
-
-/// All supported context types.
-pub fn all_context_types() -> Vec<&'static str> {
-    vec![
-        context_types::DAMAGE,
-        context_types::HEALING,
-        context_types::EXPERIENCE_GAIN,
-        context_types::ITEM_DROP,
-        context_types::COMBAT,
-        context_types::MOVEMENT,
-        context_types::CASTING,
-    ]
-}
-
-/// All supported system IDs.
-pub fn all_system_ids() -> Vec<&'static str> {
-    vec![
-        system_ids::LUYEN_THE,
-        system_ids::KIM_DAN,
-        system_ids::COMBAT,
-        system_ids::EQUIPMENT,
-        system_ids::BUFF,
-        system_ids::GUILD,
-        system_ids::EVENT,
-        system_ids::WORLD,
-        system_ids::MAGIC,
-        system_ids::CULTIVATION,
-        system_ids::EXPERIENCE,
-        system_ids::REPUTATION,
-        system_ids::TRADING,
-        system_ids::WEATHER,
-        system_ids::LOCATION,
-        system_ids::TIME,
-        system_ids::STEALTH,
-        system_ids::PERCEPTION,
-    ]
-}
-
-/// Dimension range constants for validation
-pub mod dimension_ranges {
-    // Primary stats
-    pub const MIN_STRENGTH: f64 = 1.0;
-    pub const MAX_STRENGTH: f64 = 1000.0;
-    pub const MIN_AGILITY: f64 = 1.0;
-    pub const MAX_AGILITY: f64 = 1000.0;
-    pub const MIN_INTELLIGENCE: f64 = 1.0;
-    pub const MAX_INTELLIGENCE: f64 = 1000.0;
-    pub const MIN_VITALITY: f64 = 1.0;
-    pub const MAX_VITALITY: f64 = 1000.0;
-    pub const MIN_SPIRIT: f64 = 1.0;
-    pub const MAX_SPIRIT: f64 = 1000.0;
-    pub const MIN_LUCK: f64 = 1.0;
-    pub const MAX_LUCK: f64 = 1000.0;
+/// All supported dimensions (loaded from configuration at runtime)
+/// 
+/// # Errors
+/// Returns `ActorCoreError::ConfigurationError` if:
+/// - Configuration category "dimensions" is not found
+/// - "supported_dimensions" is not configured
+/// - No valid dimensions are found
+pub async fn all_dimensions(config_manager: Arc<ConfigurationManager>) -> crate::ActorCoreResult<Vec<String>> {
+    // Load dimensions from configuration
+    let config = config_manager.get_category_config("dimensions").await?;
     
-    // Health/Mana/Stamina
-    pub const MIN_HEALTH: f64 = 1.0;
-    pub const MAX_HEALTH: f64 = 10000.0;
-    pub const MIN_MANA: f64 = 0.0;
-    pub const MAX_MANA: f64 = 10000.0;
-    pub const MIN_STAMINA: f64 = 0.0;
-    pub const MAX_STAMINA: f64 = 10000.0;
+    let dimensions_config = config.get("supported_dimensions")
+        .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+            "Dimensions configuration not found for category 'dimensions'".to_string()
+        ))?;
     
-    // Derived stats
-    pub const MIN_ATTACK_POWER: f64 = 0.0;
-    pub const MAX_ATTACK_POWER: f64 = 5000.0;
-    pub const MIN_DEFENSE_POWER: f64 = 0.0;
-    pub const MAX_DEFENSE_POWER: f64 = 5000.0;
-    pub const MIN_CRITICAL_HIT_CHANCE: f64 = 0.0;
-    pub const MAX_CRITICAL_HIT_CHANCE: f64 = 1.0;
-    pub const MIN_CRITICAL_HIT_DAMAGE: f64 = 1.0;
-    pub const MAX_CRITICAL_HIT_DAMAGE: f64 = 5.0;
-    pub const MIN_ATTACK_SPEED: f64 = 0.1;
-    pub const MAX_ATTACK_SPEED: f64 = 10.0;
-    pub const MIN_MOVEMENT_SPEED: f64 = 0.1;
-    pub const MAX_MOVEMENT_SPEED: f64 = 20.0;
-    pub const MIN_CASTING_SPEED: f64 = 0.1;
-    pub const MAX_CASTING_SPEED: f64 = 10.0;
-    pub const MIN_COOLDOWN_REDUCTION: f64 = 0.0;
-    pub const MAX_COOLDOWN_REDUCTION: f64 = 0.8;
+    let dimensions_array = dimensions_config.value.as_array()
+        .ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+            "Invalid dimensions configuration: 'supported_dimensions' must be an array".to_string()
+        ))?;
     
-    // Experience and Level
-    pub const MIN_EXPERIENCE: f64 = 0.0;
-    pub const MAX_EXPERIENCE: f64 = 999999999.0;
-    pub const MIN_LEVEL: f64 = 1.0;
-    pub const MAX_LEVEL: f64 = 1000.0;
+    let dimensions: Vec<String> = dimensions_array
+        .iter()
+        .filter_map(|v| v.as_str().map(|s| s.to_string()))
+        .collect();
     
-    // Resistance stats
-    pub const MIN_FIRE_RESISTANCE: f64 = 0.0;
-    pub const MAX_FIRE_RESISTANCE: f64 = 1.0;
-    pub const MIN_WATER_RESISTANCE: f64 = 0.0;
-    pub const MAX_WATER_RESISTANCE: f64 = 1.0;
-    pub const MIN_EARTH_RESISTANCE: f64 = 0.0;
-    pub const MAX_EARTH_RESISTANCE: f64 = 1.0;
-    pub const MIN_AIR_RESISTANCE: f64 = 0.0;
-    pub const MAX_AIR_RESISTANCE: f64 = 1.0;
-    pub const MIN_LIGHT_RESISTANCE: f64 = 0.0;
-    pub const MAX_LIGHT_RESISTANCE: f64 = 1.0;
-    pub const MIN_DARK_RESISTANCE: f64 = 0.0;
-    pub const MAX_DARK_RESISTANCE: f64 = 1.0;
+    if dimensions.is_empty() {
+        return Err(crate::ActorCoreError::ConfigurationError(
+            "No valid dimensions found in configuration".to_string()
+        ));
+    }
     
-    // Special stats
-    pub const MIN_LUCK_FACTOR: f64 = 0.0;
-    pub const MAX_LUCK_FACTOR: f64 = 2.0;
-    pub const MIN_CRITICAL_RESISTANCE: f64 = 0.0;
-    pub const MAX_CRITICAL_RESISTANCE: f64 = 1.0;
-    pub const MIN_DODGE_CHANCE: f64 = 0.0;
-    pub const MAX_DODGE_CHANCE: f64 = 0.95;
-    pub const MIN_BLOCK_CHANCE: f64 = 0.0;
-    pub const MAX_BLOCK_CHANCE: f64 = 0.95;
-    pub const MIN_PARRY_CHANCE: f64 = 0.0;
-    pub const MAX_PARRY_CHANCE: f64 = 0.95;
+    Ok(dimensions)
 }
+
+
+// NOTE: All dimensions, stats, and performance thresholds are now loaded
+// from the Runtime Registry and Configuration Hub at runtime.
+// 
+// - Dimensions: Registered by subsystems via RegistryManager
+// - Performance thresholds: Loaded from YAML configs via ConfigurationManager
+// - No hardcoded constants should exist here
+
+// NOTE: All configurable values (defaults, timeouts, performance_thresholds, validation_rules)
+// are now loaded from configuration files at runtime through the ConfigManager.
+// Use the ConfigConstants struct to access these values dynamically.
+//
+// For examples of how to define configuration values, see:
+// - `configs/actor_core_config.yaml`
+// - `examples/rpg_resource_config.yaml`
+// - `examples/magic_resource_config.yaml`
+// - `examples/legacy_subsystems/` (for reference)

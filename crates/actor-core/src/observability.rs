@@ -17,6 +17,8 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use serde::{Deserialize, Serialize};
+use tracing::warn;
+use crate::ActorCoreResult;
 
 /// Standardized tracing fields for consistent logging across components.
 pub mod tracing_fields {
@@ -113,7 +115,38 @@ pub struct SubsystemMetrics {
 
 impl Default for StandardMetrics {
     fn default() -> Self {
-        Self {
+        Self::load_default_metrics().unwrap_or_else(|_| {
+            warn!("Failed to load standard metrics config, using hardcoded defaults");
+            Self {
+                operations: HashMap::new(),
+                timings: HashMap::new(),
+                memory_usage: 0,
+                errors: HashMap::new(),
+                cache_stats: CacheMetrics::default(),
+                subsystem_stats: SubsystemMetrics::default(),
+                last_updated: current_timestamp_ms(),
+            }
+        })
+    }
+}
+
+impl StandardMetrics {
+    /// Load default standard metrics from configuration
+    pub fn load_default_metrics() -> ActorCoreResult<Self> {
+        // Try to load from observability_config.yaml first
+        let config_path = std::path::Path::new("configs/observability_config.yaml");
+            
+        if config_path.exists() {
+            match Self::load_metrics_from_file(config_path) {
+                Ok(metrics) => return Ok(metrics),
+                Err(e) => {
+                    warn!("Failed to load standard metrics from file: {}. Using hardcoded defaults.", e);
+                }
+            }
+        }
+        
+        // Fallback to hardcoded defaults
+        Ok(Self {
             operations: HashMap::new(),
             timings: HashMap::new(),
             memory_usage: 0,
@@ -121,7 +154,24 @@ impl Default for StandardMetrics {
             cache_stats: CacheMetrics::default(),
             subsystem_stats: SubsystemMetrics::default(),
             last_updated: current_timestamp_ms(),
-        }
+        })
+    }
+
+    /// Load metrics from file
+    fn load_metrics_from_file(path: &std::path::Path) -> ActorCoreResult<Self> {
+        let content = std::fs::read_to_string(path)?;
+        let _config: ObservabilityConfig = serde_yaml::from_str(&content)?;
+        
+        // Extract metrics configuration from observability config
+        Ok(Self {
+            operations: HashMap::new(),
+            timings: HashMap::new(),
+            memory_usage: 0,
+            errors: HashMap::new(),
+            cache_stats: CacheMetrics::default(),
+            subsystem_stats: SubsystemMetrics::default(),
+            last_updated: current_timestamp_ms(),
+        })
     }
 }
 
@@ -252,7 +302,7 @@ pub struct ObservabilityManager {
 }
 
 /// Configuration for observability.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ObservabilityConfig {
     /// Enable detailed tracing
     pub enable_detailed_tracing: bool,
@@ -268,13 +318,49 @@ pub struct ObservabilityConfig {
 
 impl Default for ObservabilityConfig {
     fn default() -> Self {
-        Self {
+        Self::load_config().unwrap_or_else(|_| {
+            warn!("Failed to load observability config, using hardcoded defaults");
+            Self {
+                enable_detailed_tracing: true,
+                enable_metrics: true,
+                enable_performance_monitoring: true,
+                metrics_interval: Duration::from_secs(5),
+                max_component_metrics: 100,
+            }
+        })
+    }
+}
+
+impl ObservabilityConfig {
+    /// Load observability configuration from config file
+    pub fn load_config() -> ActorCoreResult<Self> {
+        // Try to load from observability_config.yaml first
+        let config_path = std::path::Path::new("configs/observability_config.yaml");
+            
+        if config_path.exists() {
+            match Self::load_config_from_file(config_path) {
+                Ok(config) => return Ok(config),
+                Err(e) => {
+                    warn!("Failed to load observability config from file: {}. Using hardcoded defaults.", e);
+                }
+            }
+        }
+        
+        // Fallback to hardcoded defaults
+        Ok(Self {
             enable_detailed_tracing: true,
             enable_metrics: true,
             enable_performance_monitoring: true,
             metrics_interval: Duration::from_secs(5),
             max_component_metrics: 100,
-        }
+        })
+    }
+
+    /// Load configuration from file
+    fn load_config_from_file(path: &std::path::Path) -> ActorCoreResult<Self> {
+        let content = std::fs::read_to_string(path)?;
+        let config: ObservabilityConfig = serde_yaml::from_str(&content)?;
+        Ok(config)
     }
 }
 

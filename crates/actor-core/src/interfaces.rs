@@ -4,10 +4,14 @@
 //! to participate in the actor stat aggregation system.
 
 use async_trait::async_trait;
+use serde::{Serialize, Deserialize};
+use tracing;
 use crate::types::{Actor, SubsystemOutput, Snapshot, Caps};
 use crate::ActorCoreResult;
-use crate::metrics::{SubsystemMetrics, AggregatorMetrics, CapStatistics, CacheStats};
 use crate::enums::{AcrossLayerPolicy, Operator};
+
+// Import metrics types from the metrics module
+use crate::metrics::{SubsystemMetrics, AggregatorMetrics, CapStatistics, CacheStats};
 
 /// Subsystem represents a game system that contributes to actor stats.
 #[async_trait]
@@ -189,7 +193,7 @@ pub trait CombinerRegistryAsync: Send + Sync {
 }
 
 /// MergeRule defines how contributions should be merged for a dimension.
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MergeRule {
     /// Whether to use pipeline processing
     pub use_pipeline: bool,
@@ -197,6 +201,50 @@ pub struct MergeRule {
     pub operator: Operator,
     /// Default clamp range
     pub clamp_default: Option<Caps>,
+}
+
+impl Default for MergeRule {
+    fn default() -> Self {
+        Self::load_default_rule().unwrap_or_else(|_| {
+            tracing::warn!("Failed to load merge rule from config, using hardcoded defaults");
+            Self {
+                use_pipeline: false,
+                operator: Operator::Sum,
+                clamp_default: None,
+            }
+        })
+    }
+}
+
+impl MergeRule {
+    /// Load default merge rule from configuration
+    pub fn load_default_rule() -> ActorCoreResult<Self> {
+        // Try to load from merge_rule_config.yaml first
+        let config_path = std::path::Path::new("configs/merge_rule_config.yaml");
+            
+        if config_path.exists() {
+            match Self::load_rule_from_file(config_path) {
+                Ok(rule) => return Ok(rule),
+                Err(e) => {
+                    tracing::warn!("Failed to load merge rule from file: {}. Using hardcoded defaults.", e);
+                }
+            }
+        }
+        
+        // Fallback to hardcoded defaults
+        Ok(Self {
+            use_pipeline: false,
+            operator: Operator::Sum,
+            clamp_default: None,
+        })
+    }
+
+    /// Load merge rule from file
+    fn load_rule_from_file(path: &std::path::Path) -> ActorCoreResult<Self> {
+        let content = std::fs::read_to_string(path)?;
+        let rule: MergeRule = serde_yaml::from_str(&content)?;
+        Ok(rule)
+    }
 }
 
 /// CapLayerRegistry manages cap layer configuration.

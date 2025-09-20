@@ -46,14 +46,51 @@ pub struct DashboardConfig {
 
 impl Default for DashboardConfig {
     fn default() -> Self {
-        Self {
+        Self::load_config().unwrap_or_else(|_| {
+            tracing::warn!("Failed to load dashboard config, using hardcoded defaults");
+            Self {
+                refresh_interval: Duration::from_secs(30),
+                include_detailed_metrics: true,
+                include_slo_status: true,
+                include_system_health: true,
+                max_recent_measurements: 10,
+                auto_refresh: true,
+            }
+        })
+    }
+}
+
+impl DashboardConfig {
+    /// Load dashboard configuration from config file
+    pub fn load_config() -> ActorCoreResult<Self> {
+        // Try to load from dashboard_config.yaml first
+        let config_path = std::path::Path::new("configs/dashboard_config.yaml");
+            
+        if config_path.exists() {
+            match Self::load_config_from_file(config_path) {
+                Ok(config) => return Ok(config),
+                Err(e) => {
+                    tracing::warn!("Failed to load dashboard config from file: {}. Using hardcoded defaults.", e);
+                }
+            }
+        }
+        
+        // Fallback to hardcoded defaults
+        Ok(Self {
             refresh_interval: Duration::from_secs(30),
             include_detailed_metrics: true,
             include_slo_status: true,
             include_system_health: true,
             max_recent_measurements: 10,
             auto_refresh: true,
-        }
+        })
+    }
+
+    /// Load dashboard configuration from file
+    fn load_config_from_file(path: &std::path::Path) -> ActorCoreResult<Self> {
+        let content = std::fs::read_to_string(path)?;
+        let config: DashboardConfig = serde_yaml::from_str(&content)?;
+        Ok(config)
     }
 }
 
@@ -392,18 +429,46 @@ impl ObservabilityDashboard {
             .unwrap_or_default()
             .as_secs();
 
+        // Load system load info from configuration
+        let load_info = self.load_system_load_info().await;
+
         SystemInfo {
             version: env!("CARGO_PKG_VERSION").to_string(),
             uptime_seconds,
             slo_count: self.slo_manager.list_slos().len(),
             metric_count: self.metrics_collector.list_metrics().len(),
-            load_info: LoadInfo {
-                cpu_usage_percent: 25.0, // Placeholder - would be real system metrics
-                memory_usage_percent: 45.0, // Placeholder
-                active_actors: self.get_active_actors_count().await,
-                active_subsystems: self.get_active_subsystems_count().await,
-            },
+            load_info,
         }
+    }
+
+    /// Load system load information from configuration
+    async fn load_system_load_info(&self) -> LoadInfo {
+        // Try to load from system_load_config.yaml first
+        let config_path = std::path::Path::new("configs/system_load_config.yaml");
+            
+        if config_path.exists() {
+            match Self::load_load_info_from_file(config_path) {
+                Ok(load_info) => return load_info,
+                Err(e) => {
+                    tracing::warn!("Failed to load system load info from file: {}. Using hardcoded defaults.", e);
+                }
+            }
+        }
+        
+        // Fallback to hardcoded defaults
+        LoadInfo {
+            cpu_usage_percent: 25.0, // Placeholder - would be real system metrics
+            memory_usage_percent: 45.0, // Placeholder
+            active_actors: self.get_active_actors_count().await,
+            active_subsystems: self.get_active_subsystems_count().await,
+        }
+    }
+
+    /// Load system load info from file
+    fn load_load_info_from_file(path: &std::path::Path) -> ActorCoreResult<LoadInfo> {
+        let content = std::fs::read_to_string(path)?;
+        let load_info: LoadInfo = serde_yaml::from_str(&content)?;
+        Ok(load_info)
     }
 
     /// Get recent alerts.
@@ -437,13 +502,37 @@ impl ObservabilityDashboard {
 
     /// Get active actors count (placeholder).
     async fn get_active_actors_count(&self) -> u64 {
-        // Placeholder - would query actual actor registry
+        // Try to load from system_load_config.yaml first
+        let config_path = std::path::Path::new("configs/system_load_config.yaml");
+            
+        if config_path.exists() {
+            match Self::load_load_info_from_file(config_path) {
+                Ok(load_info) => return load_info.active_actors,
+                Err(e) => {
+                    tracing::warn!("Failed to load system load info from file: {}. Using hardcoded defaults.", e);
+                }
+            }
+        }
+        
+        // Fallback to hardcoded defaults
         1000
     }
 
     /// Get active subsystems count (placeholder).
     async fn get_active_subsystems_count(&self) -> u64 {
-        // Placeholder - would query actual subsystem registry
+        // Try to load from system_load_config.yaml first
+        let config_path = std::path::Path::new("configs/system_load_config.yaml");
+            
+        if config_path.exists() {
+            match Self::load_load_info_from_file(config_path) {
+                Ok(load_info) => return load_info.active_subsystems,
+                Err(e) => {
+                    tracing::warn!("Failed to load system load info from file: {}. Using hardcoded defaults.", e);
+                }
+            }
+        }
+        
+        // Fallback to hardcoded defaults
         25
     }
 }

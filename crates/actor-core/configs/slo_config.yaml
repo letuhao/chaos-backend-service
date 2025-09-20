@@ -1,0 +1,120 @@
+# SLO Configuration
+# This file defines the Service Level Objectives for the Actor Core system
+
+# Retention period for measurements in seconds (24 hours)
+retention_period_seconds: 86400
+
+# SLO definitions
+slos:
+  # Availability SLO
+  - id: "actor_core_availability"
+    name: "Actor Core Availability"
+    description: "Percentage of successful actor stat resolutions"
+    target_success_rate: 0.999
+    measurement_window_seconds: 300
+    metric_type: "Availability"
+    labels:
+      service: "actor_core"
+      component: "aggregator"
+    enabled: true
+    severity: "High"
+    alert_threshold: 0.95
+
+  # Latency SLO
+  - id: "actor_core_latency"
+    name: "Actor Core Latency"
+    description: "Percentage of actor stat resolutions under 100ms"
+    target_success_rate: 0.95
+    measurement_window_seconds: 300
+    metric_type: "Latency"
+    threshold_ms: 100
+    labels:
+      service: "actor_core"
+      component: "aggregator"
+    enabled: true
+    severity: "Medium"
+    alert_threshold: 0.9
+
+  # Error rate SLO
+  - id: "actor_core_error_rate"
+    name: "Actor Core Error Rate"
+    description: "Percentage of actor stat resolutions without errors"
+    target_success_rate: 0.99
+    measurement_window_seconds: 300
+    metric_type: "ErrorRate"
+    labels:
+      service: "actor_core"
+      component: "aggregator"
+    enabled: true
+    severity: "High"
+    alert_threshold: 0.95
+
+  # Cache hit rate SLO
+  - id: "actor_core_cache_hit_rate"
+    name: "Actor Core Cache Hit Rate"
+    description: "Percentage of cache hits for actor stat resolutions"
+    target_success_rate: 0.8
+    measurement_window_seconds: 300
+    metric_type: "Custom"
+    metric_name: "cache_hit_rate"
+    labels:
+      service: "actor_core"
+      component: "cache"
+    enabled: true
+    severity: "Low"
+    alert_threshold: 0.8
+
+  # Throughput SLO
+  - id: "actor_core_throughput"
+    name: "Actor Core Throughput"
+    description: "Requests per second for actor stat resolutions"
+    target_success_rate: 0.9
+    measurement_window_seconds: 600
+    metric_type: "Throughput"
+    labels:
+      service: "actor_core"
+      component: "aggregator"
+    enabled: true
+    severity: "Medium"
+    alert_threshold: 0.85
+
+# SLO evaluation settings
+evaluation:
+  # Whether to enable automatic SLO evaluation
+  enable_auto_evaluation: true
+  
+  # Evaluation interval in seconds
+  evaluation_interval_seconds: 30
+  
+  # Whether to enable violation alerts
+  enable_violation_alerts: true
+  
+  # Alert cooldown period in seconds
+  alert_cooldown_seconds: 300
+  
+  # Maximum number of violations to track
+  max_violations_tracked: 1000
+
+# Violation handling settings
+violation_handling:
+  # Whether to enable console logging for violations
+  enable_console_logging: true
+  
+  # Whether to enable email notifications
+  enable_email_notifications: false
+  
+  # Whether to enable webhook notifications
+  enable_webhook_notifications: false
+  
+  # Webhook endpoint for notifications
+  webhook_endpoint: "http://localhost:8080/slo-violations"
+  
+  # Email settings
+  email:
+    smtp_server: "localhost:587"
+    from_address: "alerts@actor-core.local"
+    to_addresses: ["admin@actor-core.local"]
+
+# Example usage:
+# This configuration defines the Service Level Objectives for the Actor Core system.
+# These SLOs can be customized by modifying this file or by providing runtime configuration.

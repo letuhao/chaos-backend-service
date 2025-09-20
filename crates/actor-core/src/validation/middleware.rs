@@ -8,17 +8,86 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{info, warn, error};
 
-use crate::types::*;
-use crate::validation::*;
+// use crate::types::*; // Unused import
+use crate::types::Actor;
+use crate::types::Snapshot;
+// use crate::validation::*; // Unused import
 use crate::ActorCoreResult;
+
+/// Validation result
+#[derive(Debug, Clone)]
+pub struct ValidationResult {
+    pub is_valid: bool,
+    pub errors: Vec<ValidationError>,
+    pub warnings: Vec<ValidationError>,
+}
+
+impl ValidationResult {
+    pub fn new() -> Self {
+        Self {
+            is_valid: true,
+            errors: Vec::new(),
+            warnings: Vec::new(),
+        }
+    }
+
+    pub fn with_error(error: ValidationError) -> Self {
+        Self {
+            is_valid: false,
+            errors: vec![error],
+            warnings: Vec::new(),
+        }
+    }
+
+    pub fn add_error(&mut self, error: ValidationError) {
+        self.is_valid = false;
+        self.errors.push(error);
+    }
+
+    pub fn add_warning(&mut self, warning: ValidationError) {
+        self.warnings.push(warning);
+    }
+
+    pub fn has_warnings(&self) -> bool {
+        !self.warnings.is_empty()
+    }
+
+    pub fn first_error(&self) -> Option<&str> {
+        self.errors.first().map(|e| e.message.as_str())
+    }
+}
+
+/// Validation error
+#[derive(Debug, Clone)]
+pub struct ValidationError {
+    pub field: String,
+    pub message: String,
+    pub code: String,
+}
+
+impl ValidationError {
+    pub fn new(field: impl Into<String>, message: impl Into<String>, code: impl Into<String>) -> Self {
+        Self {
+            field: field.into(),
+            message: message.into(),
+            code: code.into(),
+        }
+    }
+}
+
 use crate::ActorCoreError;
+
+/// Validator trait
+pub trait Validator: Send + Sync {
+    fn validate(&self, value: &dyn std::any::Any) -> ValidationResult;
+}
 
 /// Validation middleware that wraps other services.
 pub struct ValidationMiddleware<T> {
     /// The wrapped service
     inner: Arc<T>,
     /// Validator instance
-    validator: Arc<Validator>,
+    validator: Arc<dyn Validator>,
     /// Validation statistics
     stats: Arc<RwLock<ValidationStats>>,
 }
@@ -40,7 +109,7 @@ pub struct ValidationStats {
 
 impl<T> ValidationMiddleware<T> {
     /// Create a new validation middleware.
-    pub fn new(inner: Arc<T>, validator: Arc<Validator>) -> Self {
+    pub fn new(inner: Arc<T>, validator: Arc<dyn Validator>) -> Self {
         Self {
             inner,
             validator,
@@ -64,9 +133,9 @@ impl<T> ValidationMiddleware<T> {
     #[allow(dead_code)]
     async fn validate_with_stats<F>(&self, validate_fn: F) -> ValidationResult
     where
-        F: FnOnce(&Validator) -> ValidationResult,
+        F: FnOnce(&dyn Validator) -> ValidationResult,
     {
-        let result = validate_fn(&self.validator);
+        let result = validate_fn(&*self.validator);
         
         let mut stats = self.stats.write().await;
         stats.total_validations += 1;
@@ -92,7 +161,7 @@ impl<T> ValidationMiddleware<T> {
     }
 
     /// Get the validator.
-    pub fn validator(&self) -> &Arc<Validator> {
+    pub fn validator(&self) -> &Arc<dyn Validator> {
         &self.validator
     }
 }
@@ -102,14 +171,14 @@ pub struct AggregatorValidationMiddleware {
     /// The wrapped aggregator
     inner: Arc<dyn crate::interfaces::Aggregator>,
     /// Validator instance
-    validator: Arc<Validator>,
+    validator: Arc<dyn Validator>,
     /// Validation statistics
     stats: Arc<RwLock<ValidationStats>>,
 }
 
 impl AggregatorValidationMiddleware {
     /// Create a new aggregator validation middleware.
-    pub fn new(inner: Arc<dyn crate::interfaces::Aggregator>, validator: Arc<Validator>) -> Self {
+    pub fn new(inner: Arc<dyn crate::interfaces::Aggregator>, validator: Arc<dyn Validator>) -> Self {
         Self {
             inner,
             validator,
@@ -126,9 +195,9 @@ impl AggregatorValidationMiddleware {
     #[allow(dead_code)]
     async fn validate_with_stats<F>(&self, validate_fn: F) -> ValidationResult
     where
-        F: FnOnce(&Validator) -> ValidationResult,
+        F: FnOnce(&dyn Validator) -> ValidationResult,
     {
-        let result = validate_fn(&self.validator);
+        let result = validate_fn(&*self.validator);
         
         let mut stats = self.stats.write().await;
         stats.total_validations += 1;
@@ -155,13 +224,13 @@ impl crate::interfaces::Aggregator for AggregatorValidationMiddleware {
     async fn resolve(&self, actor: &Actor) -> ActorCoreResult<Snapshot> {
         // Validate actor before processing
         let validation_result = self.validate_with_stats(|validator| {
-            validator.validate_actor(actor)
+            validator.validate(actor)
         }).await;
 
         if !validation_result.is_valid {
             error!("Actor validation failed: {:?}", validation_result.errors);
             return Err(ActorCoreError::InvalidActor(
-                validation_result.first_error().unwrap_or_else(|| "Actor validation failed".to_string())
+                validation_result.first_error().unwrap_or_else(|| "Actor validation failed").to_string()
             ));
         }
 
@@ -174,13 +243,13 @@ impl crate::interfaces::Aggregator for AggregatorValidationMiddleware {
 
         // Validate snapshot after processing
         let snapshot_validation = self.validate_with_stats(|validator| {
-            validator.validate_snapshot(&snapshot)
+            validator.validate(&snapshot)
         }).await;
 
         if !snapshot_validation.is_valid {
             error!("Snapshot validation failed: {:?}", snapshot_validation.errors);
             return Err(ActorCoreError::AggregationError(
-                snapshot_validation.first_error().unwrap_or_else(|| "Snapshot validation failed".to_string())
+                snapshot_validation.first_error().unwrap_or_else(|| "Snapshot validation failed").to_string()
             ));
         }
 
@@ -200,13 +269,13 @@ impl crate::interfaces::Aggregator for AggregatorValidationMiddleware {
     ) -> ActorCoreResult<Snapshot> {
         // Validate actor before processing
         let validation_result = self.validate_with_stats(|validator| {
-            validator.validate_actor(actor)
+            validator.validate(actor)
         }).await;
 
         if !validation_result.is_valid {
             error!("Actor validation failed: {:?}", validation_result.errors);
             return Err(ActorCoreError::InvalidActor(
-                validation_result.first_error().unwrap_or_else(|| "Actor validation failed".to_string())
+                validation_result.first_error().unwrap_or_else(|| "Actor validation failed").to_string()
             ));
         }
 
@@ -214,7 +283,7 @@ impl crate::interfaces::Aggregator for AggregatorValidationMiddleware {
         if let Some(context_map) = &context {
             if !context_map.is_empty() {
                 let context_validation = self.validate_with_stats(|validator| {
-                    validator.validate_config(context_map)
+                    validator.validate(context_map)
                 }).await;
 
                 if !context_validation.is_valid {
@@ -229,13 +298,13 @@ impl crate::interfaces::Aggregator for AggregatorValidationMiddleware {
 
         // Validate snapshot after processing
         let snapshot_validation = self.validate_with_stats(|validator| {
-            validator.validate_snapshot(&snapshot)
+            validator.validate(&snapshot)
         }).await;
 
         if !snapshot_validation.is_valid {
             error!("Snapshot validation failed: {:?}", snapshot_validation.errors);
             return Err(ActorCoreError::AggregationError(
-                snapshot_validation.first_error().unwrap_or_else(|| "Snapshot validation failed".to_string())
+                snapshot_validation.first_error().unwrap_or_else(|| "Snapshot validation failed").to_string()
             ));
         }
 
@@ -255,7 +324,7 @@ impl crate::interfaces::Aggregator for AggregatorValidationMiddleware {
         if let Some(cached) = self.inner.get_cached_snapshot(actor_id) {
             // Validate cached snapshot before returning
             let validation_result = futures::executor::block_on(self.validate_with_stats(|validator| {
-                validator.validate_snapshot(&cached)
+                validator.validate(&cached)
             }));
 
             if !validation_result.is_valid {
@@ -302,14 +371,14 @@ pub struct CacheValidationMiddleware {
     /// The wrapped cache
     inner: Arc<dyn crate::interfaces::Cache>,
     /// Validator instance
-    validator: Arc<Validator>,
+    validator: Arc<dyn Validator>,
     /// Validation statistics
     stats: Arc<RwLock<ValidationStats>>,
 }
 
 impl CacheValidationMiddleware {
     /// Create a new cache validation middleware.
-    pub fn new(inner: Arc<dyn crate::interfaces::Cache>, validator: Arc<Validator>) -> Self {
+    pub fn new(inner: Arc<dyn crate::interfaces::Cache>, validator: Arc<dyn Validator>) -> Self {
         Self {
             inner,
             validator,
@@ -326,9 +395,9 @@ impl CacheValidationMiddleware {
     #[allow(dead_code)]
     async fn validate_with_stats<F>(&self, validate_fn: F) -> ValidationResult
     where
-        F: FnOnce(&Validator) -> ValidationResult,
+        F: FnOnce(&dyn Validator) -> ValidationResult,
     {
-        let result = validate_fn(&self.validator);
+        let result = validate_fn(&*self.validator);
         
         let mut stats = self.stats.write().await;
         stats.total_validations += 1;
@@ -364,7 +433,7 @@ impl crate::interfaces::Cache for CacheValidationMiddleware {
         if let Some(value) = &result {
             if let Ok(snapshot) = serde_json::from_value::<Snapshot>(value.clone()) {
                 let validation_result = futures::executor::block_on(self.validate_with_stats(|validator| {
-                    validator.validate_snapshot(&snapshot)
+                    validator.validate(&snapshot)
                 }));
 
                 if !validation_result.is_valid {
@@ -397,13 +466,13 @@ impl crate::interfaces::Cache for CacheValidationMiddleware {
         // If the value is a snapshot, validate it
         if let Ok(snapshot) = serde_json::from_value::<Snapshot>(value.clone()) {
             let validation_result = futures::executor::block_on(self.validate_with_stats(|validator| {
-                validator.validate_snapshot(&snapshot)
+                validator.validate(&snapshot)
             }));
 
             if !validation_result.is_valid {
                 error!("Snapshot validation failed before caching: {:?}", validation_result.errors);
                 return Err(ActorCoreError::InvalidInput(
-                    validation_result.first_error().unwrap_or_else(|| "Snapshot validation failed".to_string())
+                    validation_result.first_error().unwrap_or("Snapshot validation failed").to_string()
                 ));
             }
 
@@ -441,14 +510,14 @@ pub struct RegistryValidationMiddleware {
     /// The wrapped registry
     inner: Arc<dyn crate::interfaces::PluginRegistry>,
     /// Validator instance
-    validator: Arc<Validator>,
+    validator: Arc<dyn Validator>,
     /// Validation statistics
     stats: Arc<RwLock<ValidationStats>>,
 }
 
 impl RegistryValidationMiddleware {
     /// Create a new registry validation middleware.
-    pub fn new(inner: Arc<dyn crate::interfaces::PluginRegistry>, validator: Arc<Validator>) -> Self {
+    pub fn new(inner: Arc<dyn crate::interfaces::PluginRegistry>, validator: Arc<dyn Validator>) -> Self {
         Self {
             inner,
             validator,
@@ -465,9 +534,9 @@ impl RegistryValidationMiddleware {
     #[allow(dead_code)]
     async fn validate_with_stats<F>(&self, validate_fn: F) -> ValidationResult
     where
-        F: FnOnce(&Validator) -> ValidationResult,
+        F: FnOnce(&dyn Validator) -> ValidationResult,
     {
-        let result = validate_fn(&self.validator);
+        let result = validate_fn(&*self.validator);
         
         let mut stats = self.stats.write().await;
         stats.total_validations += 1;
@@ -490,9 +559,9 @@ impl RegistryValidationMiddleware {
     /// Validate and record statistics (sync version).
     fn validate_with_stats_sync<F>(&self, validate_fn: F) -> ValidationResult
     where
-        F: FnOnce(&Validator) -> ValidationResult,
+        F: FnOnce(&dyn Validator) -> ValidationResult,
     {
-        let result = validate_fn(&self.validator);
+        let result = validate_fn(&*self.validator);
         
         // Note: This is a simplified version that doesn't update stats
         // In a real implementation, you might want to use a different approach
@@ -511,9 +580,8 @@ impl crate::interfaces::PluginRegistry for RegistryValidationMiddleware {
             if subsystem.system_id().is_empty() {
                 result.add_error(ValidationError {
                     code: "EMPTY_SYSTEM_ID".to_string(),
-                    field: Some("system_id".to_string()),
+                    field: "system_id".to_string(),
                     message: "System ID cannot be empty".to_string(),
-                    context: None,
                 });
             }
             result
@@ -522,7 +590,7 @@ impl crate::interfaces::PluginRegistry for RegistryValidationMiddleware {
         if !validation_result.is_valid {
             error!("Subsystem registration validation failed: {:?}", validation_result.errors);
             return Err(ActorCoreError::SubsystemError(
-                validation_result.first_error().unwrap_or_else(|| "Subsystem validation failed".to_string())
+                validation_result.first_error().unwrap_or_else(|| "Subsystem validation failed").to_string()
             ));
         }
 
@@ -585,9 +653,8 @@ impl crate::interfaces::PluginRegistry for RegistryValidationMiddleware {
                 if subsystem.system_id().is_empty() {
                     result.add_error(ValidationError {
                         code: "EMPTY_SYSTEM_ID".to_string(),
-                        field: Some("system_id".to_string()),
+                        field: "system_id".to_string(),
                         message: "System ID cannot be empty".to_string(),
-                        context: None,
                     });
                 }
             }
@@ -598,7 +665,7 @@ impl crate::interfaces::PluginRegistry for RegistryValidationMiddleware {
         if !validation_result.is_valid {
             error!("Registry validation failed: {:?}", validation_result.errors);
             return Err(ActorCoreError::RegistryError(
-                validation_result.first_error().unwrap_or_else(|| "Registry validation failed".to_string())
+                validation_result.first_error().unwrap_or_else(|| "Registry validation failed").to_string()
             ));
         }
 
@@ -617,7 +684,7 @@ impl ValidationMiddlewareFactory {
     /// Create a validation-enabled aggregator.
     pub fn create_validated_aggregator(
         inner: Arc<dyn crate::interfaces::Aggregator>,
-        validator: Arc<Validator>,
+        validator: Arc<dyn Validator>,
     ) -> Arc<AggregatorValidationMiddleware> {
         Arc::new(AggregatorValidationMiddleware::new(inner, validator))
     }
@@ -625,7 +692,7 @@ impl ValidationMiddlewareFactory {
     /// Create a validation-enabled cache.
     pub fn create_validated_cache(
         inner: Arc<dyn crate::interfaces::Cache>,
-        validator: Arc<Validator>,
+        validator: Arc<dyn Validator>,
     ) -> Arc<CacheValidationMiddleware> {
         Arc::new(CacheValidationMiddleware::new(inner, validator))
     }
@@ -633,7 +700,7 @@ impl ValidationMiddlewareFactory {
     /// Create a validation-enabled registry.
     pub fn create_validated_registry(
         inner: Arc<dyn crate::interfaces::PluginRegistry>,
-        validator: Arc<Validator>,
+        validator: Arc<dyn Validator>,
     ) -> Arc<RegistryValidationMiddleware> {
         Arc::new(RegistryValidationMiddleware::new(inner, validator))
     }

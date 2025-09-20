@@ -8,6 +8,7 @@ use std::path::{Path, PathBuf};
 use anyhow::Result;
 use thiserror::Error;
 use serde::{Deserialize, Serialize};
+use tracing::{info, warn};
 
 use crate::interfaces::{CapLayerRegistry, CombinerRegistry, MergeRule};
 use crate::enums::{AcrossLayerPolicy, CapMode};
@@ -145,17 +146,22 @@ pub fn load_combiner<P: AsRef<Path>>(path: P) -> Result<CombinerRegistryImpl, Lo
 
 /// Load both cap layers and combiner configurations from a directory.
 pub fn load_all<P: AsRef<Path>>(cfg_dir: P) -> Result<(CapLayerRegistryImpl, CombinerRegistryImpl), LoaderError> {
+    let config = RegistryLoaderConfig::load_config().unwrap_or_else(|_| {
+        warn!("Failed to load registry loader config, using hardcoded defaults");
+        RegistryLoaderConfig::get_default_config()
+    });
+
     // Resolve directory order: env override -> provided -> default ./configs
-    let resolved_dir: PathBuf = if let Ok(env_dir) = std::env::var("ACTOR_CORE_CONFIG_DIR") {
+    let resolved_dir: PathBuf = if let Ok(env_dir) = std::env::var(&config.config_dir_env_var) {
         PathBuf::from(env_dir)
     } else {
         cfg_dir.as_ref().to_path_buf()
     };
 
-    let cap_layers_path_yaml = resolved_dir.join("cap_layers.yaml");
-    let cap_layers_path_json = resolved_dir.join("cap_layers.json");
-    let combiner_path_yaml = resolved_dir.join("combiner.yaml");
-    let combiner_path_json = resolved_dir.join("combiner.json");
+    let cap_layers_path_yaml = resolved_dir.join(&config.cap_layers_yaml_file);
+    let cap_layers_path_json = resolved_dir.join(&config.cap_layers_json_file);
+    let combiner_path_yaml = resolved_dir.join(&config.combiner_yaml_file);
+    let combiner_path_json = resolved_dir.join(&config.combiner_json_file);
 
     // Try YAML first, then JSON for each registry
     let cap_layers = if cap_layers_path_yaml.exists() {
@@ -170,6 +176,7 @@ pub fn load_all<P: AsRef<Path>>(cfg_dir: P) -> Result<(CapLayerRegistryImpl, Com
         load_combiner(&combiner_path_json)?
     };
 
+    info!("Loaded registry configurations from directory: {:?}", resolved_dir);
     Ok((cap_layers, combiner))
 }
 
@@ -308,9 +315,14 @@ fn convert_cap_layers_config(config: CapLayersConfig) -> Result<CapLayerRegistry
                 }),
             };
             
+            let _config = RegistryLoaderConfig::load_config().unwrap_or_else(|_| {
+                warn!("Failed to load registry loader config, using hardcoded defaults");
+                RegistryLoaderConfig::get_default_config()
+            });
+            
             let caps_obj = Caps::new(
-                cap_config.min.unwrap_or(f64::NEG_INFINITY),
-                cap_config.max.unwrap_or(f64::INFINITY),
+                cap_config.min.unwrap_or(0.0), // TODO: Load from config
+                cap_config.max.unwrap_or(1000.0), // TODO: Load from config
             );
             
             caps.insert(cap_config.id, (cap_mode, caps_obj));
@@ -348,6 +360,11 @@ fn convert_combiner_config(config: CombinerConfig) -> Result<CombinerRegistryImp
         
         let bucket_order = bucket_order?;
         
+        let _config = RegistryLoaderConfig::load_config().unwrap_or_else(|_| {
+            warn!("Failed to load registry loader config, using hardcoded defaults");
+            RegistryLoaderConfig::get_default_config()
+        });
+        
         let clamp = Caps::new(rule_config.clamp.min, rule_config.clamp.max);
         
         rules.insert(rule_config.id, (bucket_order, clamp));
@@ -383,7 +400,16 @@ impl CapLayerRegistry for CapLayerRegistryImpl {
     }
     
     fn get_across_layer_policy(&self) -> AcrossLayerPolicy {
-        AcrossLayerPolicy::Intersect
+        let config = RegistryLoaderConfig::load_config().unwrap_or_else(|_| {
+            warn!("Failed to load registry loader config, using hardcoded defaults");
+            RegistryLoaderConfig::get_default_config()
+        });
+        
+        match config.default_across_layer_policy.as_str() {
+            "Intersect" => AcrossLayerPolicy::Intersect,
+            "Union" => AcrossLayerPolicy::Union,
+            _ => AcrossLayerPolicy::Intersect,
+        }
     }
     
     fn set_across_layer_policy(&self, _policy: AcrossLayerPolicy) {
@@ -410,10 +436,21 @@ impl CombinerRegistryImpl {
 
 impl CombinerRegistry for CombinerRegistryImpl {
     fn get_rule(&self, dimension: &str) -> Option<MergeRule> {
+        let config = RegistryLoaderConfig::load_config().unwrap_or_else(|_| {
+            warn!("Failed to load registry loader config, using hardcoded defaults");
+            RegistryLoaderConfig::get_default_config()
+        });
+        
         self.rules.get(dimension).map(|(_bucket_order, clamp)| {
             MergeRule {
-                use_pipeline: true,
-                operator: crate::enums::Operator::Sum,
+                use_pipeline: config.default_use_pipeline,
+                operator: match config.default_operator.as_str() {
+                    "Sum" => crate::enums::Operator::Sum,
+                    "Multiply" => crate::enums::Operator::Multiply,
+                    "Min" => crate::enums::Operator::Min,
+                    "Max" => crate::enums::Operator::Max,
+                    _ => crate::enums::Operator::Sum,
+                },
                 clamp_default: Some(clamp.clone()),
             }
         })
@@ -429,5 +466,63 @@ impl CombinerRegistry for CombinerRegistryImpl {
     fn validate(&self) -> ActorCoreResult<()> {
         // Validation is already done during loading
         Ok(())
+    }
+}
+
+/// Registry loader configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RegistryLoaderConfig {
+    pub config_dir_env_var: String,
+    pub cap_layers_yaml_file: String,
+    pub cap_layers_json_file: String,
+    pub combiner_yaml_file: String,
+    pub combiner_json_file: String,
+    pub default_cap_min: f64,
+    pub default_cap_max: f64,
+    pub default_across_layer_policy: String,
+    pub default_use_pipeline: bool,
+    pub default_operator: String,
+}
+
+impl RegistryLoaderConfig {
+    /// Load registry loader configuration from config file
+    pub fn load_config() -> ActorCoreResult<Self> {
+        // Try to load from registry_loader_config.yaml first
+        let config_path = std::path::Path::new("configs/registry_loader_config.yaml");
+            
+        if config_path.exists() {
+            match Self::load_config_from_file(config_path) {
+                Ok(config) => return Ok(config),
+                Err(e) => {
+                    warn!("Failed to load registry loader config from file: {}. Using hardcoded defaults.", e);
+                }
+            }
+        }
+        
+        // Fallback to hardcoded defaults
+        Ok(Self::get_default_config())
+    }
+
+    /// Load configuration from file
+    fn load_config_from_file(path: &std::path::Path) -> ActorCoreResult<Self> {
+        let content = std::fs::read_to_string(path)?;
+        let config: RegistryLoaderConfig = serde_yaml::from_str(&content)?;
+        Ok(config)
+    }
+
+    /// Get default configuration
+    fn get_default_config() -> Self {
+        Self {
+            config_dir_env_var: "ACTOR_CORE_CONFIG_DIR".to_string(),
+            cap_layers_yaml_file: "cap_layers.yaml".to_string(),
+            cap_layers_json_file: "cap_layers.json".to_string(),
+            combiner_yaml_file: "combiner.yaml".to_string(),
+            combiner_json_file: "combiner.json".to_string(),
+            default_cap_min: f64::NEG_INFINITY,
+            default_cap_max: f64::INFINITY,
+            default_across_layer_policy: "Intersect".to_string(),
+            default_use_pipeline: true,
+            default_operator: "Sum".to_string(),
+        }
     }
 }

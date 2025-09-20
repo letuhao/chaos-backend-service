@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 use crate::ActorCoreResult;
 use crate::types::{Actor, Contribution, SubsystemOutput};
 use crate::service_factory::ServiceFactory;
+use crate::config::manager::ConfigurationManager;
 use super::profiler::{PerformanceProfiler, ProfilerConfig, PerformanceReport};
 
 /// Result of a performance test.
@@ -65,6 +66,8 @@ pub struct PerformanceTestSuite {
     profiler: PerformanceProfiler,
     /// Test configuration
     config: TestSuiteConfig,
+    /// Configuration manager
+    _config_manager: Arc<ConfigurationManager>,
 }
 
 /// Configuration for the performance test suite.
@@ -105,16 +108,17 @@ impl Default for TestSuiteConfig {
 
 impl PerformanceTestSuite {
     /// Create a new performance test suite.
-    pub fn new(config: TestSuiteConfig, profiler_config: ProfilerConfig) -> Self {
+    pub fn new(config: TestSuiteConfig, profiler_config: ProfilerConfig, config_manager: Arc<ConfigurationManager>) -> Self {
         Self {
-            profiler: PerformanceProfiler::new(profiler_config),
+            profiler: PerformanceProfiler::new(profiler_config, config_manager.clone()),
             config,
+            _config_manager: config_manager,
         }
     }
 
     /// Create a new test suite with default configuration.
-    pub fn new_default() -> Self {
-        Self::new(TestSuiteConfig::default(), ProfilerConfig::default())
+    pub fn new_default(config_manager: Arc<ConfigurationManager>) -> Self {
+        Self::new(TestSuiteConfig::default(), ProfilerConfig::default(), config_manager)
     }
 
     /// Run all performance tests.

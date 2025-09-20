@@ -3,6 +3,8 @@
 //! This module contains the fundamental data structures for character stat
 //! aggregation, including Actor, Contribution, Snapshot, and related types.
 
+// Performance-related modules moved to actor-core-performance crate
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use chrono::Utc;

@@ -90,11 +90,12 @@ pub struct CacheConfig {
 impl Default for CacheConfig {
     fn default() -> Self {
         Self {
-            l1_ttl: 300, // 5 minutes
-            l2_ttl: 3600, // 1 hour
-            l3_ttl: 86400, // 24 hours
-            max_l1_size: 10000,
-            max_l2_size: 100000,
+            // TODO: Load these values from configuration
+            l1_ttl: 300, // 5 minutes - should be loaded from config
+            l2_ttl: 3600, // 1 hour - should be loaded from config
+            l3_ttl: 86400, // 24 hours - should be loaded from config
+            max_l1_size: 10000, // should be loaded from config
+            max_l2_size: 100000, // should be loaded from config
             warming_enabled: true,
             batch_enabled: true,
         }
@@ -304,8 +305,8 @@ impl ResourceCache {
             return Ok(());
         }
         
-        // This would be implemented to preload resources for active actors
-        // For now, it's a placeholder
+        // TODO: Implement cache warming logic to preload resources for active actors
+        // This should load frequently accessed resources into L1 cache
         Ok(())
     }
     
@@ -361,7 +362,7 @@ impl ResourceCache {
         let mut entries: Vec<_> = cache.iter().map(|(k, v)| (k.clone(), v.timestamp)).collect();
         entries.sort_by_key(|(_, timestamp)| *timestamp);
         
-        // Remove oldest 10% of entries
+        // TODO: Load eviction percentage from configuration (currently hardcoded to 10%)
         let to_remove = (entries.len() / 10).max(1);
         for (key, _) in entries.iter().take(to_remove) {
             cache.remove(key);

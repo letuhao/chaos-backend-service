@@ -1,0 +1,10 @@
+# Performance Thresholds Configuration
+# This file defines performance limits and thresholds for Actor Core
+
+max_actors: 10000
+max_contributions_per_actor: 1000
+max_caps_per_actor: 100
+max_subsystems: 50
+cache_size_mb: 100
+memory_usage_mb: 500
+cpu_usage_percent: 80.0

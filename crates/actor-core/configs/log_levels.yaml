@@ -1,0 +1,8 @@
+# Log Levels Configuration
+# This file defines log levels for different Actor Core components
+
+actor_core: "info"
+config: "info"
+registry: "info"
+cache: "warn"
+performance: "debug"

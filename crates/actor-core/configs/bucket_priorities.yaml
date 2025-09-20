@@ -1,0 +1,23 @@
+# Bucket Priorities Configuration
+# This file defines the processing priorities for different bucket types
+
+# Priority values (lower = processed earlier)
+priorities:
+  Flat: 1
+  Mult: 2
+  PostAdd: 3
+  Override: 4
+  Exponential: 5
+  Logarithmic: 6
+  Conditional: 7
+
+# Additional configuration
+settings:
+  enable_priority_validation: true
+  allow_duplicate_priorities: false
+  max_priority: 100
+  min_priority: 1
+
+# Example usage:
+# This configuration controls the order in which different bucket types
+# are processed during contribution aggregation. Lower numbers are processed first.

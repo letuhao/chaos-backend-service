@@ -1,0 +1,207 @@
+# Magic Resource Manager Configuration
+# This file demonstrates how Magic resources should be configured
+# instead of being hardcoded in the implementation
+
+magic_resources:
+  # Mana Points
+  mana_current:
+    name: "Mana Points"
+    description: "Character's current mana points"
+    category: "mana"
+    resource_type: "mana"
+    base_formula: "intelligence * 12 + wisdom * 8 + level * 4"
+    max_formula: "intelligence * 12 + wisdom * 8 + level * 4 + equipment_bonus"
+    regen_rate: 0.3
+    regen_type: "passive"
+    dependencies: ["intelligence", "wisdom", "level"]
+    tags: ["magic", "mana", "universal"]
+    subsystem_id: "magic_system"
+
+  # Arcane Focus
+  arcane_focus_current:
+    name: "Arcane Focus"
+    description: "Character's current arcane focus"
+    category: "focus"
+    resource_type: "energy"
+    base_formula: "wisdom * 6 + charisma * 4 + level * 2"
+    max_formula: "wisdom * 6 + charisma * 4 + level * 2 + equipment_bonus"
+    regen_rate: 0.1
+    regen_type: "passive"
+    dependencies: ["wisdom", "charisma", "level"]
+    tags: ["magic", "arcane", "focus"]
+    subsystem_id: "magic_system"
+
+  # Magical Knowledge
+  magical_knowledge_current:
+    name: "Magical Knowledge"
+    description: "Character's current magical knowledge"
+    category: "knowledge"
+    resource_type: "experience"
+    base_formula: "intelligence * 10 + level * 5"
+    max_formula: "intelligence * 10 + level * 5 + study_bonus"
+    regen_rate: 0.0
+    regen_type: "none"
+    dependencies: ["intelligence", "level"]
+    tags: ["magic", "knowledge", "arcane"]
+    subsystem_id: "magic_system"
+
+  # Divine Energy
+  divine_energy_current:
+    name: "Divine Energy"
+    description: "Character's current divine energy"
+    category: "essence"
+    resource_type: "energy"
+    base_formula: "wisdom * 8 + charisma * 6 + level * 3"
+    max_formula: "wisdom * 8 + charisma * 6 + level * 3 + faith_bonus"
+    regen_rate: 0.2
+    regen_type: "passive"
+    dependencies: ["wisdom", "charisma", "level"]
+    tags: ["magic", "divine", "essence"]
+    subsystem_id: "magic_system"
+
+  # Nature Essence
+  nature_essence_current:
+    name: "Nature Essence"
+    description: "Character's current nature essence"
+    category: "essence"
+    resource_type: "energy"
+    base_formula: "wisdom * 7 + constitution * 5 + level * 2"
+    max_formula: "wisdom * 7 + constitution * 5 + level * 2 + nature_bonus"
+    regen_rate: 0.15
+    regen_type: "passive"
+    dependencies: ["wisdom", "constitution", "level"]
+    tags: ["magic", "nature", "essence"]
+    subsystem_id: "magic_system"
+
+  # Shadow Power
+  shadow_power_current:
+    name: "Shadow Power"
+    description: "Character's current shadow power"
+    category: "essence"
+    resource_type: "energy"
+    base_formula: "intelligence * 6 + charisma * 8 + level * 3"
+    max_formula: "intelligence * 6 + charisma * 8 + level * 3 + shadow_bonus"
+    regen_rate: 0.25
+    regen_type: "passive"
+    dependencies: ["intelligence", "charisma", "level"]
+    tags: ["magic", "shadow", "essence"]
+    subsystem_id: "magic_system"
+
+# Magic Categories
+magic_categories:
+  mana:
+    name: "Mana"
+    description: "Mana and magical energy resources"
+    parent_category: "energy"
+    tags: ["magic", "mana", "energy"]
+    subsystem_id: "magic_system"
+
+  focus:
+    name: "Focus"
+    description: "Magical focus and concentration resources"
+    parent_category: "mental"
+    tags: ["magic", "focus", "mental"]
+    subsystem_id: "magic_system"
+
+  knowledge:
+    name: "Knowledge"
+    description: "Magical knowledge and learning resources"
+    parent_category: "mental"
+    tags: ["magic", "knowledge", "mental"]
+    subsystem_id: "magic_system"
+
+  essence:
+    name: "Essence"
+    description: "Magical essence and power resources"
+    parent_category: "energy"
+    tags: ["magic", "essence", "energy"]
+    subsystem_id: "magic_system"
+
+# Magic Schools
+magic_schools:
+  elemental:
+    name: "Elemental"
+    description: "Elemental magic school"
+    tags: ["magic", "elemental", "school"]
+    subsystem_id: "magic_system"
+
+  divine:
+    name: "Divine"
+    description: "Divine magic school"
+    tags: ["magic", "divine", "school"]
+    subsystem_id: "magic_system"
+
+  arcane:
+    name: "Arcane"
+    description: "Arcane magic school"
+    tags: ["magic", "arcane", "school"]
+    subsystem_id: "magic_system"
+
+  nature:
+    name: "Nature"
+    description: "Nature magic school"
+    tags: ["magic", "nature", "school"]
+    subsystem_id: "magic_system"
+
+  shadow:
+    name: "Shadow"
+    description: "Shadow magic school"
+    tags: ["magic", "shadow", "school"]
+    subsystem_id: "magic_system"
+
+  universal:
+    name: "Universal"
+    description: "Universal magic school"
+    tags: ["magic", "universal", "school"]
+    subsystem_id: "magic_system"
+
+# Magic Tags
+magic_tags:
+  magic:
+    name: "Magic"
+    description: "Magic related content"
+    tag_type: "resource"
+    color: "#8000FF"
+    subsystem_id: "magic_system"
+
+  mana:
+    name: "Mana"
+    description: "Mana related content"
+    tag_type: "resource"
+    color: "#4000FF"
+    subsystem_id: "magic_system"
+
+  arcane:
+    name: "Arcane"
+    description: "Arcane magic content"
+    tag_type: "school"
+    color: "#FF00FF"
+    subsystem_id: "magic_system"
+
+  divine:
+    name: "Divine"
+    description: "Divine magic content"
+    tag_type: "school"
+    color: "#FFFF00"
+    subsystem_id: "magic_system"
+
+  nature:
+    name: "Nature"
+    description: "Nature magic content"
+    tag_type: "school"
+    color: "#00FF00"
+    subsystem_id: "magic_system"
+
+  shadow:
+    name: "Shadow"
+    description: "Shadow magic content"
+    tag_type: "school"
+    color: "#800080"
+    subsystem_id: "magic_system"
+
+  universal:
+    name: "Universal"
+    description: "Universal magic content"
+    tag_type: "school"
+    color: "#FFFFFF"
+    subsystem_id: "magic_system"

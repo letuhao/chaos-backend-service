@@ -142,14 +142,17 @@ impl ActorCoreConfig {
         }
         
         if let Ok(timeout) = env::var("ACTOR_CORE_REDIS_CONNECTION_TIMEOUT") {
+            // TODO: Load default connection timeout from configuration instead of hardcoding 5
             config.redis.connection_timeout = timeout.parse().unwrap_or(5);
         }
         
         if let Ok(timeout) = env::var("ACTOR_CORE_REDIS_COMMAND_TIMEOUT") {
+            // TODO: Load default command timeout from configuration instead of hardcoding 3
             config.redis.command_timeout = timeout.parse().unwrap_or(3);
         }
         
         if let Ok(max_conn) = env::var("ACTOR_CORE_REDIS_MAX_CONNECTIONS") {
+            // TODO: Load default max connections from configuration instead of hardcoding 10
             config.redis.max_connections = max_conn.parse().unwrap_or(10);
         }
         
@@ -159,10 +162,12 @@ impl ActorCoreConfig {
         
         // Load cache configuration
         if let Ok(ttl) = env::var("ACTOR_CORE_CACHE_DEFAULT_TTL") {
+            // TODO: Load default TTL from configuration instead of hardcoding 1800
             config.cache.default_ttl = ttl.parse().unwrap_or(1800);
         }
         
         if let Ok(max_entries) = env::var("ACTOR_CORE_CACHE_MAX_ENTRIES") {
+            // TODO: Load default max entries from configuration instead of hardcoding 1_000_000
             config.cache.max_entries = max_entries.parse().unwrap_or(1_000_000);
         }
         
@@ -171,14 +176,17 @@ impl ActorCoreConfig {
         }
         
         if let Ok(l1_size) = env::var("ACTOR_CORE_CACHE_L1_SIZE") {
+            // TODO: Load default L1 size from configuration instead of hardcoding 50_000
             config.cache.l1_size = l1_size.parse().unwrap_or(50_000);
         }
         
         if let Ok(l2_size) = env::var("ACTOR_CORE_CACHE_L2_SIZE") {
+            // TODO: Load default L2 size from configuration instead of hardcoding 200_000
             config.cache.l2_size = l2_size.parse().unwrap_or(200_000);
         }
         
         if let Ok(l3_size) = env::var("ACTOR_CORE_CACHE_L3_SIZE") {
+            // TODO: Load default L3 size from configuration instead of hardcoding 500_000
             config.cache.l3_size = l3_size.parse().unwrap_or(500_000);
         }
         
@@ -297,7 +305,7 @@ mod tests {
         env::set_var("ACTOR_CORE_REDIS_URL", "redis://test:6379");
         env::set_var("ACTOR_CORE_CACHE_DEFAULT_TTL", "3600");
         
-        let config = ActorCoreConfig::from_env().unwrap();
+        let config = ActorCoreConfig::from_env().expect("Failed to load config from environment");
         assert_eq!(config.redis.url, "redis://test:6379");
         assert_eq!(config.cache.default_ttl, 3600);
         assert!(config.cache.enable_redis);

@@ -1,0 +1,7 @@
+# Cache Keys Configuration
+# This file defines cache key names for different data types
+
+actor_snapshot: "actor_snapshot"
+resource_regeneration: "resource_regeneration"
+stat_aggregation: "stat_aggregation"
+subsystem_data: "subsystem_data"

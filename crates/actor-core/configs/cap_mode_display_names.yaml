@@ -1,0 +1,24 @@
+# Cap Mode Display Names Configuration
+# This file defines the display names for different cap mode types
+
+# Display names for cap mode types
+display_names:
+  Baseline: "Baseline"
+  Additive: "Additive"
+  HardMax: "HardMax"
+  HardMin: "HardMin"
+  Override: "Override"
+  SoftMax: "SoftMax"
+
+# Localization support (future enhancement)
+localization:
+  enabled: false
+  default_language: "en"
+  supported_languages:
+    - "en"
+    - "vi"
+    - "zh"
+
+# Example usage:
+# This configuration provides human-readable display names for cap mode types.
+# Can be extended with localization support in the future.

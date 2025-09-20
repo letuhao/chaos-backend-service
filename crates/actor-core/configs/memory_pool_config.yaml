@@ -1,0 +1,112 @@
+# Memory Pool Configuration
+# This file defines the memory pool settings for the Actor Core system
+
+# Pool sizes
+actor_pool_size: 1000
+subsystem_output_pool_size: 2000
+contribution_pool_size: 10000
+snapshot_pool_size: 500
+
+# Pool settings
+enable_pooling: true
+enable_statistics: true
+cleanup_interval_seconds: 300
+
+# Pool-specific settings
+pools:
+  # Actor pool settings
+  actor:
+    max_size: 1000
+    initial_size: 100
+    growth_factor: 1.5
+    shrink_threshold: 0.3
+    enable_cleanup: true
+    cleanup_interval_seconds: 300
+
+  # Subsystem output pool settings
+  subsystem_output:
+    max_size: 2000
+    initial_size: 200
+    growth_factor: 1.5
+    shrink_threshold: 0.3
+    enable_cleanup: true
+    cleanup_interval_seconds: 300
+
+  # Contribution pool settings
+  contribution:
+    max_size: 10000
+    initial_size: 1000
+    growth_factor: 2.0
+    shrink_threshold: 0.2
+    enable_cleanup: true
+    cleanup_interval_seconds: 300
+
+  # Snapshot pool settings
+  snapshot:
+    max_size: 500
+    initial_size: 50
+    growth_factor: 1.5
+    shrink_threshold: 0.3
+    enable_cleanup: true
+    cleanup_interval_seconds: 300
+
+# Performance settings
+performance:
+  # Whether to enable pool pre-allocation
+  enable_preallocation: true
+  
+  # Pre-allocation percentage (0.0 to 1.0)
+  preallocation_percentage: 0.1
+  
+  # Whether to enable pool warming
+  enable_pool_warming: true
+  
+  # Pool warming interval in seconds
+  warming_interval_seconds: 60
+  
+  # Whether to enable memory pressure monitoring
+  enable_memory_pressure_monitoring: true
+  
+  # Memory pressure threshold (percentage)
+  memory_pressure_threshold: 80.0
+
+# Statistics settings
+statistics:
+  # Whether to enable detailed statistics
+  enable_detailed_stats: true
+  
+  # Statistics collection interval in seconds
+  collection_interval_seconds: 30
+  
+  # Whether to enable performance metrics
+  enable_performance_metrics: true
+  
+  # Whether to enable memory usage tracking
+  enable_memory_tracking: true
+  
+  # Statistics retention period in seconds
+  retention_period_seconds: 3600
+
+# Cleanup settings
+cleanup:
+  # Whether to enable automatic cleanup
+  enable_automatic_cleanup: true
+  
+  # Cleanup interval in seconds
+  cleanup_interval_seconds: 300
+  
+  # Whether to enable aggressive cleanup under memory pressure
+  enable_aggressive_cleanup: true
+  
+  # Aggressive cleanup threshold (percentage)
+  aggressive_cleanup_threshold: 90.0
+  
+  # Whether to enable pool shrinking
+  enable_pool_shrinking: true
+  
+  # Pool shrinking threshold (percentage)
+  shrinking_threshold: 0.3
+
+# Example usage:
+# This configuration defines the memory pool settings for the Actor Core system.
+# These settings can be customized by modifying this file or by providing runtime configuration.

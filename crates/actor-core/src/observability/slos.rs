@@ -130,12 +130,27 @@ pub trait SLOViolationHandler: Send + Sync {
 impl SLOManager {
     /// Create a new SLO manager.
     pub fn new() -> Self {
-        Self {
+        Self::new_with_config().unwrap_or_else(|_| {
+            warn!("Failed to load SLO manager config, using hardcoded defaults");
+            Self {
+                slos: HashMap::new(),
+                measurements: HashMap::new(),
+                violation_handlers: Vec::new(),
+                retention_period: Duration::from_secs(24 * 60 * 60), // 24 hours
+            }
+        })
+    }
+
+    /// Create a new SLO manager with configuration.
+    pub fn new_with_config() -> ActorCoreResult<Self> {
+        let config = SLOConfig::load_config()?;
+        
+        Ok(Self {
             slos: HashMap::new(),
             measurements: HashMap::new(),
             violation_handlers: Vec::new(),
-            retention_period: Duration::from_secs(24 * 60 * 60), // 24 hours
-        }
+            retention_period: Duration::from_secs(config.retention_period_seconds),
+        })
     }
 
     /// Register an SLO.
@@ -420,6 +435,21 @@ pub mod default_slos {
 
     /// Create default SLOs for Actor Core.
     pub fn create_default_slos() -> Vec<SLO> {
+        // Load SLOs from configuration
+        match SLOConfig::load_config() {
+            Ok(config) => {
+                info!("Loaded {} SLOs from configuration", config.slos.len());
+                config.slos
+            }
+            Err(e) => {
+                warn!("Failed to load SLO config: {}. Using hardcoded defaults.", e);
+                create_hardcoded_slos()
+            }
+        }
+    }
+
+    /// Create hardcoded SLOs as fallback.
+    fn create_hardcoded_slos() -> Vec<SLO> {
         vec![
             // Availability SLO
             SLO {
@@ -497,6 +527,48 @@ pub mod default_slos {
                 alert_threshold: 0.8, // Alert when cache hit rate drops below 80% of target
             },
         ]
+    }
+}
+
+/// SLO configuration structure
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SLOConfig {
+    pub retention_period_seconds: u64,
+    pub slos: Vec<SLO>,
+}
+
+impl SLOConfig {
+    /// Load SLO configuration from config file
+    pub fn load_config() -> ActorCoreResult<Self> {
+        // Try to load from slo_config.yaml first
+        let config_path = std::path::Path::new("configs/slo_config.yaml");
+            
+        if config_path.exists() {
+            match Self::load_config_from_file(config_path) {
+                Ok(config) => return Ok(config),
+                Err(e) => {
+                    warn!("Failed to load SLO config from file: {}. Using hardcoded defaults.", e);
+                }
+            }
+        }
+        
+        // Fallback to hardcoded defaults
+        Ok(Self::get_default_config())
+    }
+
+    /// Load configuration from file
+    fn load_config_from_file(path: &std::path::Path) -> ActorCoreResult<Self> {
+        let content = std::fs::read_to_string(path)?;
+        let config: SLOConfig = serde_yaml::from_str(&content)?;
+        Ok(config)
+    }
+
+    /// Get default configuration
+    fn get_default_config() -> Self {
+        Self {
+            retention_period_seconds: 24 * 60 * 60, // 24 hours
+            slos: default_slos::create_default_slos(),
+        }
     }
 }
 

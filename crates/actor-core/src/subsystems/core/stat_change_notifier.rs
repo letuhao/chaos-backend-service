@@ -68,6 +68,7 @@ pub struct NotifierConfig {
 impl Default for NotifierConfig {
     fn default() -> Self {
         Self {
+            // TODO: Load these values from configuration instead of hardcoded defaults
             max_history_size: 10000,
             enable_batching: true,
             batch_timeout_ms: 100,
@@ -264,8 +265,9 @@ impl StatChangeNotifier {
     
     /// Update resource dependencies based on stat changes
     async fn update_resource_dependencies(&self, _event: &StatChangeEvent) -> ActorCoreResult<()> {
-        // This would analyze the stat changes and update resource dependencies
-        // For now, it's a placeholder
+        // TODO: Implement resource dependency tracking logic
+        // This should analyze stat changes and update resource dependencies
+        // to enable smart recalculation of dependent resources
         Ok(())
     }
     
@@ -318,13 +320,13 @@ impl StatChangeListener for DefaultStatChangeListener {
 /// Resource recalculation listener
 pub struct ResourceRecalculationListener {
     listener_id: String,
-    resource_cache: Arc<dyn crate::subsystems::enhanced_hybrid_resource_manager::ResourceCache + Send + Sync>,
+    resource_cache: Arc<crate::subsystems::resource_management::ResourceCache>,
 }
 
 impl ResourceRecalculationListener {
     pub fn new(
         listener_id: String,
-        resource_cache: Arc<dyn crate::subsystems::enhanced_hybrid_resource_manager::ResourceCache + Send + Sync>,
+        resource_cache: Arc<crate::subsystems::resource_management::ResourceCache>,
     ) -> Self {
         Self {
             listener_id,

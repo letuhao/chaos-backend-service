@@ -1,0 +1,30 @@
+# Deprecation Manager Configuration
+# This file defines the configuration for the deprecation management system
+
+# Default deprecation settings
+default_deprecation_period: 31536000  # 1 year in seconds
+warning_threshold_days: 90
+critical_threshold_days: 30
+enable_automatic_warnings: true
+log_deprecation_usage: true
+
+# Additional configuration options
+notification_settings:
+  enable_email_notifications: false
+  enable_slack_notifications: false
+  notification_recipients: []
+  
+reporting_settings:
+  generate_weekly_reports: true
+  generate_monthly_reports: true
+  report_retention_days: 365
+  
+validation_settings:
+  validate_deprecation_dates: true
+  validate_removal_dates: true
+  require_migration_guides: true
+  require_rollback_plans: true
+
+# Example usage:
+# This configuration controls how the deprecation manager operates.
+# It defines thresholds for warnings, reporting settings, and validation rules.

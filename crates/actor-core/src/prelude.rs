@@ -99,14 +99,13 @@ pub use crate::error::{
 
 // Validation
 pub use crate::validation::{
-    Validator,
+    DynamicValidator,
     ValidationRules,
+    ValidationMiddlewareFactory,
+};
+pub use crate::validation::middleware::{
     ValidationResult,
     ValidationError,
-    ValidationWarning,
-    validators,
-    ValidationMiddlewareFactory,
-    validate_contributions,
 };
 
 // Deprecation management
@@ -195,23 +194,10 @@ pub use crate::metrics::{
 
 // Subsystems
 pub use crate::subsystems::{
-    ResourceManagerSubsystem,
-    EnhancedHybridResourceManager,
     InMemoryResourceDatabase,
-    SystemResourceCalculator,
-    JindanSystemResourceCalculator,
-    RpgSystemResourceCalculator,
-    MagicSystemResourceCalculator,
     ResourceCache,
     CacheConfig,
     CacheStats as ResourceCacheStats,
-    RpgResourceManager,
-    RpgResourceCategory,
-    RpgResourceEvent,
-    MagicResourceManager,
-    MagicResourceCategory,
-    MagicSchool,
-    MagicResourceEvent,
     ResourceRegenerationManager,
     RegenerationConfig,
     RegenerationStats,
@@ -365,7 +351,27 @@ pub fn create_basic_caps(min: f64, max: f64) -> Caps {
 /// assert!(result.is_valid);
 /// ```
 pub fn validate_contribution(contribution: &Contribution) -> ValidationResult {
-    validators::validate_contribution(contribution)
+    let mut result = ValidationResult::new();
+    
+    // Basic validation - check if value is positive
+    if contribution.value <= 0.0 {
+        result.add_error(ValidationError {
+            field: "value".to_string(),
+            message: "Contribution value must be positive".to_string(),
+            code: "INVALID_VALUE".to_string(),
+        });
+    }
+    
+    // Check if dimension is not empty
+    if contribution.dimension.is_empty() {
+        result.add_error(ValidationError {
+            field: "dimension".to_string(),
+            message: "Dimension cannot be empty".to_string(),
+            code: "EMPTY_DIMENSION".to_string(),
+        });
+    }
+    
+    result
 }
 
 /// Validate a cap contribution with default rules.
@@ -386,7 +392,27 @@ pub fn validate_contribution(contribution: &Contribution) -> ValidationResult {
 /// assert!(result.is_valid);
 /// ```
 pub fn validate_cap_contribution(cap_contrib: &CapContribution) -> ValidationResult {
-    validators::validate_cap_contribution(cap_contrib)
+    let mut result = ValidationResult::new();
+    
+    // Basic validation - check if dimension is not empty
+    if cap_contrib.dimension.is_empty() {
+        result.add_error(ValidationError {
+            field: "dimension".to_string(),
+            message: "Dimension cannot be empty".to_string(),
+            code: "EMPTY_DIMENSION".to_string(),
+        });
+    }
+    
+    // Check if system is not empty
+    if cap_contrib.system.is_empty() {
+        result.add_error(ValidationError {
+            field: "system".to_string(),
+            message: "System cannot be empty".to_string(),
+            code: "EMPTY_SYSTEM".to_string(),
+        });
+    }
+    
+    result
 }
 
 /// Validate an actor with default rules.
@@ -401,7 +427,18 @@ pub fn validate_cap_contribution(cap_contrib: &CapContribution) -> ValidationRes
 /// assert!(result.is_valid);
 /// ```
 pub fn validate_actor(actor: &Actor) -> ValidationResult {
-    validators::validate_actor(actor)
+    let mut result = ValidationResult::new();
+    
+    // Basic validation - check if actor name is not empty
+    if actor.name.is_empty() {
+        result.add_error(ValidationError {
+            field: "name".to_string(),
+            message: "Actor name cannot be empty".to_string(),
+            code: "EMPTY_NAME".to_string(),
+        });
+    }
+    
+    result
 }
 
 /// Validate a snapshot with default rules.
@@ -415,8 +452,19 @@ pub fn validate_actor(actor: &Actor) -> ValidationResult {
 /// let result = validate_snapshot(&snapshot);
 /// assert!(result.is_valid);
 /// ```
-pub fn validate_snapshot(snapshot: &Snapshot) -> ValidationResult {
-    validators::validate_snapshot(snapshot)
+pub fn validate_snapshot(snapshot: &Snapshot) -> ValidationResult {       
+    let mut result = ValidationResult::new();
+    
+    // Basic validation - check if primary stats exist
+    if snapshot.primary.is_empty() {
+        result.add_error(ValidationError {
+            field: "primary".to_string(),
+            message: "Primary stats cannot be empty".to_string(),
+            code: "EMPTY_PRIMARY_STATS".to_string(),
+        });
+    }
+    
+    result
 }
 
 /// Validate that all required features are available.

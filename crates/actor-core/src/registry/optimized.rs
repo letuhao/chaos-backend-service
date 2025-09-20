@@ -7,13 +7,16 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use parking_lot::RwLock;
-use tracing::debug;
+use tracing::{debug, warn};
+use serde::{Deserialize, Serialize};
 
 use fxhash::FxHashMap;
 
 use crate::interfaces::{Subsystem, MergeRule};
 use crate::enums::Operator;
-use crate::types::*;
+// use crate::types::*; // Unused import
+use crate::types::Actor;
+use crate::types::SubsystemMeta;
 use crate::ActorCoreResult;
 
 /// Optimized plugin registry with FxHash and SmallVec optimizations.
@@ -63,13 +66,18 @@ impl RegistryStats {
     }
     
     pub fn get_hit_rate(&self) -> f64 {
+        let config = OptimizedRegistryConfig::load_config().unwrap_or_else(|_| {
+            warn!("Failed to load optimized registry config, using hardcoded defaults");
+            OptimizedRegistryConfig::get_default_config()
+        });
+        
         let hits = self.cache_hits.load(std::sync::atomic::Ordering::Relaxed);
         let misses = self.cache_misses.load(std::sync::atomic::Ordering::Relaxed);
         
         if hits + misses == 0 {
             0.0
         } else {
-            (hits as f64 / (hits + misses) as f64) * 100.0
+            (hits as f64 / (hits + misses) as f64) * config.hit_rate_percentage_multiplier
         }
     }
 }
@@ -177,8 +185,13 @@ impl OptimizedPluginRegistry {
     
     /// Cleanup old cache entries with optimized batch processing.
     pub async fn cleanup_cache(&self) {
+        let config = OptimizedRegistryConfig::load_config().unwrap_or_else(|_| {
+            warn!("Failed to load optimized registry config, using hardcoded defaults");
+            OptimizedRegistryConfig::get_default_config()
+        });
+        
         let now = Instant::now();
-        let cleanup_interval = Duration::from_secs(300); // 5 minutes
+        let cleanup_interval = Duration::from_secs(config.cleanup_interval_seconds);
         
         let last_cleanup = self.stats.last_cleanup.load(std::sync::atomic::Ordering::Relaxed);
         let _last_cleanup_time = std::time::UNIX_EPOCH + Duration::from_secs(last_cleanup);
@@ -212,11 +225,22 @@ pub struct OptimizedCombinerRegistry {
 impl OptimizedCombinerRegistry {
     /// Create a new optimized combiner registry.
     pub fn new() -> Self {
+        let config = OptimizedRegistryConfig::load_config().unwrap_or_else(|_| {
+            warn!("Failed to load optimized registry config, using hardcoded defaults");
+            OptimizedRegistryConfig::get_default_config()
+        });
+        
         Self {
             merge_rules: Arc::new(RwLock::new(FxHashMap::default())),
             default_rule: MergeRule {
-                use_pipeline: false,
-                operator: Operator::Sum,
+                use_pipeline: config.default_use_pipeline,
+                operator: match config.default_operator.as_str() {
+                    "Sum" => Operator::Sum,
+                    "Multiply" => Operator::Multiply,
+                    "Min" => Operator::Min,
+                    "Max" => Operator::Max,
+                    _ => Operator::Sum,
+                },
                 clamp_default: None,
             },
             stats: Arc::new(RegistryStats::new()),
@@ -361,5 +385,59 @@ impl OptimizedSubsystemFactory {
     /// Get factory statistics.
     pub fn get_stats(&self) -> &RegistryStats {
         &self.stats
+    }
+}
+
+/// Optimized registry configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OptimizedRegistryConfig {
+    pub cleanup_interval_seconds: u64,
+    pub hit_rate_percentage_multiplier: f64,
+    pub default_use_pipeline: bool,
+    pub default_operator: String,
+    pub enable_caching: bool,
+    pub enable_statistics: bool,
+    pub max_cache_size: usize,
+    pub cache_ttl_seconds: u64,
+}
+
+impl OptimizedRegistryConfig {
+    /// Load optimized registry configuration from config file
+    pub fn load_config() -> ActorCoreResult<Self> {
+        // Try to load from optimized_registry_config.yaml first
+        let config_path = std::path::Path::new("configs/optimized_registry_config.yaml");
+            
+        if config_path.exists() {
+            match Self::load_config_from_file(config_path) {
+                Ok(config) => return Ok(config),
+                Err(e) => {
+                    warn!("Failed to load optimized registry config from file: {}. Using hardcoded defaults.", e);
+                }
+            }
+        }
+        
+        // Fallback to hardcoded defaults
+        Ok(Self::get_default_config())
+    }
+
+    /// Load configuration from file
+    fn load_config_from_file(path: &std::path::Path) -> ActorCoreResult<Self> {
+        let content = std::fs::read_to_string(path)?;
+        let config: OptimizedRegistryConfig = serde_yaml::from_str(&content)?;
+        Ok(config)
+    }
+
+    /// Get default configuration
+    fn get_default_config() -> Self {
+        Self {
+            cleanup_interval_seconds: 300, // 5 minutes
+            hit_rate_percentage_multiplier: 100.0,
+            default_use_pipeline: false,
+            default_operator: "Sum".to_string(),
+            enable_caching: true,
+            enable_statistics: true,
+            max_cache_size: 10000,
+            cache_ttl_seconds: 3600, // 1 hour
+        }
     }
 }

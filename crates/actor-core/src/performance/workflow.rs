@@ -8,6 +8,7 @@ use std::sync::Arc;
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use crate::ActorCoreResult;
+use crate::config::manager::ConfigurationManager;
 use super::profiler::{PerformanceProfiler, PerformanceReport, ProfilerConfig};
 use super::test_suite::{PerformanceTestSuite, TestSuiteConfig, TestSuiteResults};
 
@@ -23,6 +24,8 @@ pub struct PerformanceWorkflow {
     state: Arc<RwLock<WorkflowState>>,
     /// Performance history
     history: Arc<RwLock<Vec<WorkflowExecution>>>,
+    /// Configuration manager
+    config_manager: Arc<ConfigurationManager>,
 }
 
 /// Configuration for the performance workflow.
@@ -200,22 +203,23 @@ pub enum CiStatus {
 
 impl PerformanceWorkflow {
     /// Create a new performance workflow.
-    pub fn new(config: WorkflowConfig) -> Self {
+    pub fn new(config: WorkflowConfig, config_manager: Arc<ConfigurationManager>) -> Self {
         let profiler_config = ProfilerConfig::default();
         let test_suite_config = TestSuiteConfig::default();
 
         Self {
-            profiler: PerformanceProfiler::new(profiler_config.clone()),
-            test_suite: PerformanceTestSuite::new(test_suite_config, profiler_config),
+            profiler: PerformanceProfiler::new(profiler_config.clone(), config_manager.clone()),
+            test_suite: PerformanceTestSuite::new(test_suite_config, profiler_config, config_manager.clone()),
             config,
             state: Arc::new(RwLock::new(WorkflowState::default())),
             history: Arc::new(RwLock::new(Vec::new())),
+            config_manager,
         }
     }
 
     /// Create a new workflow with default configuration.
-    pub fn new_default() -> Self {
-        Self::new(WorkflowConfig::default())
+    pub fn new_default(config_manager: Arc<ConfigurationManager>) -> Self {
+        Self::new(WorkflowConfig::default(), config_manager)
     }
 
     /// Start the performance workflow.
@@ -544,11 +548,12 @@ impl PerformanceWorkflow {
 impl Clone for PerformanceWorkflow {
     fn clone(&self) -> Self {
         Self {
-            profiler: PerformanceProfiler::new(ProfilerConfig::default()),
-            test_suite: PerformanceTestSuite::new_default(),
+            profiler: PerformanceProfiler::new(ProfilerConfig::default(), self.config_manager.clone()),
+            test_suite: PerformanceTestSuite::new_default(self.config_manager.clone()),
             config: self.config.clone(),
             state: Arc::clone(&self.state),
             history: Arc::clone(&self.history),
+            config_manager: Arc::clone(&self.config_manager),
         }
     }
 }

@@ -1,0 +1,22 @@
+# System IDs Configuration
+# This file defines all supported system identifiers
+
+supported_systems:
+  - "luyen_the"
+  - "kim_dan"
+  - "combat"
+  - "equipment"
+  - "buff"
+  - "guild"
+  - "event"
+  - "world"
+  - "magic"
+  - "cultivation"
+  - "experience"
+  - "reputation"
+  - "trading"
+  - "weather"
+  - "location"
+  - "time"
+  - "stealth"
+  - "perception"

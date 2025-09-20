@@ -269,7 +269,7 @@ impl ConditionEventHandler {
     }
 }
 
-// Placeholder traits and types
+// TODO: Replace with actual traits and types from Actor Core
 #[async_trait::async_trait]
 pub trait Aggregator: Send + Sync {
     async fn aggregate(&self, actor: &crate::Actor) -> Result<Snapshot, Box<dyn std::error::Error + Send + Sync>>;
@@ -316,7 +316,7 @@ impl Snapshot {
     }
 }
 
-// Placeholder error type
+// TODO: Replace with actual error type from Actor Core
 #[derive(Debug)]
 pub enum ActorCoreError {
     ValidationError(String),
@@ -338,7 +338,7 @@ impl std::error::Error for ActorCoreError {}
 
 pub type ActorCoreResult<T> = Result<T, ActorCoreError>;
 
-// Placeholder modifier registry implementation
+// TODO: Replace with actual modifier registry implementation from Actor Core
 pub struct ModifierRegistryImpl;
 
 impl ModifierRegistryImpl {

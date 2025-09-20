@@ -147,7 +147,7 @@ pub trait Cache: Send + Sync {
     async fn delete(&self, key: &str) -> Result<(), Box<dyn std::error::Error + Send + Sync>>;
 }
 
-// Placeholder types
+// TODO: Replace with actual types from actor-core
 #[derive(Debug, Clone)]
 pub struct Actor {
     pub id: String,
@@ -171,7 +171,7 @@ impl Snapshot {
     }
 }
 
-// Placeholder error type
+// TODO: Replace with actual error type from actor-core
 #[derive(Debug)]
 pub enum ActorCoreError {
     ValidationError(String),

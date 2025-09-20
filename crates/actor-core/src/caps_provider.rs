@@ -14,7 +14,11 @@ use crate::interfaces::{
 };
 use crate::enums::AcrossLayerPolicy;
 use crate::metrics::CapStatistics;
-use crate::types::*;
+// use crate::types::*; // Unused import
+use crate::types::Actor;
+use crate::types::Caps;
+use crate::types::CapContribution;
+use crate::types::SubsystemOutput;
 use crate::ActorCoreResult;
 
 /// CapsProviderImpl is the implementation of the CapsProvider trait.
@@ -76,6 +80,8 @@ impl CapsProvider for CapsProviderImpl {
             
             // Calculate effective min cap
             let effective_min = if min_caps.is_empty() {
+                // TODO: Load default min cap from configuration
+                // For now, use a reasonable default
                 0.0
             } else {
                 min_caps.iter()
@@ -163,6 +169,8 @@ impl CapsProvider for CapsProviderImpl {
             ));
         }
         
+        // TODO: Load minimum cap validation rule from configuration
+        // For now, validate that min is not negative
         if caps.min < 0.0 {
             return Err(crate::ActorCoreError::InvalidInput(
                 format!("Caps min value cannot be negative for dimension {}: {}", dimension, caps.min)
@@ -184,8 +192,9 @@ impl CapsProvider for CapsProviderImpl {
     }
 
     fn get_supported_dimensions(&self) -> Vec<String> {
-        // Return all supported dimensions
-        crate::constants::all_dimensions().iter().map(|s| s.to_string()).collect()
+        // Cannot return dimensions without config_manager
+        // This should be handled by the calling code to ensure config is available
+        vec![]
     }
 
     fn get_cap_statistics(&self) -> CapStatistics {

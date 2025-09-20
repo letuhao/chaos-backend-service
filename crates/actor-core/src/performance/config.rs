@@ -5,7 +5,7 @@
 
 use std::time::Duration;
 use serde::{Deserialize, Serialize};
-use crate::constants::performance_thresholds;
+// use crate::config::manager::ConfigurationManager; // Unused import
 
 /// Centralized performance configuration.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -277,7 +277,7 @@ impl Default for GeneralPerformanceConfig {
 impl Default for AggregationPerformanceConfig {
     fn default() -> Self {
         Self {
-            max_aggregation_time: performance_thresholds::MAX_AGGREGATION_TIME,
+            max_aggregation_time: 100, // Default 100ms - loaded from config at runtime
             max_contributions_per_aggregation: 1000,
             max_subsystems_per_aggregation: 100,
             min_throughput: 1000,
@@ -293,9 +293,9 @@ impl Default for AggregationPerformanceConfig {
 impl Default for CachePerformanceConfig {
     fn default() -> Self {
         Self {
-            max_operation_time: performance_thresholds::MAX_CACHE_TIME,
+            max_operation_time: 1000, // Default 1s - loaded from config at runtime
             min_hit_rate: 90.0,
-            max_cache_size: performance_thresholds::MAX_CACHE_SIZE,
+            max_cache_size: 100, // Default 100MB - loaded from config at runtime
             eviction_threshold: 80.0,
             enable_cache_warming: true,
             warming_interval: Duration::from_secs(60),
@@ -308,7 +308,7 @@ impl Default for CachePerformanceConfig {
 impl Default for MemoryPerformanceConfig {
     fn default() -> Self {
         Self {
-            max_memory_per_actor: performance_thresholds::MAX_MEMORY_PER_ACTOR,
+            max_memory_per_actor: 1024, // Default 1KB - loaded from config at runtime
             max_total_memory: 1024 * 1024 * 1024, // 1GB
             warning_threshold: 75.0,
             critical_threshold: 90.0,

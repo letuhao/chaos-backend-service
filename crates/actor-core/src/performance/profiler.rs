@@ -9,7 +9,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
-use crate::constants::performance_thresholds;
+use crate::config::manager::ConfigurationManager;
 use crate::ActorCoreResult;
 
 /// Performance profiler that manages benchmarking and threshold monitoring.
@@ -22,6 +22,8 @@ pub struct PerformanceProfiler {
     history: Arc<RwLock<Vec<PerformanceSnapshot>>>,
     /// Configuration
     config: ProfilerConfig,
+    /// Configuration manager for loading thresholds
+    _config_manager: Arc<ConfigurationManager>,
     /// Start time for profiling session
     session_start: Instant,
 }
@@ -50,6 +52,7 @@ pub struct ProfilerConfig {
 impl Default for ProfilerConfig {
     fn default() -> Self {
         Self {
+            // TODO: Load these values from configuration instead of hardcoded defaults
             enable_continuous_profiling: true,
             profiling_interval: Duration::from_secs(5),
             max_history_size: 1000,
@@ -90,11 +93,12 @@ pub struct PerformanceThresholds {
 impl Default for PerformanceThresholds {
     fn default() -> Self {
         Self {
-            max_aggregation_time: performance_thresholds::MAX_AGGREGATION_TIME,
-            max_cache_time: performance_thresholds::MAX_CACHE_TIME,
-            max_subsystem_time: performance_thresholds::MAX_SUBSYSTEM_TIME,
-            max_memory_per_actor: performance_thresholds::MAX_MEMORY_PER_ACTOR,
-            max_cache_size: performance_thresholds::MAX_CACHE_SIZE,
+            // TODO: Load these values from configuration instead of hardcoded defaults
+            max_aggregation_time: 100, // Default 100ms
+            max_cache_time: 1000, // Default 1s
+            max_subsystem_time: 50, // Default 50ms
+            max_memory_per_actor: 1024, // Default 1KB
+            max_cache_size: 100, // Default 100MB
             min_throughput: 1000, // 1000 ops/sec
             max_latency: 10_000, // 10ms
             max_error_rate: 1.0, // 1%
@@ -251,19 +255,20 @@ pub struct PerformanceTestResult {
 
 impl PerformanceProfiler {
     /// Create a new performance profiler.
-    pub fn new(config: ProfilerConfig) -> Self {
+    pub fn new(config: ProfilerConfig, config_manager: Arc<ConfigurationManager>) -> Self {
         Self {
             metrics: Arc::new(RwLock::new(PerformanceMetrics::default())),
             thresholds: Arc::new(RwLock::new(PerformanceThresholds::default())),
             history: Arc::new(RwLock::new(Vec::new())),
             config,
+            _config_manager: config_manager,
             session_start: Instant::now(),
         }
     }
 
     /// Create a new profiler with default configuration.
-    pub fn new_default() -> Self {
-        Self::new(ProfilerConfig::default())
+    pub fn new_default(config_manager: Arc<ConfigurationManager>) -> Self {
+        Self::new(ProfilerConfig::default(), config_manager)
     }
 
     /// Update performance metrics.

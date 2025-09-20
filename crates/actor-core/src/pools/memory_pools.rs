@@ -7,6 +7,9 @@ use std::collections::VecDeque;
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
+use serde::{Deserialize, Serialize};
+use tracing::warn;
+use crate::ActorCoreResult;
 
 /// Memory pool manager that manages multiple specialized pools.
 pub struct MemoryPoolManager {
@@ -574,13 +577,29 @@ impl Clone for SnapshotPool {
 impl MemoryPoolManager {
     /// Create a new memory pool manager.
     pub fn new() -> Self {
-        Self {
-            actor_pool: Arc::new(ActorPool::new(1000)),
-            subsystem_output_pool: Arc::new(SubsystemOutputPool::new(2000)),
-            contribution_pool: Arc::new(ContributionPool::new(10000)),
-            snapshot_pool: Arc::new(SnapshotPool::new(500)),
+        Self::new_with_config().unwrap_or_else(|_| {
+            warn!("Failed to load memory pool config, using hardcoded defaults");
+            Self {
+                actor_pool: Arc::new(ActorPool::new(1000)),
+                subsystem_output_pool: Arc::new(SubsystemOutputPool::new(2000)),
+                contribution_pool: Arc::new(ContributionPool::new(10000)),
+                snapshot_pool: Arc::new(SnapshotPool::new(500)),
+                stats: Arc::new(PoolStats::default()),
+            }
+        })
+    }
+
+    /// Create a new memory pool manager with configuration.
+    pub fn new_with_config() -> ActorCoreResult<Self> {
+        let config = MemoryPoolConfig::load_config()?;
+        
+        Ok(Self {
+            actor_pool: Arc::new(ActorPool::new(config.actor_pool_size)),
+            subsystem_output_pool: Arc::new(SubsystemOutputPool::new(config.subsystem_output_pool_size)),
+            contribution_pool: Arc::new(ContributionPool::new(config.contribution_pool_size)),
+            snapshot_pool: Arc::new(SnapshotPool::new(config.snapshot_pool_size)),
             stats: Arc::new(PoolStats::default()),
-        }
+        })
     }
     
     /// Get an actor from the pool.
@@ -614,5 +633,57 @@ impl MemoryPoolManager {
         self.subsystem_output_pool.clear();
         self.contribution_pool.clear();
         self.snapshot_pool.clear();
+    }
+}
+
+/// Memory pool configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MemoryPoolConfig {
+    pub actor_pool_size: usize,
+    pub subsystem_output_pool_size: usize,
+    pub contribution_pool_size: usize,
+    pub snapshot_pool_size: usize,
+    pub enable_pooling: bool,
+    pub enable_statistics: bool,
+    pub cleanup_interval_seconds: u64,
+}
+
+impl MemoryPoolConfig {
+    /// Load memory pool configuration from config file
+    pub fn load_config() -> ActorCoreResult<Self> {
+        // Try to load from memory_pool_config.yaml first
+        let config_path = std::path::Path::new("configs/memory_pool_config.yaml");
+            
+        if config_path.exists() {
+            match Self::load_config_from_file(config_path) {
+                Ok(config) => return Ok(config),
+                Err(e) => {
+                    warn!("Failed to load memory pool config from file: {}. Using hardcoded defaults.", e);
+                }
+            }
+        }
+        
+        // Fallback to hardcoded defaults
+        Ok(Self::get_default_config())
+    }
+
+    /// Load configuration from file
+    fn load_config_from_file(path: &std::path::Path) -> ActorCoreResult<Self> {
+        let content = std::fs::read_to_string(path)?;
+        let config: MemoryPoolConfig = serde_yaml::from_str(&content)?;
+        Ok(config)
+    }
+
+    /// Get default configuration
+    fn get_default_config() -> Self {
+        Self {
+            actor_pool_size: 1000,
+            subsystem_output_pool_size: 2000,
+            contribution_pool_size: 10000,
+            snapshot_pool_size: 500,
+            enable_pooling: true,
+            enable_statistics: true,
+            cleanup_interval_seconds: 300, // 5 minutes
+        }
     }
 }

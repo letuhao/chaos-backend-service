@@ -137,6 +137,7 @@ pub struct EventConfig {
 impl Default for EventConfig {
     fn default() -> Self {
         Self {
+            // TODO: Load these values from configuration instead of hardcoded defaults
             max_history_size: 10000,
             enable_batching: true,
             batch_size: 100,
@@ -479,7 +480,7 @@ impl ResourceEventManager {
     fn get_current_timestamp(&self) -> u64 {
         SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .unwrap()
+            .unwrap_or_else(|_| std::time::Duration::from_secs(0))
             .as_secs()
     }
 }
@@ -543,13 +544,13 @@ impl ResourceEventListener for DefaultResourceEventListener {
 pub struct ResourceChangeListener {
     listener_id: String,
     #[allow(dead_code)]
-    resource_cache: Arc<dyn crate::subsystems::enhanced_hybrid_resource_manager::ResourceCache + Send + Sync>,
+    resource_cache: Arc<crate::subsystems::resource_management::ResourceCache>,
 }
 
 impl ResourceChangeListener {
     pub fn new(
         listener_id: String,
-        resource_cache: Arc<dyn crate::subsystems::enhanced_hybrid_resource_manager::ResourceCache + Send + Sync>,
+        resource_cache: Arc<crate::subsystems::resource_management::ResourceCache>,
     ) -> Self {
         Self {
             listener_id,

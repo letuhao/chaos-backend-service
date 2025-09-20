@@ -53,6 +53,7 @@ impl EvictionPolicy {
     /// Get the memory overhead of this policy.
     pub fn memory_overhead(&self) -> usize {
         match self {
+            // TODO: Load memory overhead values from configuration
             EvictionPolicy::Lru => 8, // timestamp per item
             EvictionPolicy::Lfu => 8, // counter per item
             EvictionPolicy::Fifo => 8, // insertion order per item

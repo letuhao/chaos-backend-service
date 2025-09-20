@@ -1,0 +1,8 @@
+# Timeouts Configuration
+# This file defines all timeout values for Actor Core operations
+
+cache_ttl: 3600
+aggregation_timeout: 5.0
+validation_timeout: 1.0
+regeneration_interval: 1.0
+subsystem_timeout: 10.0

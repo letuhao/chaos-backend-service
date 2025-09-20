@@ -174,11 +174,14 @@
 
 // Core modules - essential functionality
 pub mod types;
+// pub use types::*; // Commented out to avoid conflicts
 pub mod enums;
 pub mod interfaces;
 pub mod error;
 pub mod service_factory;
 pub mod validation;
+
+// Core modules
 pub mod deprecation;
 pub mod api_stability;
 
@@ -197,6 +200,9 @@ pub mod registry;
 #[doc(hidden)]
 pub mod cache;
 pub mod config;
+pub mod system_config;
+pub mod runtime_registry;
+pub mod builder;
 #[doc(hidden)]
 pub mod constants;
 #[doc(hidden)]

@@ -1,0 +1,25 @@
+# Bucket Display Names Configuration
+# This file defines the display names for different bucket types
+
+# Display names for bucket types
+display_names:
+  Flat: "Flat"
+  Mult: "Mult"
+  PostAdd: "PostAdd"
+  Override: "Override"
+  Exponential: "Exponential"
+  Logarithmic: "Logarithmic"
+  Conditional: "Conditional"
+
+# Localization support (future enhancement)
+localization:
+  enabled: false
+  default_language: "en"
+  supported_languages:
+    - "en"
+    - "vi"
+    - "zh"
+
+# Example usage:
+# This configuration provides human-readable display names for bucket types.
+# Can be extended with localization support in the future.

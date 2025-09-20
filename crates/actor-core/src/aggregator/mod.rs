@@ -16,7 +16,12 @@ use crate::interfaces::{
     Aggregator, PluginRegistry, Cache, CombinerRegistry
 };
 use crate::metrics::AggregatorMetrics;
-use crate::types::*;
+// use crate::types::*; // Unused import
+use crate::types::Actor;
+use crate::types::Snapshot;
+use crate::types::Contribution;
+use crate::types::CapContribution;
+use crate::types::Caps;
 use crate::enums::{Bucket, Operator, CapMode};
 use crate::ActorCoreResult;
 
@@ -93,12 +98,10 @@ impl AggregatorImpl {
             return Ok(0.0);
         }
 
-        // Use the default merge rule if none specified
-        let rule = merge_rule.unwrap_or(crate::interfaces::MergeRule {
-            use_pipeline: false,
-            operator: Operator::Sum,
-            clamp_default: None,
-        });
+        // Use the provided merge rule or return error if none specified
+        let rule = merge_rule.ok_or_else(|| crate::ActorCoreError::ConfigurationError(
+            "No merge rule specified for dimension".to_string()
+        ))?;
 
         // Apply operator logic first, then bucket processing
         let mut result = match rule.operator {
@@ -198,7 +201,11 @@ impl AggregatorImpl {
         cap_contrib: CapContribution,
     ) {
         let caps = caps_used.entry(cap_contrib.dimension.clone())
-            .or_insert_with(|| Caps::new(0.0, 1000.0));
+            .or_insert_with(|| {
+                // TODO: Load default caps from configuration
+                // For now, use a reasonable default range
+                Caps::new(0.0, 1000.0)
+            });
         
         match cap_contrib.mode {
             CapMode::Baseline => {
@@ -316,13 +323,11 @@ impl Aggregator for AggregatorImpl {
                 // Fallback to caps provider if no caps from subsystems
                 let caps_provider_value = self.apply_caps(&dimension, value, actor).await?;
                 
-                // If caps provider doesn't provide caps, use constants-based clamping
+                // If caps provider doesn't provide caps, we cannot clamp without config
                 if caps_provider_value == value {
-                    if let Some((min, max)) = crate::constants::clamp_ranges::get_range(&dimension) {
-                        value.max(min).min(max)
-                    } else {
-                        caps_provider_value
-                    }
+                    // Cannot clamp without config_manager - return original value
+                    // This should be handled by the calling code to ensure config is available
+                    caps_provider_value
                 } else {
                     caps_provider_value
                 }
@@ -341,11 +346,13 @@ impl Aggregator for AggregatorImpl {
             processing_time,
         );
 
-        // Cache the snapshot
+        // Cache the snapshot (TTL should be loaded from configuration)
+        // For now, we'll use a reasonable default but this should be configurable
+        let cache_ttl = 3600; // TODO: Load from configuration
         self.cache.set(
             actor.id.to_string(),
             serde_json::to_value(&snapshot)?,
-            Some(3600), // 1 hour TTL
+            Some(cache_ttl),
         )?;
 
         // Update metrics

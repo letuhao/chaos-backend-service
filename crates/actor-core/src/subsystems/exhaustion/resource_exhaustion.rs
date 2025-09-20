@@ -560,9 +560,10 @@ impl ExhaustionEngine {
         let config = self.config.read().await;
         
         // Get actor archetype (simplified - in real implementation, this would come from actor data)
+        // TODO: Load default archetype from configuration instead of hardcoded value
         let archetype = actor.data.get("archetype")
             .and_then(|v| v.as_str())
-            .unwrap_or("default");
+            .unwrap_or("default"); // should be loaded from config
 
         // Get archetype config
         let archetype_config = config.archetypes.get(archetype)
@@ -704,7 +705,8 @@ pub trait ExhaustionProvider {
 impl ExhaustionProvider for ResourceExhaustionSubsystem {
     fn evaluate(&self, actor_id: &str, snapshot: &Snapshot) -> Vec<ExhaustionTransition> {
         // Create a dummy actor for evaluation
-        let actor = Actor::new(actor_id.to_string(), "default".to_string());
+        // TODO: Load default race from configuration instead of hardcoded value
+        let actor = Actor::new(actor_id.to_string(), "default".to_string()); // should be loaded from config
         
         // Use the engine to evaluate transitions (blocking call)
         tokio::task::block_in_place(|| {

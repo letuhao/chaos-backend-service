@@ -416,7 +416,7 @@ pub fn get_stability_report() -> String {
     report.push_str(&format!("Generated for version: {}\n\n", ApiVersion::current().to_string()));
     
     // Stable components
-    report.push_str("## Stable API (v1.0.0+)\n\n");
+    report.push_str(&format!("## Stable API (v{}+)\n\n", ApiVersion::current().to_string()));
     for component in registry.get_stable() {
         report.push_str(&format!("- **{}**: {}\n", component.name, component.description));
     }

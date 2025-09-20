@@ -4,16 +4,27 @@
 //! using mock data providers.
 
 use condition_core::*;
+use actor_core::registry::{RegistryManager, ResourceDefinition, CategoryDefinition, TagDefinition, ResourceDefinitionBuilder, CategoryDefinitionBuilder, TagDefinitionBuilder};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Simple Actor Core + Condition Core Integration ===\n");
 
-    // Create mock data providers
+    // Create runtime registry manager
+    let registry_manager = RegistryManager::new();
+    let resource_registry = registry_manager.get_resource_registry();
+    let category_registry = registry_manager.get_category_registry();
+    let tag_registry = registry_manager.get_tag_registry();
+
+    // Register some basic resources and categories
+    println!("📦 Setting up runtime registries...");
+    setup_runtime_registries(&resource_registry, &category_registry, &tag_registry).await?;
+
+    // Create mock data providers with runtime registries
     let mut data_registry = DataProviderRegistry::new();
     data_registry.register_actor_provider(Box::new(MockActorDataProvider));
-    data_registry.register_resource_provider(Box::new(MockResourceDataProvider));
-    data_registry.register_category_provider(Box::new(MockCategoryDataProvider));
+    data_registry.register_resource_provider(Box::new(MockResourceDataProvider::new(resource_registry)));
+    data_registry.register_category_provider(Box::new(MockCategoryDataProvider::new(category_registry)));
 
     // Create condition resolver
     let condition_resolver = ConditionResolver::new(data_registry);
@@ -139,8 +150,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 // Mock implementations for demonstration
 struct MockActorDataProvider;
-struct MockResourceDataProvider;
-struct MockCategoryDataProvider;
+
+struct MockResourceDataProvider {
+    resource_registry: std::sync::Arc<dyn actor_core::registry::ResourceRegistry>,
+}
+
+impl MockResourceDataProvider {
+    fn new(resource_registry: std::sync::Arc<dyn actor_core::registry::ResourceRegistry>) -> Self {
+        Self { resource_registry }
+    }
+}
+
+struct MockCategoryDataProvider {
+    category_registry: std::sync::Arc<dyn actor_core::registry::CategoryRegistry>,
+}
+
+impl MockCategoryDataProvider {
+    fn new(category_registry: std::sync::Arc<dyn actor_core::registry::CategoryRegistry>) -> Self {
+        Self { category_registry }
+    }
+}
 
 #[async_trait::async_trait]
 impl condition_core::ActorDataProvider for MockActorDataProvider {
@@ -297,11 +326,10 @@ impl condition_core::ResourceDataProvider for MockResourceDataProvider {
     }
 
     async fn list_resources(&self) -> ConditionResult<Vec<String>> {
-        Ok(vec![
-            "health".to_string(),
-            "mana".to_string(),
-            "stamina".to_string(),
-        ])
+        // Use the runtime registry instead of hardcoded values
+        let resources = self.resource_registry.get_all_resources().await
+            .map_err(|e| ConditionError::ConfigError { message: e.to_string() })?;
+        Ok(resources.into_iter().map(|r| r.id).collect())
     }
 }
 
@@ -336,10 +364,45 @@ impl condition_core::CategoryDataProvider for MockCategoryDataProvider {
     }
 
     async fn list_categories(&self) -> ConditionResult<Vec<String>> {
-        Ok(vec![
-            "weapon".to_string(),
-            "armor".to_string(),
-            "potion".to_string(),
-        ])
+        // Use the runtime registry instead of hardcoded values
+        let categories = self.category_registry.get_all_categories().await
+            .map_err(|e| ConditionError::ConfigError { message: e.to_string() })?;
+        Ok(categories.into_iter().map(|c| c.id).collect())
     }
+}
+
+async fn setup_runtime_registries(
+    resource_registry: &std::sync::Arc<dyn actor_core::registry::ResourceRegistry>,
+    category_registry: &std::sync::Arc<dyn actor_core::registry::CategoryRegistry>,
+    tag_registry: &std::sync::Arc<dyn actor_core::registry::TagRegistry>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    // Register basic resources
+    let health = ResourceDefinition::create_health_resource("mock_subsystem");
+    resource_registry.register_resource(health).await?;
+    
+    let mana = ResourceDefinition::create_mana_resource("mock_subsystem");
+    resource_registry.register_resource(mana).await?;
+    
+    let stamina = ResourceDefinition::create_stamina_resource("mock_subsystem");
+    resource_registry.register_resource(stamina).await?;
+
+    // Register basic categories
+    let weapon = CategoryDefinition::create_weapon_category("mock_subsystem");
+    category_registry.register_category(weapon).await?;
+    
+    let armor = CategoryDefinition::create_armor_category("mock_subsystem");
+    category_registry.register_category(armor).await?;
+    
+    let potion = CategoryDefinition::create_potion_category("mock_subsystem");
+    category_registry.register_category(potion).await?;
+
+    // Register basic tags
+    let vital = TagDefinition::create_vital_tag("mock_subsystem");
+    tag_registry.register_tag(vital).await?;
+    
+    let magic = TagDefinition::create_magic_tag("mock_subsystem");
+    tag_registry.register_tag(magic).await?;
+
+    println!("  ✅ Registered resources, categories, and tags");
+    Ok(())
 }

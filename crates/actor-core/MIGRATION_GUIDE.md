@@ -1,296 +1,551 @@
 # Actor Core Migration Guide
 
-This guide helps you migrate your code to use the new prelude-based API and understand the changes in the public API surface.
+## 🚀 Overview
 
-## Overview of Changes
+This guide helps you migrate from the old Actor Core system to the new refactored system. The refactor introduces a modern, plugin-based architecture that eliminates hardcoded values and provides dynamic configuration management.
 
-The main changes in this version focus on:
+## 📋 Migration Checklist
 
-1. **Cleaner API Surface**: Most implementation details are now hidden behind `#[doc(hidden)]`
-2. **Prelude Module**: A new `prelude` module provides convenient access to commonly used types
-3. **Simplified Imports**: Use `use actor_core::prelude::*;` for most use cases
-4. **Stability Guarantees**: Clear documentation of what's stable vs experimental
+### Phase 1: Preparation
+- [ ] Review the new architecture
+- [ ] Identify hardcoded values in your code
+- [ ] Plan configuration file structure
+- [ ] Update dependencies
 
-## Migration Steps
+### Phase 2: Configuration Migration
+- [ ] Create configuration files
+- [ ] Move hardcoded values to configuration
+- [ ] Set up environment variables
+- [ ] Configure database settings
 
-### 1. Update Your Imports
+### Phase 3: Code Migration
+- [ ] Update imports
+- [ ] Replace hardcoded values with configuration access
+- [ ] Update registry usage
+- [ ] Implement builder pattern
 
-**Before:**
-```rust
-use actor_core::*;
-use actor_core::types::{Actor, Contribution, Snapshot};
-use actor_core::interfaces::{Subsystem, Aggregator};
-```
+### Phase 4: Testing
+- [ ] Update unit tests
+- [ ] Update integration tests
+- [ ] Run performance tests
+- [ ] Validate configuration
 
-**After:**
-```rust
-use actor_core::prelude::*;
+### Phase 5: Deployment
+- [ ] Deploy configuration files
+- [ ] Set environment variables
+- [ ] Monitor system health
+- [ ] Validate functionality
 
-// That's it! All commonly used types are now available
-```
+## 🔧 Step-by-Step Migration
 
-### 2. Update Service Creation
+### Step 1: Update Dependencies
 
-**Before:**
-```rust
-use actor_core::service_factory::ServiceFactory;
-
-let aggregator = ServiceFactory::create_aggregator(
-    plugin_registry,
-    combiner_registry,
-    caps_provider,
-    cache,
-)?;
-```
-
-**After:**
+#### Old System
 ```rust
 use actor_core::prelude::*;
+use actor_core::ActorCoreResult;
+```
 
-// Option 1: Quick setup for simple cases
-let (aggregator, cache) = quick_setup().await?;
+#### New System
+```rust
+use actor_core::builder::*;
+use actor_core::config::*;
+use actor_core::runtime_registry::*;
+use actor_core::ActorCoreResult;
+```
 
-// Option 2: Manual setup for advanced cases
+### Step 2: Replace Hardcoded Values
+
+#### Old System
+```rust
+// Hardcoded values
+const MAX_ACTORS: usize = 10000;
+const CACHE_TTL: u64 = 3600;
+const HEALTH_BASE: f64 = 100.0;
+```
+
+#### New System
+```rust
+// Configuration-based values
+let config_manager = actor_core.get_config_manager();
+let max_actors = config_manager.get_config("performance_thresholds", "max_actors").await?;
+let cache_ttl = config_manager.get_config("timeouts", "cache_ttl").await?;
+let health_base = config_manager.get_config("defaults", "resources").await?;
+```
+
+### Step 3: Update System Initialization
+
+#### Old System
+```rust
+// Old initialization
 let cache = ServiceFactory::create_cache()?;
 let plugin_registry = ServiceFactory::create_plugin_registry();
 let combiner_registry = ServiceFactory::create_combiner_registry();
-let caps_provider = ServiceFactory::create_caps_provider();
-
+let cap_layer_registry = ServiceFactory::create_cap_layer_registry();
+let caps_provider = ServiceFactory::create_caps_provider(cap_layer_registry);
 let aggregator = ServiceFactory::create_aggregator(
     plugin_registry,
     combiner_registry,
     caps_provider,
     cache,
-)?;
-```
-
-### 3. Update Actor Creation
-
-**Before:**
-```rust
-use actor_core::types::Actor;
-use std::collections::HashMap;
-
-let mut actor = Actor::new("player1".to_string(), "human".to_string());
-let mut data = HashMap::new();
-data.insert("level".to_string(), serde_json::Value::Number(serde_json::Number::from(10)));
-actor.set_data(data);
-```
-
-**After:**
-```rust
-use actor_core::prelude::*;
-
-// Option 1: Simple actor creation
-let actor = create_simple_actor("player1", "human", 10);
-
-// Option 2: Manual creation (still available)
-let mut actor = Actor::new("player1".to_string(), "human".to_string());
-let mut data = HashMap::new();
-data.insert("level".to_string(), serde_json::Value::Number(serde_json::Number::from(10)));
-actor.set_data(data);
-```
-
-### 4. Update Contribution Creation
-
-**Before:**
-```rust
-use actor_core::types::Contribution;
-use actor_core::enums::Bucket;
-
-let contribution = Contribution::new(
-    "strength".to_string(),
-    Bucket::Flat,
-    10.0,
-    "equipment".to_string()
 );
 ```
 
-**After:**
+#### New System
 ```rust
-use actor_core::prelude::*;
+// New initialization with builder pattern
+let actor_core = ActorCoreBuilder::new()
+    .with_config_path(PathBuf::from("configs/actor_core_defaults.yaml"))
+    .with_hot_reload(true)
+    .with_metrics(true)
+    .with_caching(true)
+    .with_cache_size(200)
+    .with_log_level("debug".to_string())
+    .build()
+    .await?;
 
-// Option 1: Simple contribution creation
-let contribution = create_basic_contribution("strength", 10.0, "equipment");
-
-// Option 2: Manual creation (still available)
-let contribution = Contribution::new(
-    "strength".to_string(),
-    Bucket::Flat,
-    10.0,
-    "equipment".to_string()
-);
+let config_manager = actor_core.get_config_manager();
+let registry_manager = actor_core.get_registry_manager();
 ```
 
-### 5. Update Caps Creation
+### Step 4: Update Resource Management
 
-**Before:**
+#### Old System
 ```rust
-use actor_core::types::Caps;
-
-let caps = Caps {
-    min: Some(0.0),
-    max: Some(100.0),
+// Hardcoded resource definitions
+let health_resource = ResourceDefinition {
+    id: "health".to_string(),
+    name: "Health".to_string(),
+    base_value: 100.0,
+    min_value: 0.0,
+    max_value: 1000.0,
+    // ... other fields
 };
 ```
 
-**After:**
+#### New System
 ```rust
-use actor_core::prelude::*;
-
-// Option 1: Simple caps creation
-let caps = create_basic_caps(0.0, 100.0);
-
-// Option 2: Manual creation (still available)
-let caps = Caps {
-    min: Some(0.0),
-    max: Some(100.0),
+// Dynamic resource registration
+let health_resource = ResourceDefinition {
+    id: "health".to_string(),
+    name: "Health".to_string(),
+    description: Some("Character health points".to_string()),
+    category: "vital".to_string(),
+    resource_type: ResourceType::Health,
+    base_value: 100.0,
+    min_value: 0.0,
+    max_value: 1000.0,
+    regen_rate: 1.0,
+    regen_type: RegenType::Passive,
+    dependencies: vec![],
+    tags: vec!["vital".to_string(), "health".to_string()],
+    subsystem_id: "actor_core".to_string(),
+    created_at: chrono::Utc::now(),
+    updated_at: chrono::Utc::now(),
 };
+
+registry_manager.get_resource_registry().register_resource(health_resource).await?;
 ```
 
-## API Stability
+### Step 5: Update Configuration Access
 
-### Stable API (v1.0.0+)
-
-These components are guaranteed to remain compatible across minor versions:
-
-- **Core Types**: `Actor`, `Contribution`, `CapContribution`, `Snapshot`, `Caps`
-- **Enums**: `Bucket`, `CapMode`, `CapKind`, `AcrossLayerPolicy`, `Operator`
-- **Traits**: `Subsystem`, `Aggregator`, `CapsProvider`, `PluginRegistry`, `CombinerRegistry`, `Cache`
-- **Error Types**: `ActorCoreError`, `ActorCoreResult`
-- **Service Factory**: `ServiceFactory`
-- **Prelude Module**: `prelude`
-
-### Beta API (may change in minor versions)
-
-These components may change in minor versions but will be deprecated first:
-
-- **Performance Monitoring**: `PerformanceProfiler`, `PerformanceTestSuite`, `PerformanceWorkflowManager`
-- **Observability**: `ObservabilityManager`
-- **Metrics**: `SubsystemMetrics`, `AggregatorMetrics`, `CacheStats`
-
-### Internal API (not part of public API)
-
-These modules are now hidden and may change without notice:
-
-- `bucket_processor`
-- `aggregator`
-- `cache`
-- `registry`
-- `production`
-- `metrics`
-- `constants`
-- `pools`
-- `subsystems`
-- `observability`
-
-## Breaking Changes
-
-### 1. Module Visibility
-
-Some modules that were previously public are now hidden:
-
+#### Old System
 ```rust
-// This will no longer work:
-use actor_core::bucket_processor::process_contributions_in_order;
-
-// Use the prelude instead:
-use actor_core::prelude::*;
-// The function is still available, but through the prelude
+// Direct access to hardcoded values
+let max_health = 1000.0;
+let regen_rate = 1.0;
 ```
 
-### 2. Direct Implementation Access
-
-Direct access to implementation modules is no longer recommended:
-
+#### New System
 ```rust
-// This will no longer work:
-use actor_core::aggregator::AggregatorImpl;
-
-// Use the trait instead:
-use actor_core::prelude::*;
-// Create through ServiceFactory
+// Configuration-based access
+let health_config = config_manager.get_config("defaults", "resources").await?;
+let max_health = health_config.unwrap().value["health"]["max_value"].as_f64().unwrap();
+let regen_rate = health_config.unwrap().value["health"]["regen_rate"].as_f64().unwrap();
 ```
 
-## New Features
+### Step 6: Update Registry Usage
 
-### 1. Quick Setup Function
-
+#### Old System
 ```rust
-use actor_core::prelude::*;
+// Static registry access
+let resources = get_all_resources();
+let categories = get_all_categories();
+```
 
-#[tokio::main]
-async fn main() -> ActorCoreResult<()> {
-    let (aggregator, cache) = quick_setup().await?;
-    // Ready to use!
+#### New System
+```rust
+// Dynamic registry access
+let resources = registry_manager.get_resource_registry().get_all_resources().await?;
+let categories = registry_manager.get_category_registry().get_all_categories().await?;
+```
+
+## 📁 Configuration File Structure
+
+### Main Configuration File
+```yaml
+# configs/actor_core_defaults.yaml
+defaults:
+  resources:
+    health:
+      base_value: 100.0
+      min_value: 0.0
+      max_value: 1000.0
+      regen_rate: 1.0
+      regen_type: "passive"
+    mana:
+      base_value: 50.0
+      min_value: 0.0
+      max_value: 500.0
+      regen_rate: 0.5
+      regen_type: "passive"
+    stamina:
+      base_value: 100.0
+      min_value: 0.0
+      max_value: 1000.0
+      regen_rate: 2.0
+      regen_type: "passive"
+  
+  stats:
+    strength:
+      base_value: 10.0
+      min_value: 0.0
+      max_value: 100.0
+    agility:
+      base_value: 10.0
+      min_value: 0.0
+      max_value: 100.0
+    intelligence:
+      base_value: 10.0
+      min_value: 0.0
+      max_value: 100.0
+    constitution:
+      base_value: 10.0
+      min_value: 0.0
+      max_value: 100.0
+    wisdom:
+      base_value: 10.0
+      min_value: 0.0
+      max_value: 100.0
+    charisma:
+      base_value: 10.0
+      min_value: 0.0
+      max_value: 100.0
+  
+  elements:
+    fire:
+      base_affinity: 0.0
+      min_affinity: 0.0
+      max_affinity: 1.0
+    water:
+      base_affinity: 0.0
+      min_affinity: 0.0
+      max_affinity: 1.0
+    earth:
+      base_affinity: 0.0
+      min_affinity: 0.0
+      max_affinity: 1.0
+    air:
+      base_affinity: 0.0
+      min_affinity: 0.0
+      max_affinity: 1.0
+    light:
+      base_affinity: 0.0
+      min_affinity: 0.0
+      max_affinity: 1.0
+    dark:
+      base_affinity: 0.0
+      min_affinity: 0.0
+      max_affinity: 1.0
+
+timeouts:
+  cache_ttl: 3600
+  aggregation_timeout: 5.0
+  validation_timeout: 1.0
+  regeneration_interval: 1.0
+  subsystem_timeout: 10.0
+
+performance_thresholds:
+  max_actors: 10000
+  max_contributions_per_actor: 1000
+  max_caps_per_actor: 100
+  max_subsystems: 50
+  cache_size_mb: 100
+  memory_usage_mb: 500
+  cpu_usage_percent: 80.0
+
+validation_rules:
+  resource_values:
+    min_value: 0.0
+    max_value: 1000000.0
+  stat_values:
+    min_value: 0.0
+    max_value: 1000.0
+  element_affinities:
+    min_value: 0.0
+    max_value: 1.0
+  contribution_values:
+    min_value: -1000.0
+    max_value: 1000.0
+
+cache_keys:
+  actor_snapshot: "actor_snapshot"
+  resource_regeneration: "resource_regeneration"
+  stat_aggregation: "stat_aggregation"
+  subsystem_data: "subsystem_data"
+
+log_levels:
+  actor_core: "info"
+  config: "info"
+  registry: "info"
+  cache: "warn"
+  performance: "debug"
+
+cache_policies:
+  actor_snapshot:
+    ttl: 3600
+    max_size: 1000
+    eviction_policy: "lru"
+  resource_regeneration:
+    ttl: 300
+    max_size: 500
+    eviction_policy: "lru"
+  stat_aggregation:
+    ttl: 1800
+    max_size: 2000
+    eviction_policy: "lru"
+
+system_ids:
+  - "luyen_the"
+  - "kim_dan"
+  - "combat"
+  - "equipment"
+  - "buff"
+  - "guild"
+  - "event"
+  - "world"
+  - "magic"
+  - "cultivation"
+  - "experience"
+  - "reputation"
+  - "trading"
+  - "weather"
+  - "location"
+  - "time"
+  - "stealth"
+  - "perception"
+
+context_types:
+  - "combat"
+  - "exploration"
+  - "social"
+  - "crafting"
+  - "cultivation"
+  - "trading"
+  - "guild"
+  - "event"
+```
+
+### Environment Variables
+```bash
+# Set environment variables for runtime configuration
+export ACTOR_CORE_ELEMENT_FIRE_AFFINITY=0.8
+export ACTOR_CORE_ELEMENT_WATER_AFFINITY=0.6
+export ACTOR_CORE_STAT_STRENGTH=15
+export ACTOR_CORE_STAT_AGILITY=12
+export ACTOR_CORE_FLAG_ENABLE_CACHING=true
+export ACTOR_CORE_FLAG_ENABLE_METRICS=true
+export ACTOR_CORE_CACHE_SIZE_MB=200
+export ACTOR_CORE_LOG_LEVEL=debug
+```
+
+## 🧪 Testing Migration
+
+### Update Unit Tests
+
+#### Old System
+```rust
+#[test]
+fn test_resource_creation() {
+    let resource = create_resource("health", 100.0);
+    assert_eq!(resource.value, 100.0);
+}
+```
+
+#### New System
+```rust
+#[tokio::test]
+async fn test_resource_creation() -> Result<(), Box<dyn std::error::Error>> {
+    let registry_system = RegistryBuilder::new().build().await?;
+    
+    let resource = ResourceDefinition {
+        id: "health".to_string(),
+        name: "Health".to_string(),
+        description: Some("Character health points".to_string()),
+        category: "vital".to_string(),
+        resource_type: ResourceType::Health,
+        base_value: 100.0,
+        min_value: 0.0,
+        max_value: 1000.0,
+        regen_rate: 1.0,
+        regen_type: RegenType::Passive,
+        dependencies: vec![],
+        tags: vec!["vital".to_string(), "health".to_string()],
+        subsystem_id: "test_subsystem".to_string(),
+        created_at: chrono::Utc::now(),
+        updated_at: chrono::Utc::now(),
+    };
+    
+    registry_system.get_resource_registry().register_resource(resource).await?;
+    
+    let retrieved_resource = registry_system.get_resource_registry().get_resource("health").await?;
+    assert!(retrieved_resource.is_some());
+    assert_eq!(retrieved_resource.unwrap().base_value, 100.0);
+    
     Ok(())
 }
 ```
 
-### 2. Convenience Functions
+### Update Integration Tests
 
+#### Old System
 ```rust
-use actor_core::prelude::*;
-
-// Create a simple actor with level
-let actor = create_simple_actor("player1", "human", 10);
-
-// Create a basic contribution
-let contribution = create_basic_contribution("strength", 10.0, "equipment");
-
-// Create basic caps
-let caps = create_basic_caps(0.0, 100.0);
-```
-
-### 3. Feature Detection
-
-```rust
-use actor_core::prelude::*;
-
-if has_feature("redis-cache") {
-    println!("Redis cache support is available");
+#[test]
+fn test_system_integration() {
+    let system = create_system();
+    let result = system.process_actor(actor);
+    assert!(result.is_ok());
 }
 ```
 
-### 4. Build Information
-
+#### New System
 ```rust
-use actor_core::prelude::*;
-
-let info = get_build_info();
-println!("Actor Core version: {}", info.version);
-println!("Available features: {:?}", info.features);
+#[tokio::test]
+async fn test_system_integration() -> Result<(), Box<dyn std::error::Error>> {
+    let actor_core = ActorCoreBuilder::new().build().await?;
+    
+    let config_manager = actor_core.get_config_manager();
+    let registry_manager = actor_core.get_registry_manager();
+    
+    // Test configuration access
+    let value = config_manager.get_config("defaults", "resources").await?;
+    assert!(value.is_some());
+    
+    // Test registry access
+    let resources = registry_manager.get_resource_registry().get_all_resources().await?;
+    assert!(!resources.is_empty());
+    
+    actor_core.shutdown().await?;
+    Ok(())
+}
 ```
 
-## Migration Checklist
+## 🚀 Performance Considerations
 
-- [ ] Update imports to use `actor_core::prelude::*`
-- [ ] Replace manual service creation with `quick_setup()` where appropriate
-- [ ] Update actor creation to use `create_simple_actor()` where appropriate
-- [ ] Update contribution creation to use `create_basic_contribution()` where appropriate
-- [ ] Update caps creation to use `create_basic_caps()` where appropriate
-- [ ] Remove direct imports of internal modules
-- [ ] Test your application thoroughly
-- [ ] Update documentation to reflect new API usage
+### Configuration Caching
+The new system includes comprehensive caching to improve performance:
 
-## Getting Help
+```rust
+// Configuration is automatically cached
+let value = config_manager.get_config("category", "key").await?; // First call loads from source
+let value = config_manager.get_config("category", "key").await?; // Subsequent calls use cache
+```
 
-If you encounter issues during migration:
+### Registry Performance
+The registry system is optimized for high-performance operations:
 
-1. Check the [API Stability Report](api_stability.md)
-2. Review the [examples](examples/) directory for updated usage patterns
-3. Open an issue on GitHub with your specific migration question
-4. Join our Discord community for real-time help
+```rust
+// Batch operations for better performance
+let mut resources = Vec::new();
+for i in 0..1000 {
+    resources.push(create_resource(i));
+}
+registry_manager.get_resource_registry().register_resources(resources).await?;
+```
 
-## Examples
+### Memory Management
+The system uses efficient memory management:
 
-See the updated examples in the `examples/` directory:
+```rust
+// Resources are automatically cleaned up
+let resource = registry_manager.get_resource_registry().get_resource("health").await?;
+// Resource is automatically dropped when out of scope
+```
 
-- `basic_usage.rs`: Shows the new prelude-based API
-- `configuration_example.rs`: Demonstrates configuration usage
-- `subsystem_example.rs`: Shows custom subsystem implementation
-- `performance_workflow_example.rs`: Demonstrates performance monitoring
+## 🔒 Security Considerations
 
-## Performance Notes
+### Configuration Security
+- **Validation**: All configuration values are validated
+- **Sanitization**: Input sanitization prevents injection attacks
+- **Access Control**: Role-based access control for configuration management
+- **Audit Logging**: Comprehensive audit logging for all changes
 
-The new API surface doesn't change the underlying performance characteristics. All optimizations remain in place, and the new convenience functions are thin wrappers around the existing functionality.
+### Registry Security
+- **Access Control**: Fine-grained access control for registry operations
+- **Validation**: All registry operations are validated
+- **Audit Logging**: Comprehensive audit logging for all changes
+- **Rate Limiting**: Rate limiting prevents abuse
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+#### Configuration Not Loading
+```rust
+// Check if configuration file exists
+if !Path::new("configs/actor_core_defaults.yaml").exists() {
+    eprintln!("Configuration file not found!");
+    return Err("Configuration file not found".into());
+}
+```
+
+#### Registry Registration Failing
+```rust
+// Check if resource ID is valid
+if resource.id.is_empty() {
+    return Err("Resource ID cannot be empty".into());
+}
+```
+
+#### Builder Pattern Errors
+```rust
+// Check if all required parameters are set
+let actor_core = ActorCoreBuilder::new()
+    .with_config_path(PathBuf::from("configs/actor_core_defaults.yaml"))
+    .build()
+    .await?;
+```
+
+### Debug Mode
+Enable debug mode for detailed logging:
+
+```rust
+let actor_core = ActorCoreBuilder::new()
+    .with_log_level("debug".to_string())
+    .build()
+    .await?;
+```
+
+## 📚 Additional Resources
+
+### Documentation
+- [README_REFACTORED.md](README_REFACTORED.md) - Complete system documentation
+- [API Reference](docs/api_reference.md) - Detailed API documentation
+- [Configuration Guide](docs/configuration_guide.md) - Configuration management guide
+- [Performance Guide](docs/performance_guide.md) - Performance optimization guide
+
+### Examples
+- [Basic Usage](examples/basic_usage.rs) - Basic usage examples
+- [Advanced Usage](examples/advanced_usage.rs) - Advanced usage examples
+- [Builder Pattern](examples/builder_pattern_example.rs) - Builder pattern examples
+- [Complete System](examples/complete_refactor_example.rs) - Complete system examples
+
+### Support
+- **GitHub Issues**: Open an issue on GitHub
+- **Discord Community**: Join our Discord community
+- **Documentation**: Check the comprehensive documentation
+- **Examples**: Review the example programs
+
+---
+
+**Note**: This migration guide is designed to help you transition from the old Actor Core system to the new refactored system. If you encounter any issues during migration, please refer to the troubleshooting section or open an issue on GitHub.

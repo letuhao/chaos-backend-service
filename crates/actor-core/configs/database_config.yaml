@@ -1,0 +1,49 @@
+# Database Configuration
+# This file defines the database connection and table structure for configuration storage
+
+# Database connection settings
+connection_string: "postgresql://localhost:5432/actor_core_config"
+table_name: "configuration"
+
+# Column mappings
+category_column: "category"
+key_column: "key_name"
+value_column: "value_data"
+priority_column: "priority"
+enabled_column: "is_enabled"
+
+# Database-specific configuration
+database:
+  connection_pool_size: 10
+  query_timeout: 30
+  enable_caching: true
+  max_retries: 3
+  retry_delay_ms: 1000
+
+# System configuration loaded from database
+system:
+  max_actors: 10000
+  cache_ttl: 3600
+  enable_metrics: true
+  log_level: "INFO"
+
+# Merge rules for database provider
+merge_rules:
+  database:
+    strategy: "Override"
+    use_pipeline: false
+    default_value: null
+    validation_rules: []
+    
+  system:
+    strategy: "Override"
+    use_pipeline: false
+    default_value: null
+    validation_rules: []
+
+# Default merge rule for unknown categories
+default_merge_rule:
+  strategy: "Override"
+  use_pipeline: false
+  default_value: null
+  validation_rules: []

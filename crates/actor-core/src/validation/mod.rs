@@ -2,20 +2,18 @@
 //!
 //! This module provides comprehensive validation for contributions, caps,
 //! configuration data, and other core types to ensure data integrity.
+//!
+//! NOTE: Legacy hardcoded validator has been moved to examples/legacy_subsystems/
+//! Use DynamicValidator for configuration-based validation.
 
-pub mod validator;
+pub mod dynamic_validator;
 pub mod middleware;
 
 // Re-export the main validation types and functions
-pub use validator::{
-    Validator,
+pub use dynamic_validator::{
+    DynamicValidator,
     ValidationRules,
-    ValidationResult,
-    ValidationError,
-    ValidationWarning,
-    validators,
 };
-pub use validator::validators::validate_contributions;
 
 // Re-export middleware types
 pub use middleware::{

@@ -1,0 +1,18 @@
+# Context Types Configuration
+# This file defines all supported context types for temporary effects
+
+supported_contexts:
+  - "combat"
+  - "exploration"
+  - "social"
+  - "crafting"
+  - "cultivation"
+  - "trading"
+  - "guild"
+  - "event"
+  - "damage"
+  - "healing"
+  - "experience_gain"
+  - "item_drop"
+  - "movement"
+  - "casting"

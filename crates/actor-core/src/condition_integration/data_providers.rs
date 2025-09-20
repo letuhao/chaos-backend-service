@@ -5,9 +5,16 @@
 
 use condition_core::*;
 use std::sync::Arc;
+use crate::registry::{ResourceRegistry, CategoryRegistry as RuntimeCategoryRegistry};
 
 // Error conversion helper functions
 fn map_actor_core_error(err: Box<dyn std::error::Error + Send + Sync>) -> ConditionError {
+    ConditionError::ConfigError {
+        message: err.to_string(),
+    }
+}
+
+fn map_actor_core_result_error(err: crate::ActorCoreError) -> ConditionError {
     ConditionError::ConfigError {
         message: err.to_string(),
     }
@@ -142,6 +149,7 @@ pub struct ResourceDataProvider {
     resource_manager: Arc<dyn ResourceManager>,
     #[allow(dead_code)]
     stat_cache: Arc<dyn StatCache>,
+    resource_registry: Arc<dyn ResourceRegistry>,
 }
 
 impl ResourceDataProvider {
@@ -149,10 +157,12 @@ impl ResourceDataProvider {
     pub fn new(
         resource_manager: Arc<dyn ResourceManager>,
         stat_cache: Arc<dyn StatCache>,
+        resource_registry: Arc<dyn ResourceRegistry>,
     ) -> Self {
         Self {
             resource_manager,
             stat_cache,
+            resource_registry,
         }
     }
 }
@@ -226,14 +236,10 @@ impl condition_core::ResourceDataProvider for ResourceDataProvider {
     }
     
     async fn list_resources(&self) -> ConditionResult<Vec<String>> {
-        // This would typically come from a resource registry
-        // For now, return common resource types
-        Ok(vec![
-            "health".to_string(),
-            "mana".to_string(),
-            "stamina".to_string(),
-            "sanity".to_string(),
-        ])
+        // Get resources from the runtime registry
+        let resources = self.resource_registry.get_all_resources().await
+            .map_err(map_actor_core_result_error)?;
+        Ok(resources.into_iter().map(|r| r.id).collect())
     }
 }
 
@@ -243,14 +249,14 @@ impl condition_core::ResourceDataProvider for ResourceDataProvider {
 /// such as items, availability, and counts.
 pub struct CategoryDataProvider {
     #[allow(dead_code)]
-    category_registry: Arc<dyn CategoryRegistry>,
+    category_registry: Arc<dyn RuntimeCategoryRegistry>,
     actor_inventory: Arc<dyn ActorInventory>,
 }
 
 impl CategoryDataProvider {
     /// Create a new Category data provider
     pub fn new(
-        category_registry: Arc<dyn CategoryRegistry>,
+        category_registry: Arc<dyn RuntimeCategoryRegistry>,
         actor_inventory: Arc<dyn ActorInventory>,
     ) -> Self {
         Self {
@@ -287,19 +293,14 @@ impl condition_core::CategoryDataProvider for CategoryDataProvider {
     }
     
     async fn list_categories(&self) -> ConditionResult<Vec<String>> {
-        // This would typically come from a category registry
-        // For now, return common category types
-        Ok(vec![
-            "weapon".to_string(),
-            "armor".to_string(),
-            "potion".to_string(),
-            "combat".to_string(),
-            "magic".to_string(),
-        ])
+        // Get categories from the runtime registry
+        let categories = self.category_registry.get_all_categories().await
+            .map_err(map_actor_core_result_error)?;
+        Ok(categories.into_iter().map(|c| c.id).collect())
     }
 }
 
-// Placeholder traits for Actor Core interfaces
+// TODO: Replace with actual traits from Actor Core interfaces
 // These would be defined in the actual Actor Core implementation
 
 /// Trait for actor repository
@@ -332,7 +333,7 @@ pub trait ActorInventory: Send + Sync {
     async fn get_items_by_category(&self, actor_id: &str, category: &str) -> Result<Vec<Item>, Box<dyn std::error::Error + Send + Sync>>;
 }
 
-// Placeholder types for Actor Core
+// TODO: Replace with actual types from Actor Core
 #[derive(Debug, Clone)]
 pub struct Actor {
     pub id: String,

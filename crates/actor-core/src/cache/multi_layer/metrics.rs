@@ -140,11 +140,13 @@ impl MultiLayerStats {
 
     /// Get cache efficiency score (0.0 to 1.0).
     pub fn efficiency_score(&self) -> f64 {
+        // TODO: Load efficiency weights from configuration
         let hit_ratio_weight = 0.4;
         let response_time_weight = 0.3;
         let memory_efficiency_weight = 0.3;
 
         let hit_ratio_score = self.hit_ratio;
+        // TODO: Load response time threshold from configuration
         let response_time_score = 1.0 - (self.avg_response_time.as_micros() as f64 / 1000.0).min(1.0);
         let memory_efficiency_score = if self.total_memory_usage > 0 {
             (self.l1_stats.memory_usage as f64 / self.total_memory_usage as f64).min(1.0)

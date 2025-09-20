@@ -1,0 +1,51 @@
+# Default Rollback Plans Configuration
+# This file defines the default rollback plans for Actor Core
+
+- id: "rollback_old_aggregator"
+  name: "Rollback Old Aggregator API"
+  description: "Rollback plan for the old aggregator API deprecation"
+  deprecation_id: "old_aggregator_api"
+  steps:
+    - step_number: 1
+      description: "Stop all services using the new aggregator API"
+      commands:
+        - "systemctl stop actor-core"
+        - "docker stop actor-core-container"
+      expected_outcome: "All services stopped successfully"
+      validation_criteria: "No processes running on port 8080"
+      estimated_time: 30
+      critical: true
+    - step_number: 2
+      description: "Revert to previous version with old API"
+      commands:
+        - "git checkout v0.1.0"
+        - "cargo build --release"
+      expected_outcome: "Previous version compiled successfully"
+      validation_criteria: "Build completes without errors"
+      estimated_time: 300
+      critical: true
+    - step_number: 3
+      description: "Start services with old API"
+      commands:
+        - "systemctl start actor-core"
+        - "docker start actor-core-container"
+      expected_outcome: "Services started successfully"
+      validation_criteria: "Health check passes"
+      estimated_time: 60
+      critical: true
+  estimated_duration: 390  # 6.5 minutes
+  prerequisites:
+    - "Previous version available in git"
+    - "Backup of current configuration"
+    - "Maintenance window scheduled"
+  risk_level: "High"
+  validation_steps:
+    - "Verify all services are running"
+    - "Run health checks"
+    - "Test basic functionality"
+    - "Monitor error logs"
+
+# Example usage:
+# This file contains the default rollback plans that are loaded when the
+# deprecation manager starts. Each rollback plan includes detailed steps
+# for safely rolling back deprecations.

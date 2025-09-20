@@ -8,7 +8,7 @@ use std::sync::Arc;
 use std::time::{Duration, Instant, SystemTime};
 use std::sync::atomic::{AtomicU64, Ordering};
 use serde::{Deserialize, Serialize};
-use tracing::{info, debug};
+use tracing::{info, debug, warn};
 
 use crate::ActorCoreResult;
 use crate::ActorCoreError;
@@ -425,108 +425,270 @@ pub mod default_metrics {
 
     /// Register default metrics for Actor Core.
     pub fn register_default_metrics(collector: &mut MetricsCollector) -> ActorCoreResult<()> {
+        // Load metrics configuration
+        let config = MetricsCollectorConfig::load_config().unwrap_or_else(|_| {
+            warn!("Failed to load metrics collector config, using hardcoded defaults");
+            MetricsCollectorConfig::get_default_config()
+        });
+
+        // Register metrics from configuration
+        let metrics_count = config.metrics.len();
+        for metric_config in config.metrics {
+            match metric_config.metric_type {
+                MetricType::Counter => {
+                    collector.register_counter(
+                        metric_config.name,
+                        metric_config.description,
+                        metric_config.labels,
+                    )?;
+                }
+                MetricType::Gauge => {
+                    collector.register_gauge(
+                        metric_config.name,
+                        metric_config.description,
+                        metric_config.labels,
+                        metric_config.initial_value,
+                    )?;
+                }
+                MetricType::Histogram => {
+                    collector.register_histogram(
+                        metric_config.name,
+                        metric_config.description,
+                        metric_config.labels,
+                        metric_config.buckets.unwrap_or_else(|| vec![1.0, 5.0, 10.0, 25.0, 50.0, 100.0]),
+                    )?;
+                }
+                MetricType::Summary => {
+                    // Summaries not implemented yet
+                    warn!("Summary metrics not implemented yet, skipping: {}", metric_config.name);
+                }
+            }
+        }
+
+        info!("Registered {} Actor Core metrics from configuration", metrics_count);
+        Ok(())
+    }
+}
+
+/// Metrics collector configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MetricsCollectorConfig {
+    pub metrics: Vec<MetricConfig>,
+}
+
+/// Individual metric configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MetricConfig {
+    pub name: String,
+    pub description: String,
+    pub metric_type: MetricType,
+    pub labels: HashMap<String, String>,
+    pub unit: Option<String>,
+    pub enabled: bool,
+    pub initial_value: Option<u64>,
+    pub buckets: Option<Vec<f64>>,
+}
+
+impl MetricsCollectorConfig {
+    /// Load metrics collector configuration from config file
+    pub fn load_config() -> ActorCoreResult<Self> {
+        // Try to load from metrics_collector_config.yaml first
+        let config_path = std::path::Path::new("configs/metrics_collector_config.yaml");
+            
+        if config_path.exists() {
+            match Self::load_config_from_file(config_path) {
+                Ok(config) => return Ok(config),
+                Err(e) => {
+                    warn!("Failed to load metrics collector config from file: {}. Using hardcoded defaults.", e);
+                }
+            }
+        }
+        
+        // Fallback to hardcoded defaults
+        Ok(Self::get_default_config())
+    }
+
+    /// Load configuration from file
+    fn load_config_from_file(path: &std::path::Path) -> ActorCoreResult<Self> {
+        let content = std::fs::read_to_string(path)?;
+        let config: MetricsCollectorConfig = serde_yaml::from_str(&content)?;
+        Ok(config)
+    }
+
+    /// Get default configuration
+    fn get_default_config() -> Self {
+        let mut metrics = Vec::new();
+
         // Actor resolution metrics
-        collector.register_counter(
-            "actor_resolutions_total".to_string(),
-            "Total number of actor stat resolutions".to_string(),
-            HashMap::new(),
-        )?;
+        metrics.push(MetricConfig {
+            name: "actor_resolutions_total".to_string(),
+            description: "Total number of actor stat resolutions".to_string(),
+            metric_type: MetricType::Counter,
+            labels: HashMap::new(),
+            unit: Some("count".to_string()),
+            enabled: true,
+            initial_value: None,
+            buckets: None,
+        });
 
-        collector.register_counter(
-            "actor_resolution_errors_total".to_string(),
-            "Total number of actor resolution errors".to_string(),
-            HashMap::new(),
-        )?;
+        metrics.push(MetricConfig {
+            name: "actor_resolution_errors_total".to_string(),
+            description: "Total number of actor resolution errors".to_string(),
+            metric_type: MetricType::Counter,
+            labels: HashMap::new(),
+            unit: Some("count".to_string()),
+            enabled: true,
+            initial_value: None,
+            buckets: None,
+        });
 
-        collector.register_histogram(
-            "actor_resolution_duration_ms".to_string(),
-            "Duration of actor stat resolutions in milliseconds".to_string(),
-            HashMap::new(),
-            vec![1.0, 5.0, 10.0, 25.0, 50.0, 100.0, 250.0, 500.0, 1000.0],
-        )?;
+        metrics.push(MetricConfig {
+            name: "actor_resolution_duration_ms".to_string(),
+            description: "Duration of actor stat resolutions in milliseconds".to_string(),
+            metric_type: MetricType::Histogram,
+            labels: HashMap::new(),
+            unit: Some("milliseconds".to_string()),
+            enabled: true,
+            initial_value: None,
+            buckets: Some(vec![1.0, 5.0, 10.0, 25.0, 50.0, 100.0, 250.0, 500.0, 1000.0]),
+        });
 
         // Cache metrics
-        collector.register_counter(
-            "cache_operations_total".to_string(),
-            "Total number of cache operations".to_string(),
-            HashMap::new(),
-        )?;
+        metrics.push(MetricConfig {
+            name: "cache_operations_total".to_string(),
+            description: "Total number of cache operations".to_string(),
+            metric_type: MetricType::Counter,
+            labels: HashMap::new(),
+            unit: Some("count".to_string()),
+            enabled: true,
+            initial_value: None,
+            buckets: None,
+        });
 
-        collector.register_counter(
-            "cache_hits_total".to_string(),
-            "Total number of cache hits".to_string(),
-            HashMap::new(),
-        )?;
+        metrics.push(MetricConfig {
+            name: "cache_hits_total".to_string(),
+            description: "Total number of cache hits".to_string(),
+            metric_type: MetricType::Counter,
+            labels: HashMap::new(),
+            unit: Some("count".to_string()),
+            enabled: true,
+            initial_value: None,
+            buckets: None,
+        });
 
-        collector.register_counter(
-            "cache_misses_total".to_string(),
-            "Total number of cache misses".to_string(),
-            HashMap::new(),
-        )?;
+        metrics.push(MetricConfig {
+            name: "cache_misses_total".to_string(),
+            description: "Total number of cache misses".to_string(),
+            metric_type: MetricType::Counter,
+            labels: HashMap::new(),
+            unit: Some("count".to_string()),
+            enabled: true,
+            initial_value: None,
+            buckets: None,
+        });
 
-        collector.register_histogram(
-            "cache_operation_duration_ms".to_string(),
-            "Duration of cache operations in milliseconds".to_string(),
-            HashMap::new(),
-            vec![0.1, 0.5, 1.0, 2.5, 5.0, 10.0, 25.0, 50.0],
-        )?;
+        metrics.push(MetricConfig {
+            name: "cache_operation_duration_ms".to_string(),
+            description: "Duration of cache operations in milliseconds".to_string(),
+            metric_type: MetricType::Histogram,
+            labels: HashMap::new(),
+            unit: Some("milliseconds".to_string()),
+            enabled: true,
+            initial_value: None,
+            buckets: Some(vec![0.1, 0.5, 1.0, 2.5, 5.0, 10.0, 25.0, 50.0]),
+        });
 
         // Subsystem metrics
-        collector.register_counter(
-            "subsystem_contributions_total".to_string(),
-            "Total number of subsystem contributions".to_string(),
-            HashMap::new(),
-        )?;
+        metrics.push(MetricConfig {
+            name: "subsystem_contributions_total".to_string(),
+            description: "Total number of subsystem contributions".to_string(),
+            metric_type: MetricType::Counter,
+            labels: HashMap::new(),
+            unit: Some("count".to_string()),
+            enabled: true,
+            initial_value: None,
+            buckets: None,
+        });
 
-        collector.register_counter(
-            "subsystem_errors_total".to_string(),
-            "Total number of subsystem errors".to_string(),
-            HashMap::new(),
-        )?;
+        metrics.push(MetricConfig {
+            name: "subsystem_errors_total".to_string(),
+            description: "Total number of subsystem errors".to_string(),
+            metric_type: MetricType::Counter,
+            labels: HashMap::new(),
+            unit: Some("count".to_string()),
+            enabled: true,
+            initial_value: None,
+            buckets: None,
+        });
 
-        collector.register_histogram(
-            "subsystem_processing_duration_ms".to_string(),
-            "Duration of subsystem processing in milliseconds".to_string(),
-            HashMap::new(),
-            vec![0.1, 0.5, 1.0, 2.5, 5.0, 10.0, 25.0, 50.0],
-        )?;
+        metrics.push(MetricConfig {
+            name: "subsystem_processing_duration_ms".to_string(),
+            description: "Duration of subsystem processing in milliseconds".to_string(),
+            metric_type: MetricType::Histogram,
+            labels: HashMap::new(),
+            unit: Some("milliseconds".to_string()),
+            enabled: true,
+            initial_value: None,
+            buckets: Some(vec![0.1, 0.5, 1.0, 2.5, 5.0, 10.0, 25.0, 50.0]),
+        });
 
         // Memory metrics
-        collector.register_gauge(
-            "memory_usage_bytes".to_string(),
-            "Current memory usage in bytes".to_string(),
-            HashMap::new(),
-            None,
-        )?;
+        metrics.push(MetricConfig {
+            name: "memory_usage_bytes".to_string(),
+            description: "Current memory usage in bytes".to_string(),
+            metric_type: MetricType::Gauge,
+            labels: HashMap::new(),
+            unit: Some("bytes".to_string()),
+            enabled: true,
+            initial_value: Some(0),
+            buckets: None,
+        });
 
-        collector.register_gauge(
-            "active_actors_count".to_string(),
-            "Current number of active actors".to_string(),
-            HashMap::new(),
-            None,
-        )?;
+        metrics.push(MetricConfig {
+            name: "active_actors_count".to_string(),
+            description: "Current number of active actors".to_string(),
+            metric_type: MetricType::Gauge,
+            labels: HashMap::new(),
+            unit: Some("count".to_string()),
+            enabled: true,
+            initial_value: Some(0),
+            buckets: None,
+        });
 
         // Validation metrics
-        collector.register_counter(
-            "validation_checks_total".to_string(),
-            "Total number of validation checks performed".to_string(),
-            HashMap::new(),
-        )?;
+        metrics.push(MetricConfig {
+            name: "validation_checks_total".to_string(),
+            description: "Total number of validation checks performed".to_string(),
+            metric_type: MetricType::Counter,
+            labels: HashMap::new(),
+            unit: Some("count".to_string()),
+            enabled: true,
+            initial_value: None,
+            buckets: None,
+        });
 
-        collector.register_counter(
-            "validation_failures_total".to_string(),
-            "Total number of validation failures".to_string(),
-            HashMap::new(),
-        )?;
+        metrics.push(MetricConfig {
+            name: "validation_failures_total".to_string(),
+            description: "Total number of validation failures".to_string(),
+            metric_type: MetricType::Counter,
+            labels: HashMap::new(),
+            unit: Some("count".to_string()),
+            enabled: true,
+            initial_value: None,
+            buckets: None,
+        });
 
-        collector.register_histogram(
-            "validation_duration_ms".to_string(),
-            "Duration of validation operations in milliseconds".to_string(),
-            HashMap::new(),
-            vec![0.1, 0.5, 1.0, 2.5, 5.0, 10.0, 25.0, 50.0],
-        )?;
+        metrics.push(MetricConfig {
+            name: "validation_duration_ms".to_string(),
+            description: "Duration of validation operations in milliseconds".to_string(),
+            metric_type: MetricType::Histogram,
+            labels: HashMap::new(),
+            unit: Some("milliseconds".to_string()),
+            enabled: true,
+            initial_value: None,
+            buckets: Some(vec![0.1, 0.5, 1.0, 2.5, 5.0, 10.0, 25.0, 50.0]),
+        });
 
-        info!("Registered default Actor Core metrics");
-        Ok(())
+        Self { metrics }
     }
 }

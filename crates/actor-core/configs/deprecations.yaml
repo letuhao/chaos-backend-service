@@ -1,0 +1,37 @@
+# Default Deprecations Configuration
+# This file defines the default deprecations for Actor Core
+
+- id: "old_aggregator_api"
+  name: "Old Aggregator API"
+  description: "The old aggregator API is deprecated in favor of the new async API"
+  status: "Deprecated"
+  deprecated_date: "2021-01-01T00:00:00Z"
+  removal_date: "2023-01-01T00:00:00Z"
+  replacement: "New Async Aggregator API"
+  migration_guide: "https://docs.actor-core.dev/migration/aggregator-api"
+  severity: "High"
+  affected_versions:
+    - "0.1.0"
+    - "0.2.0"
+  breaking_change: true
+  notes: "This is a breaking change that requires code migration"
+
+- id: "legacy_cache_backend"
+  name: "Legacy Cache Backend"
+  description: "The legacy cache backend is deprecated in favor of the new multi-layer cache"
+  status: "DeprecatedRemovalImminent"
+  deprecated_date: "2020-01-01T00:00:00Z"
+  removal_date: "2022-01-01T00:00:00Z"
+  replacement: "Multi-Layer Cache System"
+  migration_guide: "https://docs.actor-core.dev/migration/cache-backend"
+  severity: "Critical"
+  affected_versions:
+    - "0.0.1"
+    - "0.1.0"
+  breaking_change: true
+  notes: "Critical: This backend will be removed in the next major version"
+
+# Example usage:
+# This file contains the default deprecations that are loaded when the
+# deprecation manager starts. Each deprecation entry includes all necessary
+# information for tracking and managing the deprecation lifecycle.

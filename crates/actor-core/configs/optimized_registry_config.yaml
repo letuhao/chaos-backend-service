@@ -1,0 +1,131 @@
+# Optimized Registry Configuration
+# This file defines the optimized registry settings for the Actor Core system
+
+# Cleanup settings
+cleanup_interval_seconds: 300  # 5 minutes
+hit_rate_percentage_multiplier: 100.0
+
+# Default merge rule settings
+default_use_pipeline: false
+default_operator: "Sum"
+
+# Caching settings
+enable_caching: true
+enable_statistics: true
+max_cache_size: 10000
+cache_ttl_seconds: 3600  # 1 hour
+
+# Performance settings
+performance:
+  # Whether to enable performance optimizations
+  enable_performance_optimizations: true
+  
+  # Whether to enable FxHash for faster lookups
+  enable_fxhash: true
+  
+  # Whether to enable SmallVec for small collections
+  enable_smallvec: true
+  
+  # Whether to enable atomic operations
+  enable_atomic_operations: true
+  
+  # Whether to enable batch operations
+  enable_batch_operations: true
+  
+  # Batch size for operations
+  batch_size: 100
+
+# Registry settings
+registry:
+  # Whether to enable subsystem caching
+  enable_subsystem_caching: true
+  
+  # Whether to enable metadata caching
+  enable_metadata_caching: true
+  
+  # Whether to enable actor-subsystem mapping caching
+  enable_actor_subsystem_caching: true
+  
+  # Maximum number of subsystems per actor
+  max_subsystems_per_actor: 50
+  
+  # Whether to enable factory caching
+  enable_factory_caching: true
+  
+  # Factory cache size
+  factory_cache_size: 1000
+
+# Statistics settings
+statistics:
+  # Whether to enable detailed statistics
+  enable_detailed_stats: true
+  
+  # Whether to enable hit rate tracking
+  enable_hit_rate_tracking: true
+  
+  # Whether to enable lookup time tracking
+  enable_lookup_time_tracking: false
+  
+  # Whether to enable memory usage tracking
+  enable_memory_tracking: false
+  
+  # Statistics collection interval in seconds
+  collection_interval_seconds: 30
+
+# Memory settings
+memory:
+  # Whether to enable memory optimization
+  enable_memory_optimization: true
+  
+  # Whether to enable pre-allocation
+  enable_preallocation: true
+  
+  # Pre-allocation size
+  preallocation_size: 1000
+  
+  # Whether to enable memory pooling
+  enable_memory_pooling: false
+  
+  # Memory pool size
+  memory_pool_size: 10000
+
+# Cleanup settings
+cleanup:
+  # Whether to enable automatic cleanup
+  enable_automatic_cleanup: true
+  
+  # Cleanup interval in seconds
+  cleanup_interval_seconds: 300
+  
+  # Whether to enable aggressive cleanup under memory pressure
+  enable_aggressive_cleanup: true
+  
+  # Aggressive cleanup threshold (percentage)
+  aggressive_cleanup_threshold: 90.0
+  
+  # Whether to enable cache shrinking
+  enable_cache_shrinking: true
+  
+  # Cache shrinking threshold (percentage)
+  shrinking_threshold: 0.3
+
+# Error handling settings
+error_handling:
+  # Whether to enable error recovery
+  enable_error_recovery: true
+  
+  # Maximum retry attempts
+  max_retry_attempts: 3
+  
+  # Retry delay in seconds
+  retry_delay_seconds: 1
+  
+  # Whether to enable error logging
+  enable_error_logging: true
+  
+  # Whether to enable detailed error messages
+  enable_detailed_errors: true
+
+# Example usage:
+# This configuration defines the optimized registry settings for the Actor Core system.
+# These settings can be customized by modifying this file or by providing runtime configuration.

@@ -10,7 +10,9 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use crate::types::Actor;
 use crate::ActorCoreResult;
-use super::system_resource_manager::SystemResourceCalculator;
+use super::SystemResourceCalculator;
+// Legacy system_resource_manager moved to examples/legacy_subsystems/
+// Use Runtime Registry System for resource calculations instead
 use tracing::{info};
 
 /// Convert string error to ActorCoreError
@@ -113,10 +115,11 @@ pub struct RegenerationConfig {
 impl Default for RegenerationConfig {
     fn default() -> Self {
         Self {
-            update_interval: 1.0, // 1 second
-            max_concurrent_tasks: 1000,
+            // TODO: Load these values from configuration
+            update_interval: 1.0, // 1 second - should be loaded from config
+            max_concurrent_tasks: 1000, // should be loaded from config
             enable_batch_processing: true,
-            batch_size: 100,
+            batch_size: 100, // should be loaded from config
             enable_monitoring: true,
         }
     }
@@ -139,62 +142,63 @@ impl ResourceRegenerationManager {
     
     /// Initialize default regeneration rules
     fn initialize_default_rules(&mut self) {
+        // TODO: Load regeneration rules from configuration instead of hardcoding
         // HP Regeneration
         self.add_regeneration_rule(RegenerationRule {
             resource_name: "hp_current".to_string(),
-            base_rate: 0.1, // 0.1 HP per second
+            base_rate: 0.1, // 0.1 HP per second - should be loaded from config
             formula: "base_rate * vitality_modifier * rest_modifier".to_string(),
             conditions: vec![
                 RegenerationCondition::NotInCombat,
-                RegenerationCondition::HealthAbove(0.1), // Only regenerate when above 10% health
+                RegenerationCondition::HealthAbove(0.1), // Only regenerate when above 10% health - should be loaded from config
             ],
             modifiers: vec![
-                RegenerationModifier::StatBased("vitality".to_string(), 0.1),
-                RegenerationModifier::EquipmentBased("regeneration_bonus".to_string(), 1.0),
+                RegenerationModifier::StatBased("vitality".to_string(), 0.1), // should be loaded from config
+                RegenerationModifier::EquipmentBased("regeneration_bonus".to_string(), 1.0), // should be loaded from config
             ],
         });
         
         // MP Regeneration
         self.add_regeneration_rule(RegenerationRule {
             resource_name: "mp_current".to_string(),
-            base_rate: 0.2, // 0.2 MP per second
+            base_rate: 0.2, // 0.2 MP per second - should be loaded from config
             formula: "base_rate * intelligence_modifier * meditation_modifier".to_string(),
             conditions: vec![
                 RegenerationCondition::NotInCombat,
                 RegenerationCondition::Resting,
             ],
             modifiers: vec![
-                RegenerationModifier::StatBased("intelligence".to_string(), 0.05),
-                RegenerationModifier::EquipmentBased("mana_regeneration".to_string(), 1.0),
+                RegenerationModifier::StatBased("intelligence".to_string(), 0.05), // should be loaded from config
+                RegenerationModifier::EquipmentBased("mana_regeneration".to_string(), 1.0), // should be loaded from config
             ],
         });
         
         // Stamina Regeneration
         self.add_regeneration_rule(RegenerationRule {
             resource_name: "stamina_current".to_string(),
-            base_rate: 0.5, // 0.5 stamina per second
+            base_rate: 0.5, // 0.5 stamina per second - should be loaded from config
             formula: "base_rate * constitution_modifier * rest_modifier".to_string(),
             conditions: vec![
                 RegenerationCondition::NotMoving,
             ],
             modifiers: vec![
-                RegenerationModifier::StatBased("constitution".to_string(), 0.1),
-                RegenerationModifier::EquipmentBased("stamina_regeneration".to_string(), 1.0),
+                RegenerationModifier::StatBased("constitution".to_string(), 0.1), // should be loaded from config
+                RegenerationModifier::EquipmentBased("stamina_regeneration".to_string(), 1.0), // should be loaded from config
             ],
         });
         
         // Mana Regeneration
         self.add_regeneration_rule(RegenerationRule {
             resource_name: "mana_current".to_string(),
-            base_rate: 0.3, // 0.3 mana per second
+            base_rate: 0.3, // 0.3 mana per second - should be loaded from config
             formula: "base_rate * wisdom_modifier * meditation_modifier".to_string(),
             conditions: vec![
                 RegenerationCondition::NotInCombat,
                 RegenerationCondition::Resting,
             ],
             modifiers: vec![
-                RegenerationModifier::StatBased("wisdom".to_string(), 0.05),
-                RegenerationModifier::EquipmentBased("mana_regeneration".to_string(), 1.0),
+                RegenerationModifier::StatBased("wisdom".to_string(), 0.05), // should be loaded from config
+                RegenerationModifier::EquipmentBased("mana_regeneration".to_string(), 1.0), // should be loaded from config
             ],
         });
     }
@@ -348,6 +352,7 @@ impl ResourceRegenerationManager {
                 // Check if health is above threshold
                 let data = actor.get_data();
                 let current_hp = data.get("hp_current").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                // TODO: Load default max HP from configuration instead of hardcoded 100.0
                 let max_hp = data.get("hp_max").and_then(|v| v.as_f64()).unwrap_or(100.0);
                 let health_percentage = current_hp / max_hp;
                 Ok(health_percentage > *threshold)
@@ -356,6 +361,7 @@ impl ResourceRegenerationManager {
                 // Check if health is below threshold
                 let data = actor.get_data();
                 let current_hp = data.get("hp_current").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                // TODO: Load default max HP from configuration instead of hardcoded 100.0
                 let max_hp = data.get("hp_max").and_then(|v| v.as_f64()).unwrap_or(100.0);
                 let health_percentage = current_hp / max_hp;
                 Ok(health_percentage < *threshold)
@@ -390,6 +396,7 @@ impl ResourceRegenerationManager {
         // Ensure we don't exceed maximum
         let data = actor.get_data();
         let current_value = data.get(resource_name).and_then(|v| v.as_f64()).unwrap_or(0.0);
+        // TODO: Load default max value from configuration instead of hardcoded 100.0
         let max_value = data.get(&format!("{}_max", resource_name)).and_then(|v| v.as_f64()).unwrap_or(100.0);
         
         let new_value = (current_value + regen_amount).min(max_value);
@@ -512,13 +519,14 @@ impl SystemResourceCalculator for ResourceRegenerationManager {
         dependencies
     }
     
-    fn get_resource_categories(&self) -> Vec<super::system_resource_manager::ResourceCategory> {
-        use super::system_resource_manager::ResourceCategory;
+    fn get_resource_categories(&self) -> Vec<String> {
+        // Legacy ResourceCategory enum moved to examples/legacy_subsystems/
+        // Return category IDs as strings instead
         vec![
-            ResourceCategory::Health,
-            ResourceCategory::Energy,
-            ResourceCategory::Physical,
-            ResourceCategory::Cultivation,
+            "health".to_string(),
+            "energy".to_string(),
+            "physical".to_string(),
+            "cultivation".to_string(),
         ]
     }
     

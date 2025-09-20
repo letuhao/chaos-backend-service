@@ -1,0 +1,23 @@
+# Configuration Registry Settings
+# This file defines the configuration for the configuration registry system
+
+# Registry limits and settings
+max_providers: 100
+validation_timeout_ms: 5000
+enable_metrics: true
+auto_validation: true
+validation_interval_ms: 30000
+
+# Error messages (can be localized)
+error_messages:
+  empty_provider_id: "Provider ID cannot be empty"
+  provider_not_found: "Configuration provider not found: {}"
+  invalid_priority: "Invalid priority for provider {}: {}"
+  validation_failed: "Provider {} validation failed: {}"
+  empty_provider_id_found: "Empty provider ID found"
+  max_providers_exceeded: "Maximum number of providers exceeded: {}"
+
+# Example usage:
+# This registry manages configuration providers and applies the settings
+# defined above. It supports configurable error messages for localization,
+# limits on the number of providers, and optional metrics collection.

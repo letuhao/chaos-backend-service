@@ -102,6 +102,7 @@ pub struct PerformanceConfig {
 impl Default for PerformanceConfig {
     fn default() -> Self {
         Self {
+            // TODO: Load these values from configuration instead of hardcoded defaults
             enable_monitoring: true,
             collection_interval: 60, // 1 minute
             max_metrics_history: 1000,
@@ -364,6 +365,7 @@ impl PerformanceMonitor {
         test.results.push(result);
         
         // Keep only the last 100 results per test
+        // TODO: Load max results per test from configuration instead of hardcoded value
         if test.results.len() > 100 {
             test.results.drain(0..test.results.len() - 100);
         }

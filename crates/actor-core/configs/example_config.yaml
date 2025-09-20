@@ -1,0 +1,60 @@
+# Example Configuration
+# This file defines the configuration for the example provider used in testing and demonstration
+
+# Provider settings
+provider_id: "example_provider"
+priority: 100
+
+# Supported categories
+supported_categories:
+  - "element_affinities"
+  - "primary_stats"
+
+# Default values for each category
+default_values:
+  element_affinities:
+    fire_affinity: 0.0
+    water_affinity: 0.0
+    earth_affinity: 0.0
+    air_affinity: 0.0
+    lightning_affinity: 0.0
+    ice_affinity: 0.0
+    dark_affinity: 0.0
+    light_affinity: 0.0
+    
+  primary_stats:
+    strength: 10.0
+    agility: 10.0
+    intelligence: 10.0
+    wisdom: 10.0
+    constitution: 10.0
+    charisma: 10.0
+
+# Merge rules for different categories
+merge_rules:
+  element_affinities:
+    strategy: "Sum"
+    use_pipeline: true
+    default_value: 0.0
+    
+  primary_stats:
+    strategy: "Sum"
+    use_pipeline: true
+    default_value: 0.0
+
+# Validation rules for different categories
+validation_rules:
+  element_affinities:
+    min_value: 0.0
+    max_value: 1.0
+    required: false
+    
+  primary_stats:
+    min_value: 0.0
+    max_value: null
+    required: false
+
+# Example usage:
+# This provider is typically used for testing and demonstration purposes.
+# It provides sample configuration values that can be used to test the
+# configuration system without requiring external configuration sources.

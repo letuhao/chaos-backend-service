@@ -160,7 +160,7 @@ impl Subsystem for ConditionalResourceSubsystem {
     }
 }
 
-// Placeholder traits and types for Actor Core
+// TODO: Replace with actual traits and types from actor-core
 #[async_trait::async_trait]
 pub trait Subsystem: Send + Sync {
     fn system_id(&self) -> &str;
@@ -243,7 +243,7 @@ pub enum CapKind {
     Min,
 }
 
-// Placeholder error type
+// TODO: Replace with actual error type from actor-core
 #[derive(Debug)]
 pub enum ActorCoreError {
     ValidationError(String),
@@ -265,7 +265,7 @@ impl std::error::Error for ActorCoreError {}
 
 pub type ActorCoreResult<T> = Result<T, ActorCoreError>;
 
-// Placeholder ResourceManager trait
+// TODO: Replace with actual ResourceManager trait from actor-core
 #[async_trait::async_trait]
 pub trait ResourceManager: Send + Sync {
     async fn get_actor_resources(&self, actor_id: &str) -> Result<Vec<Resource>, Box<dyn std::error::Error + Send + Sync>>;

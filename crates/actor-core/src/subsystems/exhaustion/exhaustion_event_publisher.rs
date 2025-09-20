@@ -43,7 +43,7 @@ impl InMemoryEventPublisher {
             events: Arc::new(RwLock::new(Vec::new())),
             stats: Arc::new(RwLock::new(EventStats::default())),
             last_emit: Arc::new(RwLock::new(HashMap::new())),
-            coalesce_window_ms: 100, // Default 100ms coalescing window
+            coalesce_window_ms: 100, // TODO: Load default coalesce window from configuration
         }
     }
 

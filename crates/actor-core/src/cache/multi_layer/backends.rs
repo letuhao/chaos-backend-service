@@ -192,8 +192,7 @@ impl L1Cache for LockFreeL1Cache {
     }
 
     fn get_stats(&self) -> L1CacheStats {
-        // This is a simplified implementation
-        // In a real implementation, you'd want to return the current stats
+        // TODO: Return actual statistics from self.stats
         L1CacheStats::new()
     }
 
@@ -284,8 +283,7 @@ impl MemoryMappedL2Cache {
 
     /// Calculate current memory usage.
     fn calculate_memory_usage(&self) -> u64 {
-        // This is a simplified implementation
-        // In a real implementation, you'd calculate the actual memory usage
+        // TODO: Calculate actual memory usage from cache entries
         0
     }
 }
@@ -442,6 +440,7 @@ impl L3Cache for PersistentL3Cache {
 
         let file = File::open(&file_path)?;
         let mut contents = String::new();
+        // TODO: Load max file size from configuration
         file.take(1024 * 1024).read_to_string(&mut contents)?; // Limit to 1MB
         
         let entry: CacheEntry = serde_json::from_str(&contents)?;
@@ -527,8 +526,7 @@ impl L3Cache for PersistentL3Cache {
     }
 
     async fn compact(&self) -> ActorCoreResult<()> {
-        // This is a simplified implementation
-        // In a real implementation, you'd implement proper compaction
+        // TODO: Implement proper compaction logic
         Ok(())
     }
 }

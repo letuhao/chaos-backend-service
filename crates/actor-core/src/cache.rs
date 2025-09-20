@@ -655,24 +655,33 @@ impl CacheFactory {
 
     /// Create a sensible default multi-layer cache.
     /// L1: lock-free in-memory; L2: in-memory; L3: distributed if REDIS url is provided, otherwise in-memory.
+    /// TODO: Load cache configuration from config files instead of hardcoded values
     pub fn create_default_multi_layer_cache() -> Arc<dyn Cache> {
-        let l1 = Self::create_lock_free_in_memory_cache(50_000, 300);
-        let l2 = Self::create_in_memory_cache(200_000, 600);
+        // TODO: Load these values from configuration
+        let l1_max_entries = 50_000;
+        let l1_ttl = 300;
+        let l2_max_entries = 200_000;
+        let l2_ttl = 600;
+        let l3_max_entries = 500_000;
+        let l3_ttl = 1800;
+        
+        let l1 = Self::create_lock_free_in_memory_cache(l1_max_entries, l1_ttl);
+        let l2 = Self::create_in_memory_cache(l2_max_entries, l2_ttl);
         let l3 = if let Ok(_url) = std::env::var("ACTOR_CORE_REDIS_URL") {
             #[cfg(feature = "redis-cache")]
             {
-                if let Ok(redis_cache) = Self::create_distributed_cache(&_url, 1800) {
+                if let Ok(redis_cache) = Self::create_distributed_cache(&_url, l3_ttl) {
                     redis_cache
                 } else {
-                    Self::create_in_memory_cache(500_000, 1800)
+                    Self::create_in_memory_cache(l3_max_entries, l3_ttl)
                 }
             }
             #[cfg(not(feature = "redis-cache"))]
             {
-                Self::create_in_memory_cache(500_000, 1800)
+                Self::create_in_memory_cache(l3_max_entries, l3_ttl)
             }
         } else {
-            Self::create_in_memory_cache(500_000, 1800)
+            Self::create_in_memory_cache(l3_max_entries, l3_ttl)
         };
         Self::create_multi_layer_cache(l1, l2, l3)
     }

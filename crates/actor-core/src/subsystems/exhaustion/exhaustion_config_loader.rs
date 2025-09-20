@@ -148,6 +148,7 @@ impl ExhaustionConfigLoader {
     /// Deep merge two configurations
     fn deep_merge_configs(&self, mut base: ExhaustionConfig, override_config: ExhaustionConfig) -> Result<ExhaustionConfig, ConfigLoaderError> {
         // Merge hysteresis_default (override takes precedence)
+        // TODO: Load default hysteresis value from configuration instead of hardcoding 0.0
         if override_config.hysteresis_default != 0.0 {
             base.hysteresis_default = override_config.hysteresis_default;
         }
@@ -201,6 +202,7 @@ Ok(base)
         }
 
         // Sort thresholds by order
+        // TODO: Load default order value from configuration instead of hardcoding 0
         base_thresholds.sort_by_key(|t| t.order.unwrap_or(0));
 
         Ok(())
@@ -394,14 +396,14 @@ Ok(base)
     fn validate_effect(&self, effect: &EffectConfig) -> Result<(), ConfigLoaderError> {
         match effect.effect_type.as_str() {
             "disable_tags" | "disable_cost_type" | "break_active_shields" | "action_lockout" => {
-                if effect.values.is_none() || effect.values.as_ref().unwrap().is_empty() {
+                if effect.values.is_none() || effect.values.as_ref().map_or(true, |v| v.is_empty()) {
                     return Err(ConfigLoaderError::ValidationError(
                         format!("Effect '{}' requires non-empty values", effect.effect_type)
                     ));
                 }
             }
             "damage_multiplier" | "incoming_multiplier" => {
-                if effect.categories.is_none() || effect.categories.as_ref().unwrap().is_empty() {
+                if effect.categories.is_none() || effect.categories.as_ref().map_or(true, |c| c.is_empty()) {
                     return Err(ConfigLoaderError::ValidationError(
                         format!("Effect '{}' requires non-empty categories", effect.effect_type)
                     ));
@@ -432,6 +434,7 @@ Ok(base)
                         "Effect 'stagger_susceptibility' requires level".to_string()
                     ));
                 }
+                // TODO: Load valid stagger levels from configuration instead of hardcoding
                 let level = effect.level.as_ref().unwrap();
                 if !["light", "medium", "heavy"].contains(&level.as_str()) {
                     return Err(ConfigLoaderError::ValidationError(

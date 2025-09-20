@@ -1,0 +1,59 @@
+# Default Category Definitions
+# This file contains the default category definitions that are loaded at startup
+
+categories:
+  vital:
+    id: "vital"
+    name: "Vital"
+    description: "Vital resources like health, mana, stamina"
+    parent_category: null
+    tags: ["resource", "vital"]
+    subsystem_id: "actor_core"
+
+  combat:
+    id: "combat"
+    name: "Combat"
+    description: "Combat-related resources and stats"
+    parent_category: null
+    tags: ["combat", "action"]
+    subsystem_id: "actor_core"
+
+  magic:
+    id: "magic"
+    name: "Magic"
+    description: "Magic-related resources and stats"
+    parent_category: null
+    tags: ["magic", "elemental"]
+    subsystem_id: "actor_core"
+
+  cultivation:
+    id: "cultivation"
+    name: "Cultivation"
+    description: "Cultivation-related resources and stats"
+    parent_category: null
+    tags: ["cultivation", "spiritual"]
+    subsystem_id: "actor_core"
+
+  physical:
+    id: "physical"
+    name: "Physical"
+    description: "Physical attributes and abilities"
+    parent_category: null
+    tags: ["physical", "body"]
+    subsystem_id: "actor_core"
+
+  mental:
+    id: "mental"
+    name: "Mental"
+    description: "Mental attributes and abilities"
+    parent_category: null
+    tags: ["mental", "mind"]
+    subsystem_id: "actor_core"
+
+  social:
+    id: "social"
+    name: "Social"
+    description: "Social attributes and abilities"
+    parent_category: null
+    tags: ["social", "interaction"]
+    subsystem_id: "actor_core"

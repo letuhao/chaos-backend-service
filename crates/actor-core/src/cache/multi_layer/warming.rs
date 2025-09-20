@@ -141,14 +141,12 @@ impl CacheWarmingStrategy for PredefinedDataWarming {
     }
 
     fn get_stats(&self) -> CacheWarmingStats {
-        // This is a simplified implementation
-        // In a real implementation, you'd return the current stats
+        // TODO: Return actual statistics from self.stats
         CacheWarmingStats::new()
     }
 
     fn is_warming(&self) -> bool {
-        // This is a simplified implementation
-        // In a real implementation, you'd check the actual warming state
+        // TODO: Check actual warming state from self.is_warming
         false
     }
 
@@ -324,12 +322,12 @@ impl CacheWarmingStrategy for PredictiveWarming {
     }
 
     fn get_stats(&self) -> CacheWarmingStats {
+        // TODO: Return actual statistics from self.stats
         CacheWarmingStats::new()
     }
 
     fn is_warming(&self) -> bool {
-        // This is a simplified implementation
-        // In a real implementation, you'd check the actual warming state
+        // TODO: Check actual warming state from self.is_warming
         false
     }
 

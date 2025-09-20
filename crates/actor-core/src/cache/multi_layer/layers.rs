@@ -209,6 +209,7 @@ impl LayerConfig {
         Self {
             max_capacity,
             eviction_policy: crate::cache::multi_layer::policy::EvictionPolicy::Lru,
+            // TODO: Load default TTL from configuration
             default_ttl: Some(300), // 5 minutes
             enable_compression: false,
             compression_level: 0,
@@ -222,8 +223,10 @@ impl LayerConfig {
         Self {
             max_capacity,
             eviction_policy: crate::cache::multi_layer::policy::EvictionPolicy::Lru,
+            // TODO: Load default TTL from configuration
             default_ttl: Some(3600), // 1 hour
             enable_compression: true,
+            // TODO: Load compression level from configuration
             compression_level: 6,
             enable_encryption: false,
             encryption_key: None,
@@ -235,8 +238,10 @@ impl LayerConfig {
         Self {
             max_capacity,
             eviction_policy: crate::cache::multi_layer::policy::EvictionPolicy::Lru,
+            // TODO: Load default TTL from configuration
             default_ttl: Some(86400), // 24 hours
             enable_compression: true,
+            // TODO: Load compression level from configuration
             compression_level: 9,
             enable_encryption: true,
             encryption_key: None,
@@ -269,6 +274,7 @@ impl LayerConfig {
 
 impl Default for LayerConfig {
     fn default() -> Self {
+        // TODO: Load default capacity from configuration
         Self::new(1000)
     }
 }

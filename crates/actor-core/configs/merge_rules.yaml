@@ -1,0 +1,76 @@
+# Merge Rules Configuration
+# This file defines how configuration values should be merged from different providers
+
+merge_rules:
+  # Element system rules
+  element_affinities:
+    strategy: "Sum"
+    use_pipeline: true
+    default_value: 0.0
+    validation_rules: []
+    
+  element_interactions:
+    strategy: "Override"
+    use_pipeline: false
+    default_value: null
+    validation_rules: []
+    
+  # Stats system rules
+  primary_stats:
+    strategy: "Sum"
+    use_pipeline: true
+    default_value: 0.0
+    validation_rules: []
+    
+  derived_formulas:
+    strategy: "Override"
+    use_pipeline: false
+    default_value: null
+    validation_rules: []
+    
+  # Performance system rules
+  performance:
+    strategy: "Min"
+    use_pipeline: true
+    default_value: 1000000
+    validation_rules: []
+    
+  # Cache system rules
+  cache_settings:
+    strategy: "Override"
+    use_pipeline: false
+    default_value: null
+    validation_rules: []
+    
+  # Registry system rules
+  registry_settings:
+    strategy: "Override"
+    use_pipeline: false
+    default_value: null
+    validation_rules: []
+    
+  # Default rule for unknown categories
+  default:
+    strategy: "Override"
+    use_pipeline: false
+    default_value: null
+    validation_rules: []
+
+# Strategy definitions
+strategies:
+  Override: "Use the highest priority value"
+  Sum: "Add all values together"
+  Max: "Use the maximum value"
+  Min: "Use the minimum value"
+  Average: "Calculate the average value"
+  Multiply: "Multiply all values"
+  Concat: "Concatenate string values"
+
+# Pipeline settings
+pipeline:
+  enabled: true
+  stages:
+    - validation
+    - transformation
+    - merging
+    - final_validation

@@ -1,0 +1,155 @@
+# RPG Resource Manager Configuration
+# This file demonstrates how RPG resources should be configured
+# instead of being hardcoded in the implementation
+
+rpg_resources:
+  # Health Points
+  hp_current:
+    name: "Health Points"
+    description: "Character's current health points"
+    category: "health"
+    resource_type: "health"
+    base_formula: "vitality * 10 + level * 5"
+    max_formula: "vitality * 10 + level * 5 + equipment_bonus"
+    regen_rate: 0.1
+    regen_type: "passive"
+    dependencies: ["vitality", "level"]
+    tags: ["vital", "health", "rpg"]
+    subsystem_id: "rpg_system"
+
+  # Magic Points
+  mp_current:
+    name: "Magic Points"
+    description: "Character's current magic points"
+    category: "magic"
+    resource_type: "mana"
+    base_formula: "intelligence * 8 + level * 3"
+    max_formula: "intelligence * 8 + level * 3 + equipment_bonus"
+    regen_rate: 0.2
+    regen_type: "passive"
+    dependencies: ["intelligence", "level"]
+    tags: ["magic", "mana", "rpg"]
+    subsystem_id: "rpg_system"
+
+  # Stamina
+  stamina_current:
+    name: "Stamina"
+    description: "Character's current stamina"
+    category: "physical"
+    resource_type: "stamina"
+    base_formula: "constitution * 6 + level * 2"
+    max_formula: "constitution * 6 + level * 2 + equipment_bonus"
+    regen_rate: 0.5
+    regen_type: "passive"
+    dependencies: ["constitution", "level"]
+    tags: ["physical", "stamina", "rpg"]
+    subsystem_id: "rpg_system"
+
+  # Experience Points
+  exp_current:
+    name: "Experience Points"
+    description: "Character's current experience points"
+    category: "progression"
+    resource_type: "experience"
+    base_formula: "0"
+    max_formula: "level * 1000 + (level - 1) * 500"
+    regen_rate: 0.0
+    regen_type: "none"
+    dependencies: ["level"]
+    tags: ["progression", "experience", "rpg"]
+    subsystem_id: "rpg_system"
+
+  # Special Ability Points
+  special_points_current:
+    name: "Special Ability Points"
+    description: "Character's special ability points"
+    category: "special"
+    resource_type: "energy"
+    base_formula: "charisma * 4 + level * 1"
+    max_formula: "charisma * 4 + level * 1 + equipment_bonus"
+    regen_rate: 0.05
+    regen_type: "passive"
+    dependencies: ["charisma", "level"]
+    tags: ["special", "ability", "rpg"]
+    subsystem_id: "rpg_system"
+
+# RPG Categories
+rpg_categories:
+  health:
+    name: "Health"
+    description: "Health and vitality related resources"
+    parent_category: "vital"
+    tags: ["vital", "health", "rpg"]
+    subsystem_id: "rpg_system"
+
+  magic:
+    name: "Magic"
+    description: "Magic and mana related resources"
+    parent_category: "energy"
+    tags: ["magic", "mana", "rpg"]
+    subsystem_id: "rpg_system"
+
+  physical:
+    name: "Physical"
+    description: "Physical and stamina related resources"
+    parent_category: "energy"
+    tags: ["physical", "stamina", "rpg"]
+    subsystem_id: "rpg_system"
+
+  progression:
+    name: "Progression"
+    description: "Character progression related resources"
+    parent_category: "meta"
+    tags: ["progression", "experience", "rpg"]
+    subsystem_id: "rpg_system"
+
+  special:
+    name: "Special"
+    description: "Special ability related resources"
+    parent_category: "ability"
+    tags: ["special", "ability", "rpg"]
+    subsystem_id: "rpg_system"
+
+# RPG Tags
+rpg_tags:
+  vital:
+    name: "Vital"
+    description: "Vital resources essential for survival"
+    tag_type: "resource"
+    color: "#FF0000"
+    subsystem_id: "rpg_system"
+
+  health:
+    name: "Health"
+    description: "Health related content"
+    tag_type: "resource"
+    color: "#FF6666"
+    subsystem_id: "rpg_system"
+
+  magic:
+    name: "Magic"
+    description: "Magic related content"
+    tag_type: "resource"
+    color: "#8000FF"
+    subsystem_id: "rpg_system"
+
+  physical:
+    name: "Physical"
+    description: "Physical related content"
+    tag_type: "resource"
+    color: "#FF8000"
+    subsystem_id: "rpg_system"
+
+  progression:
+    name: "Progression"
+    description: "Character progression content"
+    tag_type: "resource"
+    color: "#00FF00"
+    subsystem_id: "rpg_system"
+
+  special:
+    name: "Special"
+    description: "Special ability content"
+    tag_type: "resource"
+    color: "#FF00FF"
+    subsystem_id: "rpg_system"
