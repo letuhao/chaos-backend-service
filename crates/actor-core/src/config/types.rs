@@ -59,6 +59,7 @@ pub enum ConfigurationValueType {
     String,
     Integer,
     Float,
+    Number, // Generic number type for MongoDB compatibility
     Boolean,
     Array,
     Object,

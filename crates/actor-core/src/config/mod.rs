@@ -12,6 +12,8 @@ pub mod manager;
 pub mod loader;
 pub mod providers;
 pub mod loaders;
+pub mod mongodb;
+pub mod mongodb_manager;
 
 // Re-export main types for convenience
 pub use types::*;

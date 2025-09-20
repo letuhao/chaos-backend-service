@@ -221,5 +221,8 @@ pub mod observability;
 // Condition Core Integration
 pub mod condition_integration;
 
+#[cfg(feature = "cli-tools")]
+pub mod cli;
+
 // Re-export prelude as the main API
 pub use prelude::*;

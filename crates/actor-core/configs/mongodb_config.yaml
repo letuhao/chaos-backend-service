@@ -1,0 +1,49 @@
+# MongoDB Configuration for Actor Core
+# This file defines settings for MongoDB-based configuration management
+
+# MongoDB connection settings
+connection_string: "mongodb://localhost:27017"
+database_name: "actor_core_config"
+collection_name: "configuration"
+
+# Auto-sync settings
+enable_auto_sync: true
+sync_interval_seconds: 300  # 5 minutes
+
+# Fallback settings
+enable_fallback_to_file: true
+fallback_file_path: "configs/"
+
+# Performance settings
+max_connection_pool_size: 10
+connection_timeout_seconds: 30
+server_selection_timeout_seconds: 5
+
+# Security settings
+enable_ssl: false
+ssl_cert_file: ""
+ssl_key_file: ""
+ssl_ca_file: ""
+
+# Authentication settings
+username: ""
+password: ""
+auth_database: "admin"
+
+# Index settings
+create_indexes: true
+indexes:
+  - fields: ["category", "key"]
+    unique: true
+  - fields: ["category"]
+  - fields: ["source_provider"]
+  - fields: ["timestamp"]
+
+# Backup settings
+enable_backup: false
+backup_interval_hours: 24
+backup_retention_days: 7
+
+# Monitoring settings
+enable_metrics: true
+metrics_collection_interval_seconds: 60

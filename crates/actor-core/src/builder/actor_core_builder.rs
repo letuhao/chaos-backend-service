@@ -12,12 +12,15 @@ use crate::ActorCoreResult;
 pub struct ActorCoreBuilder {
     config_manager: Option<Arc<ConfigurationManager>>,
     _registry_manager: Option<Arc<RegistryManager>>,
+    #[cfg(feature = "mongodb-storage")]
+    mongodb_manager: Option<Arc<crate::config::mongodb_manager::MongoDBConfigManager>>,
     config_paths: Vec<PathBuf>,
     enable_hot_reload: bool,
     enable_metrics: bool,
     enable_caching: bool,
     cache_size_mb: usize,
     log_level: String,
+    use_mongodb_config: bool,
 }
 
 impl ActorCoreBuilder {
@@ -27,6 +30,8 @@ impl ActorCoreBuilder {
         Self {
             config_manager: None,
             _registry_manager: None,
+            #[cfg(feature = "mongodb-storage")]
+            mongodb_manager: None,
             config_paths: Vec::new(),
             // TODO: Load these defaults from configuration
             enable_hot_reload: false,
@@ -34,6 +39,7 @@ impl ActorCoreBuilder {
             enable_caching: true,
             cache_size_mb: 100,
             log_level: "info".to_string(),
+            use_mongodb_config: false,
         }
     }
 
@@ -73,6 +79,12 @@ impl ActorCoreBuilder {
         self
     }
 
+    /// Enable MongoDB configuration
+    pub fn with_mongodb_config(mut self, enabled: bool) -> Self {
+        self.use_mongodb_config = enabled;
+        self
+    }
+
     /// Build the Actor Core system
     pub async fn build(self) -> ActorCoreResult<ActorCoreSystem> {
         info!("Building Actor Core system with Builder pattern");
@@ -92,6 +104,7 @@ impl ActorCoreBuilder {
             enable_caching: self.enable_caching,
             cache_size_mb: self.cache_size_mb,
             log_level: self.log_level,
+            use_mongodb_config: self.use_mongodb_config,
         };
         
         info!("Actor Core system built successfully");
@@ -144,6 +157,19 @@ impl ActorCoreBuilder {
         );
         db_provider.load_from_database().await?;
         loader.add_provider(Arc::new(db_provider));
+
+        // Add MongoDB provider if enabled
+        #[cfg(feature = "mongodb-storage")]
+        if self.use_mongodb_config {
+            info!("Adding MongoDB configuration provider");
+            let mongodb_config = crate::config::mongodb::MongoDBConfigurationProvider::load_mongodb_config("configs/mongodb_config.yaml")?;
+            let mongodb_provider = Arc::new(crate::config::mongodb::MongoDBConfigurationProvider::new(
+                "mongodb_provider".to_string(),
+                50, // High priority for MongoDB
+                mongodb_config,
+            ).await?);
+            loader.add_provider(mongodb_provider);
+        }
         
         // Add custom configuration files
         for config_path in &self.config_paths {
@@ -200,6 +226,7 @@ pub struct ActorCoreSystem {
     pub enable_caching: bool,
     pub cache_size_mb: usize,
     pub log_level: String,
+    pub use_mongodb_config: bool,
 }
 
 impl ActorCoreSystem {

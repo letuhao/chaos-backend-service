@@ -61,7 +61,18 @@ pub enum ActorCoreError {
     /// Validation error
     #[error("Validation error: {0}")]
     ValidationError(String),
+
+    /// MongoDB error
+    #[error("MongoDB error: {0}")]
+    MongoDBError(String),
 }
 
 /// Result type for actor core operations.
 pub type ActorCoreResult<T> = Result<T, ActorCoreError>;
+
+#[cfg(feature = "mongodb-storage")]
+impl From<mongodb::error::Error> for ActorCoreError {
+    fn from(err: mongodb::error::Error) -> Self {
+        ActorCoreError::MongoDBError(err.to_string())
+    }
+}
