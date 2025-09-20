@@ -1,0 +1,24 @@
+# Production Configuration for CMS Service
+server:
+  port: 8080
+  host: "0.0.0.0"
+  workers: 8
+
+database:
+  mongodb_uri: "mongodb://mongodb-cluster:27017"
+  mongodb_database: "chaos_cms"
+
+auth:
+  jwt_secret: "CHANGE_THIS_IN_PRODUCTION_USE_STRONG_SECRET"
+  jwt_expiry: 3600
+  admin_username: "admin"
+  admin_password: "CHANGE_THIS_IN_PRODUCTION"
+
+monitoring:
+  metrics_enabled: true
+  metrics_port: 9090
+  health_check_enabled: true
+
+logging:
+  level: "info"
+  format: "json"

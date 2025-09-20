@@ -11,13 +11,12 @@ path = "src/main.rs"
 tokio = { workspace = true }
 axum = { workspace = true }
 tower = { workspace = true }
-tower-http = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 anyhow = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
-tracing-subscriber = { workspace = true }
+tracing-subscriber = { workspace = true, features = ["env-filter"] }
 clap = { workspace = true }
 uuid = { workspace = true }
 chrono = { workspace = true }
@@ -28,3 +27,9 @@ redis = { workspace = true }
 # Service-specific dependencies
 actor-core = { path = "../../crates/actor-core" }
 shared = { path = "../../crates/shared" }
+
+# Additional dependencies for admin login and monitoring
+jsonwebtoken = "9.2"
+argon2 = "0.5"
+prometheus = "0.13"
+tower-http = { workspace = true, features = ["cors", "trace"] }

@@ -120,3 +120,6 @@ k8s/*.secret.*
 coverage*/
 
 .env
+scripts/data/lock
+
+scripts/data/wal/000001

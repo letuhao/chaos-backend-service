@@ -318,7 +318,7 @@ async fn test_concurrent_access_integration() -> Result<(), Box<dyn std::error::
     
     // Wait for all tasks to complete
     for handle in handles {
-        handle.await?;
+        let _ = handle.await?;
     }
     
     // Verify that all resources were registered
