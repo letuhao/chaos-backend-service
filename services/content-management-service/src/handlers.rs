@@ -5,7 +5,7 @@ use axum::{
     routing::{get, post},
     Router,
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
 use crate::auth::{AuthService, LoginRequest, LoginResponse, UserInfo};
@@ -17,6 +17,20 @@ pub struct ApiResponse<T> {
     pub data: Option<T>,
     pub error: Option<String>,
     pub timestamp: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct HealthCheckRequest {
+    pub service: String,
+    pub url: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct HealthCheckResponse {
+    pub healthy: bool,
+    pub uptime: Option<String>,
+    pub version: Option<String>,
+    pub response_time_ms: Option<u64>,
 }
 
 impl<T> ApiResponse<T> {
@@ -124,11 +138,61 @@ pub async fn me_handler_get() -> Result<Json<ApiResponse<UserInfo>>, (StatusCode
     Ok(Json(ApiResponse::success(user_info)))
 }
 
+// Health check proxy handler
+pub async fn health_check_proxy_handler(
+    Json(request): Json<HealthCheckRequest>,
+) -> Result<Json<ApiResponse<HealthCheckResponse>>, (StatusCode, Json<ApiResponse<()>>)> {
+    let start_time = std::time::Instant::now();
+    
+    // Determine the correct health endpoint based on service name
+    let health_url = match request.service.as_str() {
+        "Prometheus" => format!("{}/-/healthy", request.url),
+        "Grafana" => format!("{}/api/health", request.url),
+        _ => format!("{}/health", request.url),
+    };
+    
+    match reqwest::get(&health_url).await {
+        Ok(response) => {
+            let response_time = start_time.elapsed().as_millis() as u64;
+            let healthy = response.status().is_success();
+            
+            let mut uptime = None;
+            let mut version = None;
+            
+            // Try to parse response for additional info
+            if let Ok(data) = response.json::<serde_json::Value>().await {
+                uptime = data.get("uptime").and_then(|v| v.as_str()).map(|s| s.to_string());
+                version = data.get("version").and_then(|v| v.as_str()).map(|s| s.to_string());
+            }
+            
+            let health_response = HealthCheckResponse {
+                healthy,
+                uptime,
+                version,
+                response_time_ms: Some(response_time),
+            };
+            
+            Ok(Json(ApiResponse::success(health_response)))
+        }
+        Err(_) => {
+            let health_response = HealthCheckResponse {
+                healthy: false,
+                uptime: None,
+                version: None,
+                response_time_ms: Some(start_time.elapsed().as_millis() as u64),
+            };
+            
+            Ok(Json(ApiResponse::success(health_response)))
+        }
+    }
+}
+
 // Create monitoring routes
 pub fn create_monitoring_routes() -> Router<Arc<MonitoringService>> {
     Router::new()
         .route("/health", get(health_handler))
         .route("/metrics/info", get(metrics_info_handler))
+        .route("/health/check", post(health_check_proxy_handler))
 }
 
 // Create basic routes

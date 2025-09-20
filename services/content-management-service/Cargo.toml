@@ -32,4 +32,5 @@ shared = { path = "../../crates/shared" }
 jsonwebtoken = "9.2"
 argon2 = "0.5"
 prometheus = "0.13"
+reqwest = { version = "0.11", features = ["json"] }
 tower-http = { workspace = true, features = ["cors", "trace"] }
