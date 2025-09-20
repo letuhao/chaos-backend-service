@@ -1,0 +1,187 @@
+# API Gateway Development Configuration
+# Override configuration for development environment
+
+# Server Configuration
+server:
+  host: "127.0.0.1"
+  port: 8080
+  workers: 2
+  max_connections: 1000
+  keep_alive: 30
+  timeout: 30
+
+# Logging Configuration
+logging:
+  level: "debug"
+  format: "pretty"
+  file: "logs/api-gateway-dev.log"
+  max_size: "50MB"
+  max_files: 5
+  compress: false
+
+# Service Discovery Configuration
+service_discovery:
+  type: "static"
+  static:
+    services:
+      - name: "user-management"
+        host: "127.0.0.1"
+        port: 8081
+        health_check: "/health"
+      - name: "chaos-backend"
+        host: "127.0.0.1"
+        port: 8082
+        health_check: "/health"
+      - name: "inventory-service"
+        host: "127.0.0.1"
+        port: 8083
+        health_check: "/health"
+      - name: "chat-service"
+        host: "127.0.0.1"
+        port: 8084
+        health_check: "/health"
+      - name: "guild-service"
+        host: "127.0.0.1"
+        port: 8085
+        health_check: "/health"
+      - name: "world-service"
+        host: "127.0.0.1"
+        port: 8086
+        health_check: "/health"
+      - name: "matchmaking-service"
+        host: "127.0.0.1"
+        port: 8087
+        health_check: "/health"
+      - name: "event-service"
+        host: "127.0.0.1"
+        port: 8088
+        health_check: "/health"
+      - name: "content-management-service"
+        host: "127.0.0.1"
+        port: 8089
+        health_check: "/health"
+      - name: "notification-service"
+        host: "127.0.0.1"
+        port: 8090
+        health_check: "/health"
+      - name: "payment-service"
+        host: "127.0.0.1"
+        port: 8091
+        health_check: "/health"
+      - name: "anti-cheat-service"
+        host: "127.0.0.1"
+        port: 8092
+        health_check: "/health"
+      - name: "analytics-service"
+        host: "127.0.0.1"
+        port: 8093
+        health_check: "/health"
+
+# Authentication Configuration
+auth:
+  jwt:
+    secret: "dev-jwt-secret-key-not-for-production"
+    algorithm: "HS256"
+    expiration: 7200  # 2 hours for development
+    refresh_expiration: 172800  # 48 hours for development
+    issuer: "chaos-world-api-gateway-dev"
+    audience: "chaos-world-client-dev"
+  
+  api_keys:
+    enabled: true
+    header_name: "X-API-Key"
+    keys:
+      - key: "dev-api-key-123"
+        name: "Development"
+        permissions: ["read", "write", "admin"]
+        expires_at: "2026-12-31T23:59:59Z"
+
+# Rate Limiting Configuration
+rate_limiting:
+  enabled: true
+  redis:
+    host: "127.0.0.1"
+    port: 6379
+    database: 0
+    password: ""
+    pool_size: 5
+  
+  rules:
+    - name: "global"
+      limit: 10000  # Higher limits for development
+      window: 60
+      burst: 1000
+    
+    - name: "auth"
+      limit: 100
+      window: 60
+      burst: 50
+      paths: ["/api/v1/auth/*"]
+    
+    - name: "game"
+      limit: 1000
+      window: 60
+      burst: 200
+      paths: ["/api/v1/game/*"]
+
+# Security Configuration
+security:
+  cors:
+    enabled: true
+    origins: ["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:8080"]
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"]
+    headers: ["Authorization", "Content-Type", "X-API-Key", "X-Requested-With"]
+    credentials: true
+    max_age: 86400
+
+# Caching Configuration
+caching:
+  enabled: true
+  redis:
+    host: "127.0.0.1"
+    port: 6379
+    database: 1
+    password: ""
+    pool_size: 5
+  
+  ttl:
+    default: 60    # Shorter TTL for development
+    auth: 30
+    user: 120
+    game: 15
+    inventory: 60
+    chat: 30
+    guild: 120
+    world: 15
+    matchmaking: 30
+    events: 60
+    content: 300
+    notifications: 30
+    payments: 0
+    anti_cheat: 0
+    analytics: 0
+
+# Monitoring Configuration
+monitoring:
+  tracing:
+    enabled: true
+    jaeger:
+      endpoint: "http://127.0.0.1:14268/api/traces"
+      service_name: "api-gateway-dev"
+      sample_rate: 1.0  # Sample all requests in development
+  
+  metrics:
+    prometheus:
+      enabled: true
+      port: 9090
+      path: "/metrics"
+
+# Development Configuration
+development:
+  hot_reload: true
+  debug: true
+  mock_services: false
+  log_requests: true
+  log_responses: true
+  log_headers: true
+  log_body: true

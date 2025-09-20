@@ -1,0 +1,264 @@
+[package]
+name = "api-gateway"
+version = "0.1.0"
+edition = "2021"
+authors = ["Chaos World Team"]
+description = "High-performance API Gateway for Chaos World game backend"
+license = "MIT"
+repository = "https://github.com/chaos-world/api-gateway"
+
+[[bin]]
+name = "api-gateway"
+path = "src/main.rs"
+
+[dependencies]
+# Web framework
+axum = { workspace = true }
+tokio = { workspace = true }
+tower = { workspace = true }
+tower-http = { workspace = true }
+hyper = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+
+# Error handling
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+
+# CLI
+clap = { workspace = true, features = ["derive"] }
+
+# Utilities
+uuid = { workspace = true, features = ["v4", "serde"] }
+chrono = { workspace = true, features = ["serde"] }
+
+# Logging and tracing
+tracing = { workspace = true, optional = true }
+tracing-subscriber = { workspace = true, optional = true }
+
+# Database
+redis = { workspace = true, optional = true }
+mongodb = { workspace = true, optional = true }
+bson = { workspace = true, optional = true }
+
+# Authentication
+jsonwebtoken = { workspace = true, optional = true }
+oauth2 = { workspace = true, optional = true }
+
+# HTTP client
+reqwest = { workspace = true, features = ["json"] }
+
+# Async traits
+async-trait = { workspace = true }
+
+# Futures
+futures = { workspace = true }
+
+# Concurrency
+parking_lot = { workspace = true }
+dashmap = { workspace = true }
+crossbeam = { workspace = true }
+
+# Caching
+moka = { workspace = true, optional = true, features = ["future"] }
+
+# Service discovery
+consul = { workspace = true, optional = true }
+k8s-openapi = { workspace = true, optional = true, features = ["v1_28"] }
+
+# gRPC
+tonic = { workspace = true, optional = true }
+prost = { workspace = true, optional = true }
+
+# Metrics
+prometheus = { workspace = true, optional = true }
+
+# Security
+ring = { workspace = true, optional = true }
+base64 = { workspace = true, optional = true }
+hex = { workspace = true, optional = true }
+sha2 = { workspace = true, optional = true }
+hmac = { workspace = true, optional = true }
+
+# Random
+rand = { workspace = true }
+
+# Regex
+regex = { workspace = true }
+
+# URL parsing
+url = { workspace = true }
+
+# Time
+time = { workspace = true, optional = true }
+
+# Environment variables
+dotenv = { workspace = true, optional = true }
+
+# Configuration
+config = { workspace = true, optional = true }
+
+# Validation
+validator = { workspace = true, optional = true }
+
+# Compression
+flate2 = { workspace = true, optional = true }
+
+# JSON Web Tokens
+jwt = { workspace = true, optional = true }
+
+# Rate limiting
+governor = { workspace = true, optional = true }
+
+# Tower extensions (using existing tower crates)
+tower_governor = { version = "0.1", optional = true }
+
+# Testing
+tokio-test = { workspace = true }
+tempfile = { workspace = true }
+proptest = { workspace = true }
+criterion = { workspace = true }
+
+[dev-dependencies]
+tokio-test = { workspace = true }
+tempfile = { workspace = true }
+proptest = { workspace = true }
+criterion = { workspace = true }
+
+[features]
+default = ["full"]
+full = [
+    "auth",
+    "rate-limiting",
+    "caching",
+    "monitoring",
+    "security",
+    "load-balancing",
+    "service-discovery",
+    "circuit-breaker",
+    "metrics",
+    "tracing",
+    "compression",
+    "cors",
+    "timeout",
+    "retry",
+    "health-check",
+    "prometheus",
+    "jaeger",
+    "consul",
+    "kubernetes",
+    "redis",
+    "mongodb",
+    "jwt",
+    "oauth2",
+    "grpc",
+    "websocket",
+    "http2",
+    "tls",
+    "compression",
+    "validation",
+    "logging",
+    "debug",
+    "development",
+    "production",
+    "testing"
+]
+
+# Authentication features
+auth = ["dep:jwt", "dep:oauth2", "dep:jsonwebtoken"]
+jwt = ["dep:jsonwebtoken"]
+oauth2 = ["dep:oauth2"]
+
+# Rate limiting features
+rate-limiting = ["dep:governor", "dep:redis"]
+redis = ["dep:redis"]
+
+# Caching features
+caching = ["dep:redis", "dep:moka"]
+
+# Monitoring features
+monitoring = ["dep:prometheus", "dep:tracing"]
+prometheus = ["dep:prometheus"]
+jaeger = ["dep:tracing"]
+
+# Security features
+security = ["dep:ring", "dep:base64", "dep:hex", "dep:sha2", "dep:hmac"]
+
+# Load balancing features
+load-balancing = ["dep:consul"]
+
+# Service discovery features
+service-discovery = ["dep:consul", "dep:k8s-openapi"]
+consul = ["dep:consul"]
+kubernetes = ["dep:k8s-openapi"]
+
+# Circuit breaker features
+circuit-breaker = ["dep:tower_governor"]
+
+# Metrics features
+metrics = ["dep:prometheus"]
+
+# Tracing features
+tracing = ["dep:tracing", "dep:tracing-subscriber"]
+
+# Compression features
+compression = ["dep:flate2", "tower-http/compression-gzip"]
+
+# CORS features
+cors = ["tower-http/cors"]
+
+# Timeout features
+timeout = ["tower/timeout"]
+
+# Retry features
+retry = ["tower/retry"]
+
+# Health check features
+health-check = ["tower/retry"]
+
+# gRPC features
+grpc = ["dep:tonic", "dep:prost"]
+
+# WebSocket features
+websocket = ["axum/ws"]
+
+# HTTP/2 features
+http2 = ["hyper/http2"]
+
+# TLS features
+tls = ["hyper/http1", "hyper/http2"]
+
+# Validation features
+validation = ["dep:validator"]
+
+# Logging features
+logging = ["dep:tracing", "dep:tracing-subscriber"]
+
+# Debug features
+debug = ["dep:tracing", "dep:tracing-subscriber"]
+
+# Environment features
+development = ["debug", "logging", "tracing"]
+production = ["logging", "tracing", "metrics", "monitoring"]
+testing = ["debug", "logging", "tracing"]
+
+[profile.dev]
+opt-level = 0
+debug = true
+split-debuginfo = "unpacked"
+
+[profile.release]
+opt-level = 3
+debug = false
+lto = true
+codegen-units = 1
+panic = "abort"
+
+[profile.bench]
+opt-level = 3
+debug = false
+lto = true
+codegen-units = 1

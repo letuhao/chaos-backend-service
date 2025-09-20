@@ -1,10 +1,10 @@
 [package]
-name = "event-service"
+name = "anti-cheat-service"
 version = "0.1.0"
 edition = "2021"
 
 [[bin]]
-name = "event-service"
+name = "anti-cheat-service"
 path = "src/main.rs"
 
 [dependencies]

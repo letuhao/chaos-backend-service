@@ -1,49 +1,37 @@
 [package]
 name = "chaos-backend"
-version.workspace = true
-edition.workspace = true
-authors.workspace = true
-license.workspace = true
-repository.workspace = true
-description = "Main Chaos World MMORPG backend service"
+version = "0.1.0"
+edition = "2021"
 
 [[bin]]
 name = "chaos-backend"
 path = "src/main.rs"
 
+[[bin]]
+name = "check_mongodb"
+path = "src/check_mongodb.rs"
+
 [dependencies]
-# Workspace dependencies
+actor-core = { path = "../../crates/actor-core", features = ["mongodb-storage"] }
 shared = { path = "../../crates/shared" }
-actor-core = { path = "../../crates/actor-core" }
-combat-core = { path = "../../crates/combat-core" }
-leveling-core = { path = "../../crates/leveling-core" }
-race-core = { path = "../../crates/race-core" }
-world-core = { path = "../../crates/world-core" }
-event-core = { path = "../../crates/event-core" }
-item-core = { path = "../../crates/item-core" }
-job-core = { path = "../../crates/job-core" }
-generator-core = { path = "../../crates/generator-core" }
-api = { path = "../../crates/api" }
+tokio = { version = "1.0", features = ["full"] }
+async-trait = "0.1"
+futures = "0.3"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+parking_lot = "0.12"
+anyhow = "1.0"
+thiserror = "1.0"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+axum = "0.7"
+tower = "0.4"
+tower-http = { version = "0.5", features = ["cors", "trace"] }
+uuid = { version = "1.0", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+clap = { version = "4.0", features = ["derive"] }
+mongodb = "2.8"
+bson = "2.8"
 
-# Core dependencies
-tokio = { workspace = true }
-tracing = { workspace = true }
-tracing-subscriber = { workspace = true }
-anyhow = { workspace = true }
-clap = { workspace = true }
-config = { workspace = true }
-
-# Database
-sqlx = { workspace = true }
-redis = { workspace = true }
-
-# Web framework
-axum = { workspace = true }
-tower = { workspace = true }
-tower-http = { workspace = true }
-
-# gRPC
-tonic = { workspace = true }
-
-# Monitoring
-prometheus = { workspace = true }
+[features]
+mongodb-storage = ["actor-core/mongodb-storage"]

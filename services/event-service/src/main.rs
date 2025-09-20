@@ -1,43 +1,33 @@
-//! Event Service
-//!
-//! Microservice for quests and dynamic content management.
-
-use anyhow::Result;
-use clap::Parser;
-use tracing::{info, error};
-
-#[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
-struct Args {
-    /// Port to listen on
-    #[arg(short, long, default_value = "8084")]
-    port: u16,
-    
-    /// Log level
-    #[arg(short, long, default_value = "info")]
-    log_level: String,
-}
+use axum::{
+    routing::get,
+    Router,
+};
+use std::net::SocketAddr;
+use tracing_subscriber;
 
 #[tokio::main]
-async fn main() -> Result<()> {
-    let args = Args::parse();
-    
+async fn main() {
     // Initialize tracing
-    tracing_subscriber::fmt()
-        .with_env_filter(args.log_level)
-        .init();
+    tracing_subscriber::fmt::init();
     
-    info!("Starting Event Service on port {}", args.port);
+    // Create router
+    let app = Router::new()
+        .route("/health", get(health_check))
+        .route("/", get(root));
     
-    // TODO: Initialize event-core services
-    // TODO: Start HTTP server
-    // TODO: Start gRPC server
+    // Start server
+    let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
+    tracing::info!("🚀 event-service server starting on {}", addr);
     
-    info!("Event Service started successfully");
-    
-    // Keep the service running
-    tokio::signal::ctrl_c().await?;
-    info!("Shutting down Event Service");
-    
-    Ok(())
+    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
+    axum::serve(listener, app).await.unwrap();
 }
+
+async fn health_check() -> &'static str {
+    "OK"
+}
+
+async fn root() -> &'static str {
+    "Hello from event-service!"
+}
+

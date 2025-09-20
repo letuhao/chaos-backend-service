@@ -1,0 +1,229 @@
+# API Gateway Production Configuration
+# Production-optimized configuration
+
+# Server Configuration
+server:
+  host: "0.0.0.0"
+  port: 8080
+  workers: 8
+  max_connections: 50000
+  keep_alive: 60
+  timeout: 30
+
+# Logging Configuration
+logging:
+  level: "info"
+  format: "json"
+  file: "logs/api-gateway.log"
+  max_size: "500MB"
+  max_files: 20
+  compress: true
+
+# Service Discovery Configuration
+service_discovery:
+  type: "consul"
+  consul:
+    host: "consul.chaos-world.internal"
+    port: 8500
+    datacenter: "dc1"
+    service_name: "api-gateway"
+    check_interval: "10s"
+    check_timeout: "3s"
+
+# Authentication Configuration
+auth:
+  jwt:
+    secret: "${JWT_SECRET}"  # Load from environment variable
+    algorithm: "HS256"
+    expiration: 3600  # 1 hour
+    refresh_expiration: 86400  # 24 hours
+    issuer: "chaos-world-api-gateway"
+    audience: "chaos-world-client"
+  
+  oauth2:
+    enabled: true
+    providers:
+      google:
+        client_id: "${GOOGLE_CLIENT_ID}"
+        client_secret: "${GOOGLE_CLIENT_SECRET}"
+        redirect_uri: "https://api.chaos-world.com/auth/google/callback"
+      discord:
+        client_id: "${DISCORD_CLIENT_ID}"
+        client_secret: "${DISCORD_CLIENT_SECRET}"
+        redirect_uri: "https://api.chaos-world.com/auth/discord/callback"
+      steam:
+        client_id: "${STEAM_CLIENT_ID}"
+        client_secret: "${STEAM_CLIENT_SECRET}"
+        redirect_uri: "https://api.chaos-world.com/auth/steam/callback"
+  
+  api_keys:
+    enabled: true
+    header_name: "X-API-Key"
+    keys: []  # Load from secure key management system
+
+# Rate Limiting Configuration
+rate_limiting:
+  enabled: true
+  redis:
+    host: "redis-cluster.chaos-world.internal"
+    port: 6379
+    database: 0
+    password: "${REDIS_PASSWORD}"
+    pool_size: 50
+  
+  rules:
+    - name: "global"
+      limit: 1000
+      window: 60
+      burst: 100
+    
+    - name: "auth"
+      limit: 10
+      window: 60
+      burst: 5
+      paths: ["/api/v1/auth/*"]
+    
+    - name: "game"
+      limit: 100
+      window: 60
+      burst: 20
+      paths: ["/api/v1/game/*"]
+    
+    - name: "chat"
+      limit: 200
+      window: 60
+      burst: 50
+      paths: ["/api/v1/chat/*"]
+    
+    - name: "payment"
+      limit: 20
+      window: 60
+      burst: 5
+      paths: ["/api/v1/payments/*"]
+    
+    - name: "admin"
+      limit: 500
+      window: 60
+      burst: 100
+      roles: ["admin"]
+
+# Security Configuration
+security:
+  cors:
+    enabled: true
+    origins: ["https://chaos-world.com", "https://www.chaos-world.com", "https://app.chaos-world.com"]
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    headers: ["Authorization", "Content-Type", "X-API-Key"]
+    credentials: true
+    max_age: 86400
+  
+  headers:
+    - name: "X-Content-Type-Options"
+      value: "nosniff"
+    - name: "X-Frame-Options"
+      value: "DENY"
+    - name: "X-XSS-Protection"
+      value: "1; mode=block"
+    - name: "Strict-Transport-Security"
+      value: "max-age=31536000; includeSubDomains; preload"
+    - name: "Referrer-Policy"
+      value: "strict-origin-when-cross-origin"
+    - name: "Content-Security-Policy"
+      value: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+  
+  ip_whitelist:
+    enabled: false
+    ips: []
+  
+  ip_blacklist:
+    enabled: true
+    ips: []
+    auto_ban: true
+    ban_duration: 3600
+
+# Load Balancing Configuration
+load_balancing:
+  algorithm: "least_connections"
+  health_check:
+    enabled: true
+    interval: 15
+    timeout: 3
+    path: "/health"
+    success_threshold: 2
+    failure_threshold: 3
+  
+  sticky_sessions:
+    enabled: true
+    cookie_name: "session_id"
+    max_age: 3600
+
+# Caching Configuration
+caching:
+  enabled: true
+  redis:
+    host: "redis-cluster.chaos-world.internal"
+    port: 6379
+    database: 1
+    password: "${REDIS_PASSWORD}"
+    pool_size: 50
+  
+  ttl:
+    default: 300
+    auth: 60
+    user: 600
+    game: 30
+    inventory: 300
+    chat: 60
+    guild: 600
+    world: 30
+    matchmaking: 60
+    events: 300
+    content: 1800
+    notifications: 60
+    payments: 0
+    anti_cheat: 0
+    analytics: 0
+
+# Monitoring Configuration
+monitoring:
+  tracing:
+    enabled: true
+    jaeger:
+      endpoint: "http://jaeger.chaos-world.internal:14268/api/traces"
+      service_name: "api-gateway"
+      sample_rate: 0.1  # Sample 10% of requests in production
+  
+  metrics:
+    prometheus:
+      enabled: true
+      port: 9090
+      path: "/metrics"
+    
+    custom_metrics:
+      - name: "request_duration"
+        type: "histogram"
+        labels: ["method", "path", "status"]
+      - name: "request_count"
+        type: "counter"
+        labels: ["method", "path", "status"]
+      - name: "active_connections"
+        type: "gauge"
+        labels: []
+      - name: "rate_limit_hits"
+        type: "counter"
+        labels: ["rule", "ip"]
+      - name: "circuit_breaker_state"
+        type: "gauge"
+        labels: ["service", "state"]
+
+# Production Configuration
+production:
+  hot_reload: false
+  debug: false
+  mock_services: false
+  log_requests: false
+  log_responses: false
+  log_headers: false
+  log_body: false
+  minify_responses: true
+  compress_responses: true

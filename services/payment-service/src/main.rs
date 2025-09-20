@@ -17,7 +17,7 @@ async fn main() {
     
     // Start server
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
-    tracing::info!("🚀 world-service server starting on {}", addr);
+    tracing::info!("🚀 payment-service server starting on {}", addr);
     
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
     axum::serve(listener, app).await.unwrap();
@@ -28,6 +28,6 @@ async fn health_check() -> &'static str {
 }
 
 async fn root() -> &'static str {
-    "Hello from world-service!"
+    "Hello from payment-service!"
 }
 
