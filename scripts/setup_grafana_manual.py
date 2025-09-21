@@ -41,7 +41,7 @@ def setup_datasource():
     try:
         # Check if datasource already exists
         response = requests.get("http://localhost:3001/api/datasources", 
-                              auth=("admin", "Ab123456"), timeout=10)
+                              auth=("admin", "admin123"), timeout=10)
         
         if response.status_code == 200:
             existing_ds = [ds for ds in response.json() if ds['name'] == 'Prometheus']
@@ -52,7 +52,7 @@ def setup_datasource():
         # Create datasource
         response = requests.post("http://localhost:3001/api/datasources",
                                json=datasource_config,
-                               auth=("admin", "Ab123456"),
+                               auth=("admin", "admin123"),
                                headers={"Content-Type": "application/json"},
                                timeout=10)
         
@@ -116,6 +116,10 @@ def create_simple_dashboard():
                         {
                             "expr": "rate(cms_request_duration_seconds_count[5m])",
                             "legendFormat": "CMS Requests/sec"
+                        },
+                        {
+                            "expr": "rate(user_management_request_duration_seconds_count[5m])",
+                            "legendFormat": "User Management Requests/sec"
                         }
                     ],
                     "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
@@ -135,6 +139,26 @@ def create_simple_dashboard():
                         }
                     ],
                     "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8}
+                },
+                {
+                    "id": 4,
+                    "title": "User Management Metrics",
+                    "type": "graph",
+                    "targets": [
+                        {
+                            "expr": "rate(user_management_http_requests_total[5m])",
+                            "legendFormat": "User Management HTTP Requests/sec"
+                        },
+                        {
+                            "expr": "rate(user_management_auth_attempts_total[5m])",
+                            "legendFormat": "Authentication Attempts/sec"
+                        },
+                        {
+                            "expr": "rate(user_management_registrations_total[5m])",
+                            "legendFormat": "User Registrations/sec"
+                        }
+                    ],
+                    "gridPos": {"h": 8, "w": 24, "x": 0, "y": 16}
                 }
             ],
             "time": {
@@ -148,7 +172,7 @@ def create_simple_dashboard():
     try:
         response = requests.post("http://localhost:3001/api/dashboards/db",
                                json=dashboard,
-                               auth=("admin", "Ab123456"),
+                               auth=("admin", "admin123"),
                                headers={"Content-Type": "application/json"},
                                timeout=10)
         

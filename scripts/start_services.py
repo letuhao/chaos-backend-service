@@ -15,12 +15,14 @@ class ServiceManager:
         self.services = [
             "ChaosWorld-API-Gateway",
             "ChaosWorld-Backend", 
-            "ChaosWorld-CMS"
+            "ChaosWorld-CMS",
+            "ChaosWorld-UserManagement"
         ]
         self.service_urls = {
             "ChaosWorld-API-Gateway": "http://localhost:8080",
             "ChaosWorld-Backend": "http://localhost:8081",
-            "ChaosWorld-CMS": "http://localhost:8083"
+            "ChaosWorld-CMS": "http://localhost:8083",
+            "ChaosWorld-UserManagement": "http://localhost:8082"
         }
     
     def log(self, message: str, level: str = "INFO"):
@@ -97,6 +99,7 @@ class ServiceManager:
             self.log("Service URLs:", "SUCCESS")
             self.log("- API Gateway: http://localhost:8080", "SUCCESS")
             self.log("- Chaos Backend: http://localhost:8081", "SUCCESS")
+            self.log("- User Management: http://localhost:8082", "SUCCESS")
             self.log("- CMS Service: http://localhost:8083", "SUCCESS")
             return True
         else:

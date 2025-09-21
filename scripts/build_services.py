@@ -45,6 +45,11 @@ class ServiceBuilder:
                 "path": self.services_dir / "content-management-service",
                 "binary": "content-management-service.exe",
                 "cargo_args": ["--bin", "content-management-service"]
+            },
+            "user-management": {
+                "path": self.services_dir / "user-management",
+                "binary": "user-management.exe",
+                "cargo_args": ["--bin", "user-management"]
             }
         }
     

@@ -216,32 +216,155 @@ Rate Limiting:
 ```yaml
 POST /auth/register:
   Description: Register new user
-  Request: { username, email, password, display_name }
-  Response: { user_id, token, expires_at }
+  Request: 
+    Content-Type: application/json
+    Body: {
+      "username": "string (3-50 chars)",
+      "email": "string (valid email)",
+      "password": "string (8-128 chars)",
+      "display_name": "string (optional, 1-100 chars)",
+      "agree_to_terms": "boolean (required)"
+    }
+  Response: 
+    Success (201): {
+      "success": true,
+      "user": {
+        "id": "uuid",
+        "username": "string",
+        "email": "string",
+        "display_name": "string",
+        "created_at": "timestamp"
+      },
+      "tokens": {
+        "access_token": "jwt_token",
+        "refresh_token": "jwt_token",
+        "expires_at": "timestamp"
+      }
+    }
+    Error (400/409): {
+      "success": false,
+      "error": "string",
+      "details": "string (optional)"
+    }
   Rate Limit: 5/minute per IP
 
 POST /auth/login:
   Description: User login
-  Request: { username/email, password }
-  Response: { user_id, token, refresh_token, expires_at }
+  Request:
+    Content-Type: application/json
+    Body: {
+      "username_or_email": "string",
+      "password": "string",
+      "remember_me": "boolean (optional, default: false)"
+    }
+  Response:
+    Success (200): {
+      "success": true,
+      "user": {
+        "id": "uuid",
+        "username": "string",
+        "email": "string",
+        "display_name": "string",
+        "avatar_url": "string (optional)",
+        "last_login": "timestamp"
+      },
+      "tokens": {
+        "access_token": "jwt_token",
+        "refresh_token": "jwt_token",
+        "expires_at": "timestamp"
+      }
+    }
+    Error (401/400): {
+      "success": false,
+      "error": "string",
+      "details": "string (optional)"
+    }
   Rate Limit: 10/minute per IP
+
+GET /auth/me:
+  Description: Get current user profile
+  Request:
+    Headers: {
+      "Authorization": "Bearer <access_token>"
+    }
+  Response:
+    Success (200): {
+      "success": true,
+      "user": {
+        "id": "uuid",
+        "username": "string",
+        "email": "string",
+        "display_name": "string",
+        "avatar_url": "string (optional)",
+        "status": "string",
+        "email_verified": "boolean",
+        "created_at": "timestamp",
+        "updated_at": "timestamp",
+        "last_login": "timestamp",
+        "login_count": "integer"
+      }
+    }
+    Error (401): {
+      "success": false,
+      "error": "Unauthorized",
+      "details": "Invalid or expired token"
+    }
+  Rate Limit: 1000/hour per user
 
 POST /auth/refresh:
   Description: Refresh JWT token
-  Request: { refresh_token }
-  Response: { token, expires_at }
+  Request: 
+    Content-Type: application/json
+    Body: {
+      "refresh_token": "string"
+    }
+  Response: 
+    Success (200): {
+      "success": true,
+      "tokens": {
+        "access_token": "jwt_token",
+        "refresh_token": "jwt_token",
+        "expires_at": "timestamp"
+      }
+    }
+    Error (401): {
+      "success": false,
+      "error": "Invalid refresh token"
+    }
   Rate Limit: 20/minute per user
 
 POST /auth/logout:
   Description: User logout
-  Request: { token }
-  Response: { success: true }
+  Request: 
+    Headers: {
+      "Authorization": "Bearer <access_token>"
+    }
+  Response: 
+    Success (200): {
+      "success": true,
+      "message": "Logged out successfully"
+    }
+    Error (401): {
+      "success": false,
+      "error": "Unauthorized"
+    }
   Rate Limit: 100/minute per user
 
 POST /auth/logout-all:
   Description: Logout from all devices
-  Request: { token }
-  Response: { success: true }
+  Request: 
+    Headers: {
+      "Authorization": "Bearer <access_token>"
+    }
+  Response: 
+    Success (200): {
+      "success": true,
+      "message": "Logged out from all devices"
+    }
+    Error (401): {
+      "success": false,
+      "error": "Unauthorized"
+    }
   Rate Limit: 10/minute per user
 ```
 

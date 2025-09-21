@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "chaos-monitoring-scripts"
+version = "1.0.0"
+description = "Monitoring service management scripts for Chaos World"
+requires-python = ">=3.8"
+dependencies = [
+    "requests>=2.32.0",
+    "PyYAML>=6.0.0",
+]
+
+[tool.basedpyright]
+pythonVersion = "3.10"
+pythonPlatform = "Windows"
+typeCheckingMode = "basic"
+include = ["*.py"]
+exclude = ["**/node_modules", "**/__pycache__"]

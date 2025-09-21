@@ -14,7 +14,8 @@ class ServiceManager:
         self.services = [
             "ChaosWorld-API-Gateway",
             "ChaosWorld-Backend", 
-            "ChaosWorld-CMS"
+            "ChaosWorld-CMS",
+            "ChaosWorld-UserManagement"
         ]
         self.nssm_path = r"C:\ProgramData\chocolatey\bin\nssm.exe"
         self.service_dir = r"C:\ChaosWorld\services"

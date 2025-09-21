@@ -14,7 +14,8 @@ class ServiceManager:
         self.services = [
             "ChaosWorld-API-Gateway",
             "ChaosWorld-Backend", 
-            "ChaosWorld-CMS"
+            "ChaosWorld-CMS",
+            "ChaosWorld-UserManagement"
         ]
     
     def log(self, message: str, level: str = "INFO"):

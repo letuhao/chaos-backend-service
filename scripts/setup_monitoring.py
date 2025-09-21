@@ -60,6 +60,16 @@ class MonitoringSetup:
                     "scrape_interval": "5s"
                 },
                 {
+                    "job_name": "chaos-world-user-management",
+                    "static_configs": [
+                        {
+                            "targets": ["localhost:8082"]
+                        }
+                    ],
+                    "metrics_path": "/metrics",
+                    "scrape_interval": "5s"
+                },
+                {
                     "job_name": "chaos-world-cms",
                     "static_configs": [
                         {
@@ -162,7 +172,7 @@ class MonitoringSetup:
         with open(config_file, 'r') as f:
             config_content = f.read()
         
-        # Add port configuration
+        # Add port and security configuration
         config_content += f"""
 [server]
 http_port = {self.grafana_port}
@@ -170,6 +180,10 @@ http_port = {self.grafana_port}
 [paths]
 data = {self.config_dir / 'grafana' / 'data'}
 logs = {self.config_dir / 'grafana' / 'logs'}
+
+[security]
+admin_user = admin
+admin_password = admin123
 
 [log]
 level = info
@@ -238,12 +252,12 @@ level = info
         try:
             import requests
             
-            # Create datasource
+            # Create datasource (Grafana runs on port 3001)
             response = requests.post(
-                "http://localhost:3000/api/datasources",
+                "http://localhost:3001/api/datasources",
                 json=datasource_config,
                 headers={"Content-Type": "application/json"},
-                auth=("admin", "admin")  # Default Grafana credentials
+                auth=("admin", "admin123")
             )
             
             if response.status_code in [200, 409]:  # 409 = already exists

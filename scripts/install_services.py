@@ -42,6 +42,7 @@ class ServiceInstaller:
         api_gateway_target = target_dir / "api-gateway.exe"
         chaos_backend_target = target_dir / "chaos-backend.exe"
         cms_service_target = target_dir / "content-management-service.exe"
+        user_mgmt_target = target_dir / "user-management.exe"
         
         if not api_gateway_target.exists():
             self.log(f"API Gateway not found at {api_gateway_target}", "ERROR")
@@ -58,12 +59,18 @@ class ServiceInstaller:
             self.log("Run 'python build_services.py' to build all services", "INFO")
             return False
         
+        if not user_mgmt_target.exists():
+            self.log(f"User Management Service not found at {user_mgmt_target}", "ERROR")
+            self.log("Run 'python build_services.py' to build all services", "INFO")
+            return False
+        
         # Copy executables to service directory
         self.log("Copying service executables to service directory...")
         try:
             shutil.copy2(api_gateway_target, os.path.join(self.service_dir, "api-gateway.exe"))
             shutil.copy2(chaos_backend_target, os.path.join(self.service_dir, "chaos-backend.exe"))
             shutil.copy2(cms_service_target, os.path.join(self.service_dir, "content-management-service.exe"))
+            shutil.copy2(user_mgmt_target, os.path.join(self.service_dir, "user-management.exe"))
             self.log("Service executables copied successfully")
         except Exception as e:
             self.log(f"Failed to copy service executables: {e}", "ERROR")
@@ -189,6 +196,18 @@ class ServiceInstaller:
                     "RUST_LOG": "info",
                     "CMS_PORT": "8083",
                     "APP_ENV": "prod"
+                }
+            },
+            {
+                "name": "ChaosWorld-UserManagement",
+                "exe": os.path.join(self.service_dir, "user-management.exe"),
+                "display_name": "Chaos World User Management",
+                "description": "User Management Service for Chaos World",
+                "app_parameters": "--port 8082",
+                "environment_vars": {
+                    "RUST_LOG": "info",
+                    "USER_MANAGEMENT_PORT": "8082",
+                    "MONGODB_URL": "mongodb://localhost:27017"
                 }
             }
         ]

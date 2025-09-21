@@ -28,6 +28,11 @@ class ServiceChecker:
                 "name": "ChaosWorld-CMS",
                 "url": "http://localhost:8083",
                 "port": 8083
+            },
+            {
+                "name": "ChaosWorld-UserManagement",
+                "url": "http://localhost:8082",
+                "port": 8082
             }
         ]
     

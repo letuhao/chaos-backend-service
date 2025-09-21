@@ -27,6 +27,7 @@ This directory contains Python scripts for managing all Chaos World backend serv
 | Script | Description | Usage |
 |--------|-------------|-------|
 | `cms_service_manager.py` | Manage CMS service individually | `python cms_service_manager.py <command>` |
+| `user_management_service_manager.py` | Manage User Management service individually | `python user_management_service_manager.py <command>` |
 | `cms_service.bat` | Windows batch wrapper for CMS service | `cms_service.bat <command>` |
 | `cms_service.ps1` | PowerShell wrapper for CMS service | `.\cms_service.ps1 <command>` |
 
@@ -79,16 +80,19 @@ python check_services.py
 - **ChaosWorld-API-Gateway** - Port 8080
 - **ChaosWorld-Backend** - Port 8081  
 - **ChaosWorld-CMS** - Port 8083
+- **ChaosWorld-UserManagement** - Port 8082
 
 ### Service URLs
 - API Gateway: http://localhost:8080
 - Chaos Backend: http://localhost:8081
 - CMS Service: http://localhost:8083
+- User Management: http://localhost:8082
 
 ### Health Endpoints
 - API Gateway: http://localhost:8080/health
 - Chaos Backend: http://localhost:8081/health
 - CMS Service: http://localhost:8083/health
+- User Management: http://localhost:8082/health
 
 ## CMS Service Management
 
@@ -120,10 +124,48 @@ python cms_service_manager.py logs
 python cms_service_manager.py build
 ```
 
+## User Management Service Management
+
+The User Management service can be managed individually using the `user_management_service_manager.py` script:
+
+```bash
+# Start User Management service
+python user_management_service_manager.py start
+
+# Run in foreground (development mode)
+python user_management_service_manager.py foreground
+
+# Run on specific port
+python user_management_service_manager.py foreground --port 8084
+
+# Stop service
+python user_management_service_manager.py stop
+
+# Restart service
+python user_management_service_manager.py restart
+
+# Check status
+python user_management_service_manager.py status
+
+# Test API endpoints
+python user_management_service_manager.py test
+
+# Show logs
+python user_management_service_manager.py logs
+
+# Show more log lines
+python user_management_service_manager.py logs --lines 100
+
+# Build service
+python user_management_service_manager.py build
+```
+
 ## Configuration
 
 ### Environment Variables
 - `CMS_PORT` - CMS service port (default: 8083)
+- `USER_MANAGEMENT_PORT` - User Management service port (default: 8082)
+- `MONGODB_URL` - MongoDB connection URL (default: mongodb://localhost:27017)
 - `RUST_LOG` - Log level (default: info)
 
 ### Service Configuration
@@ -188,6 +230,7 @@ python cms_service_manager.py test
 # Test individual endpoints
 curl http://localhost:8080/health
 curl http://localhost:8081/health
+curl http://localhost:8082/health
 curl http://localhost:8083/health
 ```
 

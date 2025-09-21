@@ -59,7 +59,7 @@ def check_grafana_dashboards():
     print("\n📊 Checking Grafana dashboards...")
     try:
         response = requests.get("http://localhost:3001/api/search?type=dash-db", 
-                              auth=("admin", "Ab123456"), timeout=10)
+                              auth=("admin", "admin123"), timeout=10)
         if response.status_code == 200:
             dashboards = response.json()
             
@@ -80,7 +80,7 @@ def check_grafana_datasources():
     print("\n🔗 Checking Grafana datasources...")
     try:
         response = requests.get("http://localhost:3001/api/datasources", 
-                              auth=("admin", "Ab123456"), timeout=10)
+                              auth=("admin", "admin123"), timeout=10)
         if response.status_code == 200:
             datasources = response.json()
             
