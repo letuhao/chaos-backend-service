@@ -85,6 +85,11 @@ class SimpleDeployer:
         # Show final status for deployed services only
         self.log("📊 Final service status:")
         status = self.utils.get_service_status()
+        
+        # If no specific services were deployed, show all services
+        if service_ids is None:
+            service_ids = list(self.utils.services.keys())
+        
         for service_id in service_ids:
             if service_id in status:
                 is_healthy = status[service_id]

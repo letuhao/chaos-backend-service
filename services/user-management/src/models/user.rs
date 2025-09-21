@@ -104,6 +104,7 @@ pub struct UserSession {
     pub last_accessed: DateTime<Utc>,
     pub ip_address: Option<String>,
     pub user_agent: Option<String>,
+    pub user_fingerprint: Option<String>,
     pub is_active: bool,
 }
 

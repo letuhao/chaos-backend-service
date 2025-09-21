@@ -13,6 +13,7 @@ mod services;
 mod database;
 mod middleware;
 mod metrics;
+mod utils;
 
 use config::UserServiceConfig;
 use handlers::auth::*;
@@ -181,7 +182,7 @@ async fn main() {
     tracing::info!("🚀 User Management Service is now running!");
     tracing::info!("📝 Logs are being written to: C:\\ChaosWorld\\logs\\user-management.log");
     
-    axum::serve(listener, app.into_make_service()).await.unwrap();
+    axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>()).await.unwrap();
 }
 
 /// Metrics handler for Prometheus

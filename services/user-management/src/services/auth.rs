@@ -135,6 +135,9 @@ impl AuthService {
         let now = Utc::now();
         let expires_at = now + Duration::seconds(self.config.jwt.refresh_expiry_seconds as i64);
 
+        // Generate user fingerprint for better tracking
+        let user_fingerprint = self.generate_user_fingerprint(&ip_address, &user_agent);
+
         Ok(UserSession {
             id: Uuid::new_v4(),
             user_id,
@@ -145,8 +148,31 @@ impl AuthService {
             last_accessed: now,
             ip_address,
             user_agent,
+            user_fingerprint,
             is_active: true,
         })
+    }
+
+    /// Generate a user fingerprint based on IP address and user agent
+    fn generate_user_fingerprint(&self, ip_address: &Option<String>, user_agent: &Option<String>) -> Option<String> {
+        use std::collections::hash_map::DefaultHasher;
+        use std::hash::{Hash, Hasher};
+
+        let mut hasher = DefaultHasher::new();
+        
+        // Hash IP address and user agent together
+        if let Some(ip) = ip_address {
+            ip.hash(&mut hasher);
+        }
+        if let Some(ua) = user_agent {
+            ua.hash(&mut hasher);
+        }
+        
+        // Add some randomness to make it harder to reverse
+        let timestamp = Utc::now().timestamp();
+        timestamp.hash(&mut hasher);
+        
+        Some(format!("{:x}", hasher.finish()))
     }
 
     /// Validate password strength

@@ -168,7 +168,9 @@ impl SessionRepository {
 
     /// Create a new session
     pub async fn create_session(&self, session: &UserSession) -> Result<UserSession, mongodb::error::Error> {
-        self.collection.insert_one(session, None).await?;
+        tracing::info!("Inserting session into MongoDB: {:?}", session);
+        let result = self.collection.insert_one(session, None).await?;
+        tracing::info!("Session inserted with ID: {:?}", result.inserted_id);
         Ok(session.clone())
     }
 
@@ -200,6 +202,7 @@ impl SessionRepository {
                 "last_accessed": bson::DateTime::from_system_time(session.last_accessed.into()),
                 "ip_address": session.ip_address.as_ref(),
                 "user_agent": session.user_agent.as_ref(),
+                "user_fingerprint": session.user_fingerprint.as_ref(),
                 "is_active": session.is_active
             }
         };

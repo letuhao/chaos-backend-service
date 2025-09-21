@@ -15,9 +15,11 @@ pub struct RegisterRequest {
     pub password: String,
     
     #[validate(length(max = 100, message = "Display name must be less than 100 characters"))]
+    #[serde(alias = "displayName")]
     pub display_name: Option<String>,
     
     #[validate(must_match(other = "agree_to_terms", message = "You must agree to the terms and conditions"))]
+    #[serde(alias = "agreeToTerms")]
     pub agree_to_terms: bool,
 }
 
@@ -25,11 +27,13 @@ pub struct RegisterRequest {
 #[derive(Debug, Clone, Serialize, Deserialize, Validate)]
 pub struct LoginRequest {
     #[validate(length(min = 1, message = "Username or email is required"))]
+    #[serde(alias = "username")]
     pub username_or_email: String,
     
     #[validate(length(min = 1, message = "Password is required"))]
     pub password: String,
     
+    #[serde(alias = "rememberMe")]
     pub remember_me: Option<bool>,
 }
 

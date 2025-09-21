@@ -1,8 +1,9 @@
 use axum::{
-    extract::{Json, State, Request},
-    http::StatusCode,
+    extract::{Json, State, Request, ConnectInfo},
+    http::{StatusCode, HeaderMap},
     response::Json as ResponseJson,
 };
+use std::net::SocketAddr;
 use serde_json::{json, Value};
 use uuid::Uuid;
 use chrono::Utc;
@@ -18,14 +19,22 @@ use crate::models::{
 use crate::services::AuthService;
 use crate::database::DatabaseManager;
 use crate::metrics::METRICS;
+use crate::utils::request::ClientInfo;
 
 /// User registration handler
 pub async fn register(
     State((config, db_manager)): State<(Arc<UserServiceConfig>, Arc<DatabaseManager>)>,
+    headers: HeaderMap,
+    connect_info: Option<ConnectInfo<SocketAddr>>,
     Json(payload): Json<RegisterRequest>,
 ) -> Result<ResponseJson<Value>, (StatusCode, ResponseJson<Value>)> {
     // Record HTTP request
     METRICS.record_http_request("POST", "/auth/register", 200);
+    
+    // Extract client information
+    let client_info = ClientInfo::from_request(&headers, connect_info);
+    tracing::info!("Registration request from IP: {:?}, User-Agent: {:?}", 
+                   client_info.ip_address, client_info.user_agent);
     
     // Validate request
     if let Err(validation_errors) = payload.validate() {
@@ -126,7 +135,7 @@ pub async fn register(
     };
 
     // Create session
-    let session = match auth_service.create_session(user.id, None, None) {
+    let session = match auth_service.create_session(user.id, client_info.ip_address, client_info.user_agent) {
         Ok(session) => session,
         Err(e) => {
             tracing::error!("Failed to create session: {}", e);
@@ -169,9 +178,16 @@ pub async fn register(
     };
 
     // Save session to database
-    if let Err(e) = db_manager.session_repo.create_session(&session).await {
-        tracing::error!("Failed to save session to database: {}", e);
-        // Continue anyway, user is created
+    tracing::info!("Saving session to database: {:?}", session);
+    match db_manager.session_repo.create_session(&session).await {
+        Ok(saved_session) => {
+            tracing::info!("Session saved successfully to database: {:?}", saved_session);
+        }
+        Err(e) => {
+            tracing::error!("Failed to save session to database: {}", e);
+            tracing::error!("Session data that failed to save: {:?}", session);
+            // Continue anyway, user is created
+        }
     }
 
     // Record successful registration
@@ -190,10 +206,17 @@ pub async fn register(
 /// User login handler
 pub async fn login(
     State((config, db_manager)): State<(Arc<UserServiceConfig>, Arc<DatabaseManager>)>,
+    headers: HeaderMap,
+    connect_info: Option<ConnectInfo<SocketAddr>>,
     Json(payload): Json<LoginRequest>,
 ) -> Result<ResponseJson<Value>, (StatusCode, ResponseJson<Value>)> {
     // Record HTTP request
     METRICS.record_http_request("POST", "/auth/login", 200);
+    
+    // Extract client information
+    let client_info = ClientInfo::from_request(&headers, connect_info);
+    tracing::info!("Login request from IP: {:?}, User-Agent: {:?}", 
+                   client_info.ip_address, client_info.user_agent);
     
     // Validate request
     if let Err(validation_errors) = payload.validate() {
@@ -269,7 +292,7 @@ pub async fn login(
     }
 
     // Create session
-    let session = match auth_service.create_session(user.id, None, None) {
+    let session = match auth_service.create_session(user.id, client_info.ip_address, client_info.user_agent) {
         Ok(session) => session,
         Err(e) => {
             tracing::error!("Failed to create session: {}", e);
@@ -306,9 +329,12 @@ pub async fn login(
     }
 
     // Save session to database
+    tracing::info!("Saving session to database: {:?}", session);
     if let Err(e) = db_manager.session_repo.create_session(&session).await {
         tracing::error!("Failed to save session to database: {}", e);
         // Continue anyway
+    } else {
+        tracing::info!("Session saved successfully to database");
     }
 
     // Record successful login
