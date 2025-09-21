@@ -1,6 +1,6 @@
 # Production Configuration for CMS Service
 server:
-  port: 8080
+  port: 8083
   host: "0.0.0.0"
   workers: 8
 

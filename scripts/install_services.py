@@ -82,7 +82,8 @@ class ServiceInstaller:
         """Create necessary directories"""
         os.makedirs(self.service_dir, exist_ok=True)
         os.makedirs(self.log_dir, exist_ok=True)
-        self.log(f"Created directories: {self.service_dir}, {self.log_dir}")
+        os.makedirs(os.path.join(self.service_dir, "configs"), exist_ok=True)
+        self.log(f"Created directories: {self.service_dir}, {self.log_dir}, {self.service_dir}/configs")
     
     def copy_executables(self):
         """Copy service executables to service directory"""
@@ -90,6 +91,51 @@ class ServiceInstaller:
         # Keeping for backward compatibility but it should not be called
         self.log("Note: copy_executables() is deprecated, using check_service_files() instead", "INFO")
         return True
+    
+    def copy_config_files(self) -> bool:
+        """Copy configuration files to service directory"""
+        self.log("Copying configuration files to service directory...")
+        
+        try:
+            # Define service config mappings
+            service_configs = {
+                "api-gateway": {
+                    "source": self.project_root / "services" / "api-gateway" / "configs",
+                    "dest": os.path.join(self.service_dir, "configs", "api-gateway")
+                },
+                "content-management-service": {
+                    "source": self.project_root / "services" / "content-management-service" / "configs", 
+                    "dest": os.path.join(self.service_dir, "configs", "content-management-service")
+                },
+                "chaos-backend": {
+                    "source": self.project_root / "services" / "chaos-backend" / "configs",
+                    "dest": os.path.join(self.service_dir, "configs", "chaos-backend")
+                }
+            }
+            
+            for service_name, config_info in service_configs.items():
+                source_dir = config_info["source"]
+                dest_dir = config_info["dest"]
+                
+                if source_dir.exists():
+                    # Create destination directory
+                    os.makedirs(dest_dir, exist_ok=True)
+                    
+                    # Copy all files from source to destination
+                    for file_path in source_dir.iterdir():
+                        if file_path.is_file():
+                            dest_file = os.path.join(dest_dir, file_path.name)
+                            shutil.copy2(file_path, dest_file)
+                            self.log(f"Copied {file_path.name} to {dest_dir}")
+                else:
+                    self.log(f"Warning: Config directory not found for {service_name}: {source_dir}", "WARNING")
+            
+            self.log("Configuration files copied successfully")
+            return True
+            
+        except Exception as e:
+            self.log(f"Failed to copy configuration files: {e}", "ERROR")
+            return False
     
     def run_nssm_command(self, service_name: str, command: str, *args) -> bool:
         """Run NSSM command"""
@@ -160,6 +206,10 @@ class ServiceInstaller:
         
         # Check and copy service files
         if not self.check_service_files():
+            return False
+        
+        # Copy configuration files
+        if not self.copy_config_files():
             return False
         
         # Install services

@@ -604,7 +604,7 @@ async fn test_complete_auth_flow() {
     
     // Register user
     let register_response = client
-        .post("http://localhost:8081/auth/register")
+        .post("http://localhost:8082/auth/register")
         .json(&RegisterRequest {
             username: "test_user",
             email: "test@example.com",
@@ -619,7 +619,7 @@ async fn test_complete_auth_flow() {
     
     // Login user
     let login_response = client
-        .post("http://localhost:8081/auth/login")
+        .post("http://localhost:8082/auth/login")
         .json(&LoginRequest {
             username: "test_user",
             password: "TestPassword123",
@@ -649,7 +649,7 @@ export let options = {
 };
 
 export default function() {
-  let response = http.post('http://localhost:8081/auth/login', {
+  let response = http.post('http://localhost:8082/auth/login', {
     username: 'test_user',
     password: 'test_password'
   });
@@ -673,7 +673,7 @@ RUN cargo build --release
 FROM debian:bullseye-slim
 RUN apt-get update && apt-get install -y ca-certificates
 COPY --from=builder /app/target/release/user-management /usr/local/bin/
-EXPOSE 8081
+EXPOSE 8082
 CMD ["user-management"]
 ```
 
@@ -697,7 +697,7 @@ spec:
       - name: user-management
         image: user-management:latest
         ports:
-        - containerPort: 8081
+        - containerPort: 8082
         env:
         - name: DATABASE_URL
           value: "postgresql://user:pass@postgres:5432/user_db"
@@ -779,7 +779,7 @@ JWT_ACCESS_EXPIRY=3600
 JWT_REFRESH_EXPIRY=604800
 
 # Server Configuration
-SERVER_PORT=8081
+SERVER_PORT=8082
 SERVER_HOST=0.0.0.0
 SERVER_WORKERS=4
 
@@ -799,7 +799,7 @@ RATE_LIMIT_WINDOW=3600
 ```yaml
 # user-management-config.yaml
 server:
-  port: 8081
+  port: 8082
   host: "0.0.0.0"
   workers: 4
   max_connections: 10000

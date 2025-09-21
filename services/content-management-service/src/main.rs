@@ -13,7 +13,6 @@ use std::sync::Arc;
 use tower_http::cors::CorsLayer;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-
 use config::Config;
 use auth::{AuthService, auth_middleware};
 use monitoring::MonitoringService;
@@ -36,6 +35,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Load configuration
     let config = Config::load()?;
     tracing::info!("📋 Configuration loaded successfully");
+    tracing::info!("🔧 Server config: port={}, host={}", config.server.port, config.server.host);
 
     // Initialize services
     let auth_service = Arc::new(AuthService::new(

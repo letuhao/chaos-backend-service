@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::env;
+use std::fs;
 
 /// User Management Service Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -99,7 +100,7 @@ impl Default for UserServiceConfig {
 impl Default for ServerConfig {
     fn default() -> Self {
         Self {
-            port: 8081,
+            port: 8082,
             host: "0.0.0.0".to_string(),
             workers: 4,
             max_connections: 10000,
@@ -185,7 +186,7 @@ impl UserServiceConfig {
         let config = UserServiceConfig {
             server: ServerConfig {
                 port: env::var("SERVER_PORT")
-                    .unwrap_or_else(|_| "8081".to_string())
+                    .unwrap_or_else(|_| "8082".to_string())
                     .parse()?,
                 host: env::var("SERVER_HOST").unwrap_or_else(|_| "0.0.0.0".to_string()),
                 workers: env::var("SERVER_WORKERS")
@@ -329,6 +330,27 @@ impl UserServiceConfig {
             Ok(())
         } else {
             Err(errors)
+        }
+    }
+
+    /// Load configuration from YAML file
+    pub fn from_file(path: &str) -> Result<Self, Box<dyn std::error::Error>> {
+        let content = fs::read_to_string(path)?;
+        let config: UserServiceConfig = serde_yaml::from_str(&content)?;
+        Ok(config)
+    }
+
+    /// Load configuration from file or environment variables
+    pub fn load() -> Result<Self, Box<dyn std::error::Error>> {
+        let config_path = env::var("CONFIG_PATH")
+            .unwrap_or_else(|_| "configs/user-management.yaml".to_string());
+        
+        if std::path::Path::new(&config_path).exists() {
+            tracing::info!("Loading configuration from file: {}", config_path);
+            Self::from_file(&config_path)
+        } else {
+            tracing::warn!("Config file not found at {}, using environment variables", config_path);
+            Self::from_env()
         }
     }
 }

@@ -123,3 +123,5 @@ coverage*/
 scripts/data/lock
 
 scripts/data/wal/000001
+
+scripts/__pycache__/

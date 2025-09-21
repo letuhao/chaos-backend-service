@@ -4,19 +4,81 @@
 
 use std::collections::HashMap;
 use tracing::{info, warn, error};
+use serde::{Deserialize, Serialize};
+use std::fs;
 
 use actor_core::prelude::*;
 use actor_core::builder::ActorCoreBuilder;
 use mongodb::Collection;
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct ServerConfig {
+    port: u16,
+    host: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct Config {
+    server: ServerConfig,
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            server: ServerConfig {
+                port: 8081,
+                host: "0.0.0.0".to_string(),
+            },
+        }
+    }
+}
+
+impl Config {
+    fn load() -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
+        let config_path = "configs/chaos-backend.yaml";
+        if std::path::Path::new(config_path).exists() {
+            let content = fs::read_to_string(config_path)?;
+            let config: Config = serde_yaml::from_str(&content)?;
+            Ok(config)
+        } else {
+            info!("Config file not found at {}, using default configuration", config_path);
+            Ok(Config::default())
+        }
+    }
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    // Initialize tracing with debug level to see all logs
-    tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::DEBUG)
+    // Initialize tracing with both console and file output
+    std::fs::create_dir_all("C:\\ChaosWorld\\logs").unwrap_or_else(|e| {
+        eprintln!("Warning: Could not create logs directory: {}", e);
+    });
+    
+    let file = std::fs::OpenOptions::new()
+        .create(true)
+        .write(true)
+        .append(true)
+        .open("C:\\ChaosWorld\\logs\\chaos-backend.log")
+        .unwrap_or_else(|e| {
+            eprintln!("Warning: Could not open log file: {}", e);
+            std::fs::File::create("chaos-backend.log").unwrap()
+        });
+    
+    use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+    
+    tracing_subscriber::registry()
+        .with(
+            tracing_subscriber::EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| "chaos_backend=debug".into()),
+        )
+        .with(tracing_subscriber::fmt::layer().with_writer(file).with_ansi(false))
+        .with(tracing_subscriber::fmt::layer()) // Also output to console
         .init();
     
+    // Load configuration
+    let config = Config::load()?;
     info!("🚀 Starting Chaos Backend Service - MongoDB Integration Test");
+    info!("🔧 Server config: port={}, host={}", config.server.port, config.server.host);
     
     // Use hardcoded runtime flags to avoid MongoDB port conflicts
     info!("🔧 Using hardcoded runtime flags (ignoring MongoDB)...");
@@ -116,8 +178,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     }
     
     // Start HTTP server
-    info!("🚀 Starting Chaos Backend HTTP server on port 8081...");
-    start_http_server().await?;
+    info!("🚀 Starting Chaos Backend HTTP server on port {}...", config.server.port);
+    start_http_server(config.server.port, config.server.host).await?;
     
     Ok(())
 }
@@ -396,7 +458,7 @@ async fn initialize_default_flags(collection: &Collection<mongodb::bson::Documen
 }
 
 /// Start the HTTP server
-async fn start_http_server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+async fn start_http_server(port: u16, _host: String) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     use axum::{
         routing::get,
         Router,
@@ -409,7 +471,7 @@ async fn start_http_server() -> Result<(), Box<dyn std::error::Error + Send + Sy
         .route("/", get(root));
     
     // Start server
-    let addr = SocketAddr::from(([0, 0, 0, 0], 8081));
+    let addr = SocketAddr::from(([0, 0, 0, 0], port));
     info!("🌐 Chaos Backend server starting on {}", addr);
     
     let listener = tokio::net::TcpListener::bind(addr).await?;

@@ -1,15 +1,14 @@
-# Development Configuration for CMS Service
 server:
   port: 8083
   host: "0.0.0.0"
-  workers: 2
+  workers: 4
 
 database:
   mongodb_uri: "mongodb://localhost:27017"
-  mongodb_database: "chaos_cms_dev"
+  mongodb_database: "chaos_cms"
 
 auth:
-  jwt_secret: "dev_jwt_secret_change_in_production"
+  jwt_secret: "your_jwt_secret_here_change_in_production_use_strong_secret_key"
   jwt_expiry: 3600
   admin_username: "admin"
   admin_password: "admin123"
@@ -18,7 +17,3 @@ monitoring:
   metrics_enabled: true
   metrics_port: 9090
   health_check_enabled: true
-
-logging:
-  level: "debug"
-  format: "pretty"

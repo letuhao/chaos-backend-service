@@ -1,0 +1,47 @@
+server:
+  port: 8082
+  host: "0.0.0.0"
+  workers: 4
+  max_connections: 10000
+
+database:
+  url: "mongodb://localhost:27017"
+  pool_size: 10
+  timeout_seconds: 30
+  ssl_mode: "prefer"
+
+redis:
+  url: "redis://localhost:6379"
+  password: null
+  db: 0
+  pool_size: 100
+
+jwt:
+  secret: "your_jwt_secret_here_change_in_production_use_strong_secret_key"
+  access_expiry_seconds: 3600
+  refresh_expiry_seconds: 604800
+  issuer: "chaos-world"
+  audience: "chaos-world-api"
+
+password:
+  min_length: 8
+  require_uppercase: true
+  require_lowercase: true
+  require_numbers: true
+  require_special: false
+  max_length: 128
+
+rate_limiting:
+  enabled: true
+  window_seconds: 3600
+  max_requests: 1000
+  login_attempts: 10
+  password_reset: 3
+
+email:
+  smtp_host: "smtp.gmail.com"
+  smtp_port: 587
+  smtp_username: "your-email@gmail.com"
+  smtp_password: "your-app-password"
+  from_email: "noreply@chaosworld.com"
+  from_name: "Chaos World"
