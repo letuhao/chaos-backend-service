@@ -45,6 +45,7 @@ Condition Core
 │   ├── Weather Functions (8+ functions)
 │   ├── Magic Functions (15+ functions)
 │   ├── Relationship Functions (12+ functions)
+│   ├── Element Functions (20+ functions)
 │   └── Custom Functions (10+ functions)
 └── Integration Bridges
     ├── Action Core Bridge
@@ -144,6 +145,26 @@ Condition Core
   - Load testing strategy
   - Test automation
 
+### **5. Element Core Integration Documents**
+
+- **[10_Condition_Core_Element_Core_Integration.md](10_Condition_Core_Element_Core_Integration.md)**
+  - Element Core integration design
+  - Element condition functions
+  - Element data provider interface
+  - Element condition examples
+  - Performance benefits
+  - Testing strategy
+
+### **6. Status Core Integration Documents**
+
+- **[11_Condition_Core_Status_Core_Integration.md](11_Condition_Core_Status_Core_Integration.md)**
+  - Status Core integration design
+  - Status condition functions
+  - Status data provider interface
+  - Status condition examples
+  - Performance benefits
+  - Testing strategy
+
 ## 🎮 **Skyrim-Inspired Design**
 
 ### **Condition Functions Categories**
@@ -184,6 +205,30 @@ Skyrim Condition Functions
 │   ├── IsFriendlyToActor, IsNeutralToActor
 │   ├── GetFactionRank, IsInFaction
 │   └── GetCrimeGold, GetCrimeGoldViolent
+├── Element Conditions (20+ functions)
+│   ├── GetElementMastery, HasElementAffinity
+│   ├── GetElementResistance, IsElementWeakness
+│   ├── GetElementInteraction, IsElementOvercoming
+│   ├── HasElementStatusEffect, GetElementStatusEffectCount
+│   ├── GetElementResourceValue, IsElementResourceBelowThreshold
+│   ├── HasHybridElement, IsHybridElementActivated
+│   └── GetElementDerivedStat, ListElementDerivedStats
+├── Status Conditions (25+ functions)
+│   ├── HasStatusEffect, GetStatusEffectCount
+│   ├── GetStatusEffectMagnitude, GetStatusEffectDuration
+│   ├── IsStatusEffectActive, IsStatusEffectExpired
+│   ├── HasStatusImmunity, GetStatusImmunityCount
+│   ├── GetStatusEffectStack, GetStatusEffectPriority
+│   ├── HasStatusCategory, GetStatusCategoryCount
+│   ├── IsStatusEffectStackable, CanStatusEffectStack
+│   ├── GetStatusEffectSource, GetStatusEffectTarget
+│   ├── HasStatusCondition, EvaluateStatusCondition
+│   ├── GetStatusEffectInteraction, GetStatusEffectModifier
+│   ├── HasStatusMovementRestriction, GetStatusMovementRestriction
+│   ├── HasStatusVisualEffect, GetStatusVisualEffect
+│   ├── HasStatusAudioEffect, GetStatusAudioEffect
+│   ├── GetStatusEffectProperties, HasStatusEffectProperty
+│   └── GetStatusEffectHistory, GetStatusEffectTimeline
 └── Custom Conditions (10+ functions)
     ├── GetGlobalValue, SetGlobalValue
     ├── GetQuestCompleted, GetQuestStage
@@ -219,6 +264,42 @@ if (IsRaining == 1) AND
    (GetInCurrentLocation == "Forest")
 then
    ApplyEffect WaterAmplification
+
+// Example 4: Element Mastery Condition
+if (GetElementMastery Fire > 100) AND
+   (HasElementAffinity Fire == 1) AND
+   (GetElementResistance Fire > 50)
+then
+   ApplyEffect FireMastery
+
+// Example 5: Element Interaction Condition
+if (IsElementOvercoming Fire Water == 1) AND
+   (GetElementMastery Fire > 150) AND
+   (HasElementStatusEffect Fire Burning == 0)
+then
+   ApplyEffect FireDamage
+
+// Example 6: Status Effect Condition
+if (HasStatusEffect Burning == 1) AND
+   (GetStatusEffectMagnitude Burning > 50) AND
+   (IsStatusEffectActive Burning == 1) AND
+   (HasStatusImmunity Fire == 0)
+then
+   ApplyEffect FireDamage
+
+// Example 7: Status Stacking Condition
+if (GetStatusEffectCount Burning > 3) AND
+   (IsStatusEffectStackable Burning == 1) AND
+   (GetStatusEffectPriority Burning > 100)
+then
+   ApplyEffect FireExplosion
+
+// Example 8: Status Immunity Condition
+if (HasStatusImmunity Stun == 1) AND
+   (GetStatusImmunityCount Stun > 0) AND
+   (IsStatusEffectActive StunImmunity == 1)
+then
+   BlockEffect Stun
 ```
 
 ## 🔧 **Multiple Configuration Support**
@@ -460,7 +541,7 @@ impl BatchConditionEvaluator {
 
 ## 🎯 **Documentation Status**
 
-### **✅ Complete (9/9 Documents):**
+### **✅ Complete (11/11 Documents):**
 
 1. **✅ 00_Condition_Core_Overview.md** - Complete
 2. **✅ 01_Condition_Core_Architecture_Design.md** - Complete  
@@ -472,8 +553,10 @@ impl BatchConditionEvaluator {
 8. **✅ 07_Condition_Core_Integration_Design.md** - Complete
 9. **✅ 08_Condition_Core_Performance_Design.md** - Complete
 10. **✅ 09_Condition_Core_Testing_Strategy.md** - Complete
+11. **✅ 10_Condition_Core_Element_Core_Integration.md** - Complete
+12. **✅ 11_Condition_Core_Status_Core_Integration.md** - Complete
 
-### **📊 Progress: 100% Complete (9/9)**
+### **📊 Progress: 100% Complete (11/11)**
 
 **🎉 Condition Core Documentation is COMPLETE!**
 

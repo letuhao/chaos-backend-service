@@ -103,6 +103,54 @@ impl From<bool> for ConditionParameter {
     }
 }
 
+impl ConditionParameter {
+    /// Extract string value from parameter
+    pub fn as_string(&self) -> ConditionResult<&str> {
+        match self {
+            ConditionParameter::String(s) => Ok(s),
+            _ => Err(crate::error::ConditionError::InvalidParameterType {
+                expected: "String".to_string(),
+                actual: format!("{:?}", self),
+            }),
+        }
+    }
+
+    /// Extract float value from parameter
+    pub fn as_float(&self) -> ConditionResult<f64> {
+        match self {
+            ConditionParameter::Float(f) => Ok(*f),
+            ConditionParameter::Integer(i) => Ok(*i as f64),
+            _ => Err(crate::error::ConditionError::InvalidParameterType {
+                expected: "Float".to_string(),
+                actual: format!("{:?}", self),
+            }),
+        }
+    }
+
+    /// Extract integer value from parameter
+    pub fn as_integer(&self) -> ConditionResult<i64> {
+        match self {
+            ConditionParameter::Integer(i) => Ok(*i),
+            ConditionParameter::Float(f) => Ok(*f as i64),
+            _ => Err(crate::error::ConditionError::InvalidParameterType {
+                expected: "Integer".to_string(),
+                actual: format!("{:?}", self),
+            }),
+        }
+    }
+
+    /// Extract boolean value from parameter
+    pub fn as_boolean(&self) -> ConditionResult<bool> {
+        match self {
+            ConditionParameter::Boolean(b) => Ok(*b),
+            _ => Err(crate::error::ConditionError::InvalidParameterType {
+                expected: "Boolean".to_string(),
+                actual: format!("{:?}", self),
+            }),
+        }
+    }
+}
+
 /// Configuration for a chain of conditions
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConditionChainConfig {
@@ -202,4 +250,43 @@ impl Default for FunctionRegistry {
     fn default() -> Self {
         Self::new()
     }
+}
+
+/// Status effect history entry
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StatusEffectHistory {
+    pub effect_id: String,
+    pub actor_id: String,
+    pub applied_at: SystemTime,
+    pub removed_at: Option<SystemTime>,
+    pub magnitude: f64,
+    pub source: String,
+    pub duration: f64,
+    pub stack_count: u32,
+}
+
+/// Status effect timeline entry
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StatusEffectTimeline {
+    pub effect_id: String,
+    pub actor_id: String,
+    pub timestamp: SystemTime,
+    pub event_type: StatusEffectEventType,
+    pub magnitude: f64,
+    pub stack_count: u32,
+    pub source: String,
+}
+
+/// Status effect event types
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum StatusEffectEventType {
+    Applied,
+    Removed,
+    Stacked,
+    Unstacked,
+    MagnitudeChanged,
+    DurationExtended,
+    DurationReduced,
+    ImmunityApplied,
+    ImmunityRemoved,
 }

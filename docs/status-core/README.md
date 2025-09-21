@@ -24,6 +24,12 @@ Status Core là hệ thống trung tâm quản lý tất cả status effects, bu
 - **Gradual Migration**: Migration từng bước, không cần rewrite toàn bộ
 - **Performance Neutral**: Không ảnh hưởng performance của existing systems
 
+### **4. Condition Core Integration**
+- **Standardized Condition Logic**: Sử dụng Condition Core cho tất cả status conditions
+- **Unified Condition Functions**: Tái sử dụng condition functions across systems
+- **Centralized Condition Management**: Quản lý tập trung tất cả conditions
+- **Cross-System Condition Reuse**: Các hệ thống khác có thể tái sử dụng status conditions
+
 ## 🏗️ **Kiến Trúc Status Core**
 
 ```
@@ -49,6 +55,11 @@ Status Core
 │   ├── Interaction Rules
 │   └── Interaction Priorities
 ├── Integration System
+│   ├── Condition Core Integration
+│   │   ├── Status Data Provider
+│   │   ├── Status Condition Functions
+│   │   ├── Status Condition Registry
+│   │   └── Status Condition Evaluation
 │   ├── Element Core Bridge
 │   ├── Action Core Bridge
 │   ├── Combat Core Bridge
@@ -85,6 +96,7 @@ Status Core
 ### **Integration & Flow Documents**
 - [11_Burning_Status_Combat_Flow_Diagram.md](11_Burning_Status_Combat_Flow_Diagram.md) - Visual flow diagram cho burning status trong combat
 - [12_Status_Core_Combat_Integration_Design.md](12_Status_Core_Combat_Integration_Design.md) - Optimized integration design với CombatCore
+- [13_Condition_Core_Status_Core_Integration.md](13_Condition_Core_Status_Core_Integration.md) - Integration design với Condition Core
 
 ### **Configuration Files**
 - **configs/status_plugins.yaml** - Plugin configurations
@@ -131,6 +143,12 @@ Status Core
 - **Hot Reload**: Runtime configuration changes
 - **Environment Overrides**: Environment-specific configuration
 
+### **7. Condition Core Integration**
+- **Status Data Provider**: Interface để cung cấp status data cho Condition Core
+- **Status Condition Functions**: 25+ status condition functions
+- **Status Condition Registry**: Registry để quản lý status condition functions
+- **Status Condition Evaluation**: Engine để evaluate status conditions
+
 ## 🚀 **Performance Optimization**
 
 ### **1. Caching Strategy**
@@ -150,6 +168,186 @@ Status Core
 - **Async Processing**: Non-blocking operations
 - **Resource Management**: Efficient resource usage
 - **Error Handling**: Graceful error handling
+
+## 🎯 **Condition Core Integration**
+
+### **1. Status Data Provider**
+
+Status Core implements `StatusDataProvider` trait để cung cấp status data cho Condition Core:
+
+```rust
+/// Status Data Provider Interface
+#[async_trait]
+pub trait StatusDataProvider: Send + Sync {
+    // Basic Status Functions
+    async fn has_status_effect(&self, actor_id: &str, effect_id: &str) -> ConditionResult<bool>;
+    async fn get_status_effect_count(&self, actor_id: &str, effect_id: &str) -> ConditionResult<u32>;
+    async fn get_status_effect_magnitude(&self, actor_id: &str, effect_id: &str) -> ConditionResult<f64>;
+    async fn is_status_effect_active(&self, actor_id: &str, effect_id: &str) -> ConditionResult<bool>;
+    
+    // Status Immunity Functions
+    async fn has_status_immunity(&self, actor_id: &str, effect_id: &str) -> ConditionResult<bool>;
+    async fn get_status_immunity_count(&self, actor_id: &str, effect_id: &str) -> ConditionResult<u32>;
+    
+    // Status Category Functions
+    async fn has_status_category(&self, actor_id: &str, category: &str) -> ConditionResult<bool>;
+    async fn get_status_category_count(&self, actor_id: &str, category: &str) -> ConditionResult<u32>;
+    
+    // Status Interaction Functions
+    async fn is_status_effect_stackable(&self, effect_id: &str) -> ConditionResult<bool>;
+    async fn can_status_effect_stack(&self, actor_id: &str, effect_id: &str) -> ConditionResult<bool>;
+    async fn get_status_effect_interaction(&self, effect_id: &str, target_effect_id: &str) -> ConditionResult<String>;
+    
+    // Status Movement Functions
+    async fn has_status_movement_restriction(&self, actor_id: &str, restriction_type: &str) -> ConditionResult<bool>;
+    async fn get_status_movement_restriction(&self, actor_id: &str, restriction_type: &str) -> ConditionResult<f64>;
+    
+    // Status Visual/Audio Functions
+    async fn has_status_visual_effect(&self, actor_id: &str, effect_id: &str) -> ConditionResult<bool>;
+    async fn has_status_audio_effect(&self, actor_id: &str, effect_id: &str) -> ConditionResult<bool>;
+    
+    // Status Properties Functions
+    async fn get_status_effect_properties(&self, actor_id: &str, effect_id: &str) -> ConditionResult<HashMap<String, serde_json::Value>>;
+    async fn has_status_effect_property(&self, actor_id: &str, effect_id: &str, property: &str) -> ConditionResult<bool>;
+    
+    // Status History Functions
+    async fn get_status_effect_history(&self, actor_id: &str, effect_id: &str) -> ConditionResult<Vec<StatusEffectHistory>>;
+    async fn get_status_effect_timeline(&self, actor_id: &str, effect_id: &str) -> ConditionResult<Vec<StatusEffectTimeline>>;
+}
+```
+
+### **2. Standardized Status Conditions**
+
+Status Core cung cấp 25+ status condition functions cho Condition Core:
+
+```yaml
+# Status Effect Conditions
+has_status_effect: "Check if actor has specific status effect"
+get_status_effect_count: "Get count of specific status effect"
+get_status_effect_magnitude: "Get magnitude of specific status effect"
+is_status_effect_active: "Check if status effect is active"
+is_status_effect_expired: "Check if status effect is expired"
+
+# Status Immunity Conditions
+has_status_immunity: "Check if actor has immunity to specific effect"
+get_status_immunity_count: "Get count of specific immunity"
+is_status_immunity_active: "Check if immunity is active"
+
+# Status Category Conditions
+has_status_category: "Check if actor has effects in specific category"
+get_status_category_count: "Get count of effects in specific category"
+list_status_categories: "List all status categories for actor"
+
+# Status Interaction Conditions
+is_status_effect_stackable: "Check if effect can be stacked"
+can_status_effect_stack: "Check if effect can stack on actor"
+get_status_effect_interaction: "Get interaction between two effects"
+
+# Status Movement Conditions
+has_status_movement_restriction: "Check if actor has movement restriction"
+get_status_movement_restriction: "Get magnitude of movement restriction"
+
+# Status Visual/Audio Conditions
+has_status_visual_effect: "Check if actor has visual effect"
+has_status_audio_effect: "Check if actor has audio effect"
+
+# Status Properties Conditions
+get_status_effect_properties: "Get all properties of status effect"
+has_status_effect_property: "Check if effect has specific property"
+get_status_effect_property: "Get specific property value"
+
+# Status History Conditions
+get_status_effect_history: "Get history of status effect"
+get_status_effect_timeline: "Get timeline of status effect"
+```
+
+### **3. Cross-System Condition Reuse**
+
+Các hệ thống khác có thể sử dụng status conditions thông qua Condition Core:
+
+```rust
+// Combat Core sử dụng status conditions
+use chaos_condition_core::{ConditionCore, StatusDataProvider};
+
+pub struct CombatCore {
+    condition_core: Arc<ConditionCore>,
+    status_data_provider: Arc<dyn StatusDataProvider>,
+}
+
+impl CombatCore {
+    // Check if target can be stunned
+    pub async fn can_stun_target(&self, target_id: &str) -> Result<bool, CombatError> {
+        let context = ConditionContext::new(target_id);
+        let result = self.condition_core.evaluate_condition(
+            "has_status_immunity",
+            &[ConditionParameter::String("stun".to_string())],
+            &context
+        ).await?;
+        Ok(!result) // Can stun if not immune
+    }
+    
+    // Check if attacker has damage bonus
+    pub async fn has_damage_bonus(&self, attacker_id: &str) -> Result<bool, CombatError> {
+        let context = ConditionContext::new(attacker_id);
+        let result = self.condition_core.evaluate_condition(
+            "has_status_effect",
+            &[ConditionParameter::String("damage_bonus".to_string())],
+            &context
+        ).await?;
+        Ok(result)
+    }
+}
+
+// Action Core sử dụng status conditions
+pub struct ActionCore {
+    condition_core: Arc<ConditionCore>,
+    status_data_provider: Arc<dyn StatusDataProvider>,
+}
+
+impl ActionCore {
+    // Check if action can be executed
+    pub async fn can_execute_action(&self, actor_id: &str, action_id: &str) -> Result<bool, ActionError> {
+        let context = ConditionContext::new(actor_id);
+        
+        // Check if actor is stunned
+        let is_stunned = self.condition_core.evaluate_condition(
+            "has_status_effect",
+            &[ConditionParameter::String("stun".to_string())],
+            &context
+        ).await?;
+        
+        if is_stunned {
+            return Ok(false);
+        }
+        
+        // Check if actor has required status effects
+        let has_required_effect = self.condition_core.evaluate_condition(
+            "has_status_effect",
+            &[ConditionParameter::String("action_ready".to_string())],
+            &context
+        ).await?;
+        
+        Ok(has_required_effect)
+    }
+}
+```
+
+### **4. Benefits of Condition Core Integration**
+
+#### **Standardized Logic**
+- **Consistent Behavior**: Tất cả systems sử dụng cùng logic cho status conditions
+- **Unified API**: Single API cho tất cả status condition evaluation
+- **Centralized Management**: Quản lý tập trung tất cả status conditions
+
+#### **Cross-System Reuse**
+- **Code Reuse**: Tái sử dụng status condition logic across systems
+- **Maintenance**: Dễ dàng maintain và update status conditions
+- **Testing**: Test status conditions một lần, sử dụng everywhere
+
+#### **Performance**
+- **Centralized Caching**: Cache status condition results
+- **Batch Processing**: Process multiple status conditions efficiently
+- **Memory Optimization**: Optimize memory usage cho status data
 
 ## 🧪 **Testing Strategy**
 

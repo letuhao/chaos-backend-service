@@ -10,6 +10,9 @@ pub mod resolver;
 pub mod functions;
 pub mod config;
 pub mod data_provider;
+pub mod data_accessor;
+pub mod element_functions;
+pub mod status_functions;
 pub mod builder;
 
 pub use error::*;
@@ -18,6 +21,7 @@ pub use resolver::*;
 pub use functions::*;
 pub use config::*;
 pub use data_provider::*;
+pub use data_accessor::*;
 
 /// Re-export commonly used types for convenience
 pub use types::{

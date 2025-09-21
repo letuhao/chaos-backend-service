@@ -72,6 +72,85 @@ impl ElementDataProvider for MockElementDataProvider {
             "shadow".to_string(),
             "metal".to_string(),
         ])
+    }    
+    // Element interaction functions
+    async fn is_element_same_category(&self, element1: &str, element2: &str) -> ConditionResult<bool> {
+        Ok(element1 == element2) // Simple mock implementation
+    }
+    
+    async fn is_element_generating(&self, source_element: &str, target_element: &str) -> ConditionResult<bool> {
+        Ok(false) // Simple mock implementation
+    }
+    
+    async fn is_element_overcoming(&self, source_element: &str, target_element: &str) -> ConditionResult<bool> {
+        Ok(false) // Simple mock implementation
+    }
+    
+    async fn is_element_neutral(&self, source_element: &str, target_element: &str) -> ConditionResult<bool> {
+        Ok(true) // Simple mock implementation
+    }
+    
+    // Element status functions
+    async fn has_element_status_effect(&self, element_id: &str, status_id: &str, _actor_id: &str) -> ConditionResult<bool> {
+        Ok(false) // Simple mock implementation
+    }
+    
+    async fn get_element_status_effect_count(&self, element_id: &str, status_id: &str, _actor_id: &str) -> ConditionResult<i64> {
+        Ok(0) // Simple mock implementation
+    }
+    
+    async fn is_element_status_effect_active(&self, element_id: &str, status_id: &str, actor_id: &str) -> ConditionResult<bool> {
+        self.has_element_status_effect(element_id, status_id, actor_id).await
+    }
+    
+    // Element resource functions
+    async fn has_element_resource(&self, element_id: &str, resource_type: &str, _actor_id: &str) -> ConditionResult<bool> {
+        Ok(false) // Simple mock implementation
+    }
+    
+    async fn get_element_resource_value(&self, element_id: &str, resource_type: &str, _actor_id: &str) -> ConditionResult<f64> {
+        Ok(0.0) // Simple mock implementation
+    }
+    
+    async fn is_element_resource_below_threshold(&self, element_id: &str, resource_type: &str, threshold: f64, actor_id: &str) -> ConditionResult<bool> {
+        let value = self.get_element_resource_value(element_id, resource_type, actor_id).await?;
+        Ok(value < threshold)
+    }
+    
+    async fn is_element_resource_above_threshold(&self, element_id: &str, resource_type: &str, threshold: f64, actor_id: &str) -> ConditionResult<bool> {
+        let value = self.get_element_resource_value(element_id, resource_type, actor_id).await?;
+        Ok(value > threshold)
+    }
+    
+    // Hybrid element functions
+    async fn has_hybrid_element(&self, hybrid_id: &str, _actor_id: &str) -> ConditionResult<bool> {
+        Ok(false) // Simple mock implementation
+    }
+    
+    async fn is_hybrid_element_activated(&self, hybrid_id: &str, _actor_id: &str) -> ConditionResult<bool> {
+        Ok(false) // Simple mock implementation
+    }
+    
+    async fn get_hybrid_element_parents(&self, hybrid_id: &str) -> ConditionResult<Vec<String>> {
+        Ok(vec![]) // Simple mock implementation
+    }
+    
+    async fn list_hybrid_elements(&self) -> ConditionResult<Vec<String>> {
+        Ok(vec![]) // Simple mock implementation
+    }
+    
+    // Element derived stats functions
+    async fn get_element_derived_stat(&self, element_id: &str, stat_name: &str, _actor_id: &str) -> ConditionResult<f64> {
+        Ok(0.0) // Simple mock implementation
+    }
+    
+    async fn has_element_derived_stat(&self, element_id: &str, stat_name: &str, actor_id: &str) -> ConditionResult<bool> {
+        let value = self.get_element_derived_stat(element_id, stat_name, actor_id).await?;
+        Ok(value > 0.0)
+    }
+    
+    async fn list_element_derived_stats(&self, element_id: &str) -> ConditionResult<Vec<String>> {
+        Ok(vec![]) // Simple mock implementation
     }
 }
 

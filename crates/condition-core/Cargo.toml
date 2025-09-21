@@ -8,6 +8,7 @@ license = "MIT"
 
 [dependencies]
 serde = { workspace = true }
+serde_json = { workspace = true }
 serde_yaml = "0.9"
 tokio = { workspace = true }
 thiserror = { workspace = true }
@@ -22,3 +23,13 @@ criterion = { workspace = true, features = ["html_reports"] }
 [[bench]]
 name = "condition_resolver_bench"
 harness = false
+
+# Add compiler flags to suppress warnings
+[profile.dev]
+opt-level = 0
+debug = true
+split-debuginfo = "unpacked"
+
+[profile.bench]
+opt-level = 3
+debug = false

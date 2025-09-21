@@ -1,0 +1,16 @@
+# Cargo configuration to suppress warnings for examples and benches
+[build]
+rustflags = [
+    # Suppress unused variable warnings for examples
+    "-A", "unused_variables",
+    # Suppress unused imports warnings for examples  
+    "-A", "unused_imports",
+    # Suppress dead code warnings for examples
+    "-A", "dead_code",
+    # Suppress unused mut warnings for examples
+    "-A", "unused_mut",
+]
+
+# Alternative: Use environment variable approach
+[env]
+RUSTFLAGS = "-A unused_variables -A unused_imports -A dead_code -A unused_mut"

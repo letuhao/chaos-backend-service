@@ -31,6 +31,12 @@ Element Core là hệ thống trung tâm quản lý tất cả các loại eleme
 - Formula cho phép 100% chance khi attacker quá mạnh
 - Formula cho phép 0% chance khi defender quá mạnh
 
+### **5. Condition Core Integration**
+- **Standardized Condition Logic**: Sử dụng Condition Core cho tất cả element conditions
+- **Unified Condition Functions**: Tất cả systems sử dụng cùng condition functions
+- **Centralized Condition Management**: Condition logic được quản lý tập trung
+- **Cross-System Reuse**: Element conditions có thể được tái sử dụng across systems
+
 ## 🏗️ **Kiến Trúc Element Core**
 
 ```
@@ -50,6 +56,11 @@ Element Core
 │   ├── Probability Calculations
 │   ├── Multi-System Aggregation
 │   └── Performance Optimization
+├── Condition Core Integration
+│   ├── Element Data Provider
+│   ├── Element Condition Functions
+│   ├── Element Condition Registry
+│   └── Element Condition Evaluation
 ├── Integration Layer
 │   ├── Combat Core Integration
 │   ├── Shield System Integration
@@ -60,7 +71,8 @@ Element Core
     ├── Element Definitions
     ├── Derived Stats Config
     ├── Probability Formulas
-    └── Multi-System Mappings
+    ├── Multi-System Mappings
+    └── Condition Configurations
 ```
 
 ## 📊 **Element Types & Categories**
@@ -423,6 +435,119 @@ impl ElementRegistry {
     }
 }
 ```
+
+## 🎯 **Condition Core Integration**
+
+### **Element Data Provider**
+
+Element Core implements `ElementDataProvider` trait để cung cấp data cho Condition Core:
+
+```rust
+// Element Core as Condition Core data provider
+impl ElementDataProvider for ElementCore {
+    async fn get_element_mastery(&self, element_id: &str, actor_id: &str) -> ConditionResult<f64> {
+        // Get element mastery from Element Core
+        self.get_actor_element_mastery(actor_id, element_id).await
+    }
+    
+    async fn has_element_affinity(&self, element_id: &str, actor_id: &str) -> ConditionResult<bool> {
+        // Check element affinity from Element Core
+        self.check_actor_element_affinity(actor_id, element_id).await
+    }
+    
+    async fn get_element_interaction(&self, source_element: &str, target_element: &str) -> ConditionResult<String> {
+        // Get element interaction from Element Core
+        self.get_element_interaction_type(source_element, target_element).await
+    }
+    
+    // ... implement other ElementDataProvider methods
+}
+```
+
+### **Standardized Element Conditions**
+
+Tất cả element conditions được chuẩn hóa thông qua Condition Core:
+
+```yaml
+# Element mastery condition
+element_mastery_condition:
+  condition_id: "has_fire_mastery"
+  function_name: "get_element_mastery"
+  operator: "GreaterThanOrEqual"
+  value:
+    value_type: "float"
+    value: 100.0
+  parameters:
+    - parameter_type: "string"
+      parameter_value: "fire"
+
+# Element affinity condition
+element_affinity_condition:
+  condition_id: "has_water_affinity"
+  function_name: "has_element_affinity"
+  operator: "Equal"
+  value:
+    value_type: "boolean"
+    value: true
+  parameters:
+    - parameter_type: "string"
+      parameter_value: "water"
+```
+
+### **Cross-System Condition Reuse**
+
+Các systems khác có thể sử dụng element conditions thông qua Condition Core:
+
+```rust
+// Combat Core using Element Core conditions
+impl CombatCore {
+    pub async fn can_cast_fire_spell(&self, actor_id: &str) -> Result<bool, CombatError> {
+        let condition = ConditionConfig {
+            condition_id: "can_cast_fire_spell".to_string(),
+            function_name: "get_element_mastery".to_string(),
+            operator: ConditionOperator::GreaterThanOrEqual,
+            value: ConditionValue::Float(100.0),
+            parameters: vec![ConditionParameter::String("fire".to_string())],
+        };
+        
+        let context = self.create_condition_context(actor_id).await?;
+        self.condition_resolver.resolve_condition(&condition, &context).await
+    }
+}
+
+// Shield System using Element Core conditions
+impl ShieldSystem {
+    pub async fn can_activate_water_shield(&self, actor_id: &str) -> Result<bool, ShieldError> {
+        let condition = ConditionConfig {
+            condition_id: "can_activate_water_shield".to_string(),
+            function_name: "has_element_affinity".to_string(),
+            operator: ConditionOperator::Equal,
+            value: ConditionValue::Boolean(true),
+            parameters: vec![ConditionParameter::String("water".to_string())],
+        };
+        
+        let context = self.create_condition_context(actor_id).await?;
+        self.condition_resolver.resolve_condition(&condition, &context).await
+    }
+}
+```
+
+### **Benefits of Condition Core Integration**
+
+#### **1. Standardized Condition Logic**
+- **Unified Functions**: Tất cả systems sử dụng cùng element condition functions
+- **Consistent Behavior**: Hành vi nhất quán cho element conditions
+- **Centralized Management**: Condition logic được quản lý tập trung
+
+#### **2. Cross-System Reuse**
+- **Shared Conditions**: Element conditions có thể được tái sử dụng across systems
+- **Easy Integration**: Systems dễ dàng tích hợp element conditions
+- **Reduced Duplication**: Giảm code duplication cho element conditions
+
+#### **3. Performance Benefits**
+- **Centralized Caching**: Element conditions được cache tập trung
+- **Batch Evaluation**: Có thể evaluate nhiều element conditions cùng lúc
+- **Optimized Queries**: Tối ưu queries cho element data
 
 ## 🧮 **Calculation Engine**
 

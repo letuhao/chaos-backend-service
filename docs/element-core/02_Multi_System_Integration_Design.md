@@ -6,6 +6,8 @@ Tài liệu này mô tả chi tiết cách Element Core tích hợp với các h
 
 **Hybrid Integration Approach**: Element Core sử dụng hybrid approach để tích hợp với các systems khác, trong đó Element Core cung cấp element stats (bao gồm Omni stats) và các systems khác sử dụng những stats này để thực hiện calculations của riêng mình.
 
+**Condition Core Integration**: Element Core tích hợp với Condition Core để cung cấp standardized condition functions cho tất cả systems, đảm bảo condition logic được quản lý tập trung và có thể tái sử dụng across systems.
+
 ## 🎯 **Nguyên Tắc Tích Hợp**
 
 ### **1. Loose Coupling**
@@ -47,6 +49,86 @@ Element Core Integration Layer
     ├── ElementEventDispatcher
     ├── ElementEventSubscriber
     └── ElementEventProcessor
+```
+
+## 🎯 **Condition Core Integration**
+
+### **1. Element Data Provider**
+
+Element Core implements `ElementDataProvider` trait để cung cấp data cho Condition Core:
+
+```rust
+// Element Core as Condition Core data provider
+impl ElementDataProvider for ElementCore {
+    async fn get_element_mastery(&self, element_id: &str, actor_id: &str) -> ConditionResult<f64> {
+        // Get element mastery from Element Core
+        self.get_actor_element_mastery(actor_id, element_id).await
+    }
+    
+    async fn has_element_affinity(&self, element_id: &str, actor_id: &str) -> ConditionResult<bool> {
+        // Check element affinity from Element Core
+        self.check_actor_element_affinity(actor_id, element_id).await
+    }
+    
+    async fn get_element_interaction(&self, source_element: &str, target_element: &str) -> ConditionResult<String> {
+        // Get element interaction from Element Core
+        self.get_element_interaction_type(source_element, target_element).await
+    }
+    
+    // ... implement other ElementDataProvider methods
+}
+```
+
+### **2. Standardized Element Conditions**
+
+Tất cả element conditions được chuẩn hóa thông qua Condition Core:
+
+```yaml
+# Element mastery condition
+element_mastery_condition:
+  condition_id: "has_fire_mastery"
+  function_name: "get_element_mastery"
+  operator: "GreaterThanOrEqual"
+  value:
+    value_type: "float"
+    value: 100.0
+  parameters:
+    - parameter_type: "string"
+      parameter_value: "fire"
+
+# Element affinity condition
+element_affinity_condition:
+  condition_id: "has_water_affinity"
+  function_name: "has_element_affinity"
+  operator: "Equal"
+  value:
+    value_type: "boolean"
+    value: true
+  parameters:
+    - parameter_type: "string"
+      parameter_value: "water"
+```
+
+### **3. Cross-System Condition Reuse**
+
+Các systems khác có thể sử dụng element conditions thông qua Condition Core:
+
+```rust
+// Combat Core using Element Core conditions
+impl CombatCore {
+    pub async fn can_cast_fire_spell(&self, actor_id: &str) -> Result<bool, CombatError> {
+        let condition = ConditionConfig {
+            condition_id: "can_cast_fire_spell".to_string(),
+            function_name: "get_element_mastery".to_string(),
+            operator: ConditionOperator::GreaterThanOrEqual,
+            value: ConditionValue::Float(100.0),
+            parameters: vec![ConditionParameter::String("fire".to_string())],
+        };
+        
+        let context = self.create_condition_context(actor_id).await?;
+        self.condition_resolver.resolve_condition(&condition, &context).await
+    }
+}
 ```
 
 ## 🔌 **System Interface**

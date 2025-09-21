@@ -13,6 +13,8 @@ Condition Core is designed to be a lightweight, high-performance condition resol
 - **Multiple Condition Types**: Support for single conditions, multiple conditions, and condition chains
 - **Logical Operators**: Support for AND, OR, NOT, and XOR logic in condition chains
 - **Built-in Functions**: 20+ built-in condition functions for common game logic
+- **Element Core Integration**: 20+ element condition functions for standardized element logic
+- **Status Core Integration**: 20+ status condition functions for standardized status logic
 - **Type Safety**: Strong typing with compile-time safety
 - **Async Support**: Full async/await support for high-performance applications
 - **Comprehensive Testing**: Unit tests, integration tests, and benchmarks included
@@ -156,12 +158,88 @@ conditions:
 - `Not` - Condition must be false (single condition only)
 - `Xor` - Exactly one condition must be true
 
+## Element Core Integration
+
+Condition Core now includes comprehensive integration with Element Core, providing 20+ standardized element condition functions:
+
+### Element Mastery Functions
+- `get_element_mastery` - Get element mastery level
+- `get_element_resistance` - Get element resistance value
+- `has_element_affinity` - Check if actor has element affinity
+- `has_element_weakness` - Check if actor has element weakness
+
+### Element Interaction Functions
+- `get_element_interaction` - Get element interaction type
+- `is_element_same_category` - Check if elements are in same category
+- `is_element_generating` - Check if elements are in generating relationship
+- `is_element_overcoming` - Check if elements are in overcoming relationship
+- `is_element_neutral` - Check if elements are neutral
+
+### Element Status Functions
+- `has_element_status_effect` - Check if actor has element status effect
+- `get_element_status_effect_count` - Get element status effect count
+- `is_element_status_effect_active` - Check if element status effect is active
+
+### Element Resource Functions
+- `has_element_resource` - Check if actor has element resource
+- `get_element_resource_value` - Get element resource value
+- `is_element_resource_below_threshold` - Check if element resource is below threshold
+- `is_element_resource_above_threshold` - Check if element resource is above threshold
+
+### Hybrid Element Functions
+- `has_hybrid_element` - Check if actor has hybrid element
+- `is_hybrid_element_activated` - Check if hybrid element is activated
+- `get_hybrid_element_parents` - Get hybrid element parents
+
+### Element Derived Stats Functions
+- `get_element_derived_stat` - Get element derived stat value
+- `has_element_derived_stat` - Check if actor has element derived stat
+
+## Status Core Integration
+
+Condition Core now includes comprehensive integration with Status Core, providing 20+ standardized status condition functions:
+
+### Status Effect Functions
+- `has_status_effect` - Check if actor has specific status effect
+- `get_status_effect_count` - Get count of specific status effect
+- `get_status_effect_magnitude` - Get magnitude of specific status effect
+- `is_status_effect_active` - Check if status effect is active
+- `is_status_effect_expired` - Check if status effect is expired
+
+### Status Immunity Functions
+- `has_status_immunity` - Check if actor has immunity to specific effect
+- `get_status_immunity_count` - Get count of specific immunity
+- `is_status_immunity_active` - Check if immunity is active
+
+### Status Category Functions
+- `has_status_category` - Check if actor has effects in specific category
+- `get_status_category_count` - Get count of effects in specific category
+
+### Status Interaction Functions
+- `is_status_effect_stackable` - Check if effect can be stacked
+- `can_status_effect_stack` - Check if effect can stack on actor
+- `get_status_effect_interaction` - Get interaction between two effects
+- `get_status_effect_priority` - Get priority of status effect
+
+### Status Movement Functions
+- `has_status_movement_restriction` - Check if actor has movement restriction
+- `get_status_movement_restriction` - Get magnitude of movement restriction
+
+### Status Visual/Audio Functions
+- `has_status_visual_effect` - Check if actor has visual effect
+- `has_status_audio_effect` - Check if actor has audio effect
+
+### Status Properties Functions
+- `has_status_effect_property` - Check if effect has specific property
+
 ## Examples
 
 See the `examples/` directory for more detailed usage examples:
 
 - `basic_usage.rs` - Basic condition resolution
 - `yaml_config.rs` - Loading conditions from YAML files
+- `element_conditions.rs` - Element Core integration examples
+- `status_conditions.rs` - Status Core integration examples
 
 ## Testing
 

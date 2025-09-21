@@ -59,6 +59,200 @@ impl ElementDataProvider for MockElementDataProvider {
             "dark".to_string(),
         ])
     }
+    
+    // Element interaction functions
+    async fn is_element_same_category(&self, element1: &str, element2: &str) -> ConditionResult<bool> {
+        let fire_elements = vec!["fire", "lava", "magma"];
+        let water_elements = vec!["water", "ice", "snow"];
+        let earth_elements = vec!["earth", "stone", "metal"];
+        let air_elements = vec!["air", "wind", "storm"];
+        let light_elements = vec!["light", "holy", "divine"];
+        let dark_elements = vec!["dark", "shadow", "void"];
+        
+        let category1 = if fire_elements.contains(&element1) { "fire" }
+            else if water_elements.contains(&element1) { "water" }
+            else if earth_elements.contains(&element1) { "earth" }
+            else if air_elements.contains(&element1) { "air" }
+            else if light_elements.contains(&element1) { "light" }
+            else if dark_elements.contains(&element1) { "dark" }
+            else { "unknown" };
+            
+        let category2 = if fire_elements.contains(&element2) { "fire" }
+            else if water_elements.contains(&element2) { "water" }
+            else if earth_elements.contains(&element2) { "earth" }
+            else if air_elements.contains(&element2) { "air" }
+            else if light_elements.contains(&element2) { "light" }
+            else if dark_elements.contains(&element2) { "dark" }
+            else { "unknown" };
+            
+        Ok(category1 == category2)
+    }
+    
+    async fn is_element_generating(&self, source_element: &str, target_element: &str) -> ConditionResult<bool> {
+        Ok(matches!((source_element, target_element), 
+            ("water", "fire") | ("fire", "earth") | ("earth", "metal") | ("metal", "water") |
+            ("air", "water") | ("water", "ice") | ("ice", "earth") | ("earth", "air")))
+    }
+    
+    async fn is_element_overcoming(&self, source_element: &str, target_element: &str) -> ConditionResult<bool> {
+        Ok(matches!((source_element, target_element), 
+            ("fire", "water") | ("water", "earth") | ("earth", "metal") | ("metal", "fire") |
+            ("air", "earth") | ("earth", "water") | ("water", "fire") | ("fire", "air") |
+            ("light", "dark") | ("dark", "light")))
+    }
+    
+    async fn is_element_neutral(&self, source_element: &str, target_element: &str) -> ConditionResult<bool> {
+        Ok(!self.is_element_generating(source_element, target_element).await? && 
+           !self.is_element_overcoming(source_element, target_element).await?)
+    }
+    
+    // Element status functions
+    async fn has_element_status_effect(&self, element_id: &str, status_id: &str, _actor_id: &str) -> ConditionResult<bool> {
+        match (element_id, status_id) {
+            ("fire", "burning") => Ok(true),
+            ("water", "wet") => Ok(false),
+            ("earth", "rooted") => Ok(true),
+            ("air", "floating") => Ok(false),
+            ("light", "blessed") => Ok(true),
+            ("dark", "cursed") => Ok(false),
+            _ => Ok(false),
+        }
+    }
+    
+    async fn get_element_status_effect_count(&self, element_id: &str, status_id: &str, _actor_id: &str) -> ConditionResult<i64> {
+        match (element_id, status_id) {
+            ("fire", "burning") => Ok(2),
+            ("water", "wet") => Ok(0),
+            ("earth", "rooted") => Ok(1),
+            ("air", "floating") => Ok(0),
+            ("light", "blessed") => Ok(1),
+            ("dark", "cursed") => Ok(0),
+            _ => Ok(0),
+        }
+    }
+    
+    async fn is_element_status_effect_active(&self, element_id: &str, status_id: &str, actor_id: &str) -> ConditionResult<bool> {
+        self.has_element_status_effect(element_id, status_id, actor_id).await
+    }
+    
+    // Element resource functions
+    async fn has_element_resource(&self, element_id: &str, resource_type: &str, _actor_id: &str) -> ConditionResult<bool> {
+        match (element_id, resource_type) {
+            ("fire", "mana") => Ok(true),
+            ("water", "mana") => Ok(true),
+            ("earth", "mana") => Ok(false),
+            ("air", "mana") => Ok(true),
+            ("light", "mana") => Ok(true),
+            ("dark", "mana") => Ok(false),
+            _ => Ok(false),
+        }
+    }
+    
+    async fn get_element_resource_value(&self, element_id: &str, resource_type: &str, _actor_id: &str) -> ConditionResult<f64> {
+        match (element_id, resource_type) {
+            ("fire", "mana") => Ok(100.0),
+            ("water", "mana") => Ok(80.0),
+            ("earth", "mana") => Ok(0.0),
+            ("air", "mana") => Ok(90.0),
+            ("light", "mana") => Ok(120.0),
+            ("dark", "mana") => Ok(0.0),
+            _ => Ok(0.0),
+        }
+    }
+    
+    async fn is_element_resource_below_threshold(&self, element_id: &str, resource_type: &str, threshold: f64, actor_id: &str) -> ConditionResult<bool> {
+        let value = self.get_element_resource_value(element_id, resource_type, actor_id).await?;
+        Ok(value < threshold)
+    }
+    
+    async fn is_element_resource_above_threshold(&self, element_id: &str, resource_type: &str, threshold: f64, actor_id: &str) -> ConditionResult<bool> {
+        let value = self.get_element_resource_value(element_id, resource_type, actor_id).await?;
+        Ok(value > threshold)
+    }
+    
+    // Hybrid element functions
+    async fn has_hybrid_element(&self, hybrid_id: &str, _actor_id: &str) -> ConditionResult<bool> {
+        match hybrid_id {
+            "steam" => Ok(true),
+            "mud" => Ok(false),
+            "lava" => Ok(true),
+            "storm" => Ok(true),
+            "holy_fire" => Ok(false),
+            "shadow_ice" => Ok(true),
+            _ => Ok(false),
+        }
+    }
+    
+    async fn is_hybrid_element_activated(&self, hybrid_id: &str, _actor_id: &str) -> ConditionResult<bool> {
+        match hybrid_id {
+            "steam" => Ok(true),
+            "mud" => Ok(false),
+            "lava" => Ok(true),
+            "storm" => Ok(true),
+            "holy_fire" => Ok(false),
+            "shadow_ice" => Ok(true),
+            _ => Ok(false),
+        }
+    }
+    
+    async fn get_hybrid_element_parents(&self, hybrid_id: &str) -> ConditionResult<Vec<String>> {
+        match hybrid_id {
+            "steam" => Ok(vec!["fire".to_string(), "water".to_string()]),
+            "mud" => Ok(vec!["earth".to_string(), "water".to_string()]),
+            "lava" => Ok(vec!["fire".to_string(), "earth".to_string()]),
+            "storm" => Ok(vec!["air".to_string(), "water".to_string()]),
+            "holy_fire" => Ok(vec!["light".to_string(), "fire".to_string()]),
+            "shadow_ice" => Ok(vec!["dark".to_string(), "water".to_string()]),
+            _ => Ok(vec![]),
+        }
+    }
+    
+    async fn list_hybrid_elements(&self) -> ConditionResult<Vec<String>> {
+        Ok(vec![
+            "steam".to_string(), 
+            "mud".to_string(), 
+            "lava".to_string(),
+            "storm".to_string(),
+            "holy_fire".to_string(),
+            "shadow_ice".to_string()
+        ])
+    }
+    
+    // Element derived stats functions
+    async fn get_element_derived_stat(&self, element_id: &str, stat_name: &str, _actor_id: &str) -> ConditionResult<f64> {
+        match (element_id, stat_name) {
+            ("fire", "power") => Ok(200.0),
+            ("fire", "defense") => Ok(50.0),
+            ("water", "power") => Ok(120.0),
+            ("water", "defense") => Ok(180.0),
+            ("earth", "power") => Ok(150.0),
+            ("earth", "defense") => Ok(250.0),
+            ("air", "power") => Ok(180.0),
+            ("air", "defense") => Ok(80.0),
+            ("light", "power") => Ok(250.0),
+            ("light", "defense") => Ok(200.0),
+            ("dark", "power") => Ok(220.0),
+            ("dark", "defense") => Ok(120.0),
+            _ => Ok(0.0),
+        }
+    }
+    
+    async fn has_element_derived_stat(&self, element_id: &str, stat_name: &str, actor_id: &str) -> ConditionResult<bool> {
+        let value = self.get_element_derived_stat(element_id, stat_name, actor_id).await?;
+        Ok(value > 0.0)
+    }
+    
+    async fn list_element_derived_stats(&self, element_id: &str) -> ConditionResult<Vec<String>> {
+        match element_id {
+            "fire" => Ok(vec!["power".to_string(), "defense".to_string(), "crit_rate".to_string()]),
+            "water" => Ok(vec!["power".to_string(), "defense".to_string(), "healing".to_string()]),
+            "earth" => Ok(vec!["power".to_string(), "defense".to_string(), "stability".to_string()]),
+            "air" => Ok(vec!["power".to_string(), "defense".to_string(), "speed".to_string()]),
+            "light" => Ok(vec!["power".to_string(), "defense".to_string(), "purity".to_string()]),
+            "dark" => Ok(vec!["power".to_string(), "defense".to_string(), "corruption".to_string()]),
+            _ => Ok(vec![]),
+        }
+    }
 }
 
 #[async_trait::async_trait]

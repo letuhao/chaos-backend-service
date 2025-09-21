@@ -1,6 +1,7 @@
 //! Data provider interfaces for Condition Core
 
 use super::error::*;
+use super::types::{StatusEffectHistory, StatusEffectTimeline};
 use std::sync::Arc;
 
 /// Trait for providing element data to Condition Core
@@ -23,6 +24,34 @@ pub trait ElementDataProvider: Send + Sync {
     
     /// List all available elements
     async fn list_elements(&self) -> ConditionResult<Vec<String>>;
+    
+    // Element interaction functions
+    async fn is_element_same_category(&self, element1: &str, element2: &str) -> ConditionResult<bool>;
+    async fn is_element_generating(&self, source_element: &str, target_element: &str) -> ConditionResult<bool>;
+    async fn is_element_overcoming(&self, source_element: &str, target_element: &str) -> ConditionResult<bool>;
+    async fn is_element_neutral(&self, source_element: &str, target_element: &str) -> ConditionResult<bool>;
+    
+    // Element status functions
+    async fn has_element_status_effect(&self, element_id: &str, status_id: &str, actor_id: &str) -> ConditionResult<bool>;
+    async fn get_element_status_effect_count(&self, element_id: &str, status_id: &str, actor_id: &str) -> ConditionResult<i64>;
+    async fn is_element_status_effect_active(&self, element_id: &str, status_id: &str, actor_id: &str) -> ConditionResult<bool>;
+    
+    // Element resource functions
+    async fn has_element_resource(&self, element_id: &str, resource_type: &str, actor_id: &str) -> ConditionResult<bool>;
+    async fn get_element_resource_value(&self, element_id: &str, resource_type: &str, actor_id: &str) -> ConditionResult<f64>;
+    async fn is_element_resource_below_threshold(&self, element_id: &str, resource_type: &str, threshold: f64, actor_id: &str) -> ConditionResult<bool>;
+    async fn is_element_resource_above_threshold(&self, element_id: &str, resource_type: &str, threshold: f64, actor_id: &str) -> ConditionResult<bool>;
+    
+    // Hybrid element functions
+    async fn has_hybrid_element(&self, hybrid_id: &str, actor_id: &str) -> ConditionResult<bool>;
+    async fn is_hybrid_element_activated(&self, hybrid_id: &str, actor_id: &str) -> ConditionResult<bool>;
+    async fn get_hybrid_element_parents(&self, hybrid_id: &str) -> ConditionResult<Vec<String>>;
+    async fn list_hybrid_elements(&self) -> ConditionResult<Vec<String>>;
+    
+    // Element derived stats functions
+    async fn get_element_derived_stat(&self, element_id: &str, stat_name: &str, actor_id: &str) -> ConditionResult<f64>;
+    async fn has_element_derived_stat(&self, element_id: &str, stat_name: &str, actor_id: &str) -> ConditionResult<bool>;
+    async fn list_element_derived_stats(&self, element_id: &str) -> ConditionResult<Vec<String>>;
 }
 
 /// Trait for providing actor data to Condition Core
@@ -107,16 +136,53 @@ pub trait CategoryDataProvider: Send + Sync {
 /// Trait for providing status effect data to Condition Core
 #[async_trait::async_trait]
 pub trait StatusDataProvider: Send + Sync {
-    /// Check if actor has status effect
-    async fn has_status_effect(&self, status_id: &str, actor_id: &str) -> ConditionResult<bool>;
+    // Basic Status Functions
+    async fn has_status_effect(&self, actor_id: &str, effect_id: &str) -> ConditionResult<bool>;
+    async fn get_status_effect_count(&self, actor_id: &str, effect_id: &str) -> ConditionResult<u32>;
+    async fn get_status_effect_magnitude(&self, actor_id: &str, effect_id: &str) -> ConditionResult<f64>;
+    async fn is_status_effect_active(&self, actor_id: &str, effect_id: &str) -> ConditionResult<bool>;
+    async fn is_status_effect_expired(&self, actor_id: &str, effect_id: &str) -> ConditionResult<bool>;
     
-    /// Get status effect level
+    // Status Immunity Functions
+    async fn has_status_immunity(&self, actor_id: &str, effect_id: &str) -> ConditionResult<bool>;
+    async fn get_status_immunity_count(&self, actor_id: &str, effect_id: &str) -> ConditionResult<u32>;
+    async fn is_status_immunity_active(&self, actor_id: &str, effect_id: &str) -> ConditionResult<bool>;
+    
+    // Status Category Functions
+    async fn has_status_category(&self, actor_id: &str, category: &str) -> ConditionResult<bool>;
+    async fn get_status_category_count(&self, actor_id: &str, category: &str) -> ConditionResult<u32>;
+    async fn list_status_categories(&self, actor_id: &str) -> ConditionResult<Vec<String>>;
+    
+    // Status Interaction Functions
+    async fn is_status_effect_stackable(&self, effect_id: &str) -> ConditionResult<bool>;
+    async fn can_status_effect_stack(&self, actor_id: &str, effect_id: &str) -> ConditionResult<bool>;
+    async fn get_status_effect_interaction(&self, effect_id: &str, target_effect_id: &str) -> ConditionResult<String>;
+    async fn get_status_effect_priority(&self, effect_id: &str) -> ConditionResult<i32>;
+    async fn get_status_effect_source(&self, actor_id: &str, effect_id: &str) -> ConditionResult<String>;
+    async fn get_status_effect_target(&self, actor_id: &str, effect_id: &str) -> ConditionResult<String>;
+    
+    // Status Movement Functions
+    async fn has_status_movement_restriction(&self, actor_id: &str, restriction_type: &str) -> ConditionResult<bool>;
+    async fn get_status_movement_restriction(&self, actor_id: &str, restriction_type: &str) -> ConditionResult<f64>;
+    
+    // Status Visual/Audio Functions
+    async fn has_status_visual_effect(&self, actor_id: &str, effect_id: &str) -> ConditionResult<bool>;
+    async fn get_status_visual_effect(&self, actor_id: &str, effect_id: &str) -> ConditionResult<String>;
+    async fn has_status_audio_effect(&self, actor_id: &str, effect_id: &str) -> ConditionResult<bool>;
+    async fn get_status_audio_effect(&self, actor_id: &str, effect_id: &str) -> ConditionResult<String>;
+    
+    // Status Properties Functions
+    async fn get_status_effect_properties(&self, actor_id: &str, effect_id: &str) -> ConditionResult<std::collections::HashMap<String, serde_json::Value>>;
+    async fn has_status_effect_property(&self, actor_id: &str, effect_id: &str, property: &str) -> ConditionResult<bool>;
+    async fn get_status_effect_property(&self, actor_id: &str, effect_id: &str, property: &str) -> ConditionResult<serde_json::Value>;
+    
+    // Status History Functions
+    async fn get_status_effect_history(&self, actor_id: &str, effect_id: &str) -> ConditionResult<Vec<StatusEffectHistory>>;
+    async fn get_status_effect_timeline(&self, actor_id: &str, effect_id: &str) -> ConditionResult<Vec<StatusEffectTimeline>>;
+    
+    // Legacy functions for backward compatibility
     async fn get_status_effect_level(&self, status_id: &str, actor_id: &str) -> ConditionResult<i64>;
-    
-    /// Check if actor has status from category
     async fn has_category_status(&self, category_id: &str, actor_id: &str) -> ConditionResult<bool>;
-    
-    /// List all available status effects
     async fn list_status_effects(&self) -> ConditionResult<Vec<String>>;
 }
 

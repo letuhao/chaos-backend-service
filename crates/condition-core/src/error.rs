@@ -29,6 +29,12 @@ pub enum ConditionError {
     #[error("YAML parsing error: {0}")]
     YamlError(#[from] serde_yaml::Error),
 
+    #[error("Invalid parameter count: expected {expected}, got {actual}")]
+    InvalidParameterCount { expected: usize, actual: usize },
+
+    #[error("Invalid parameter type: expected {expected}, got {actual}")]
+    InvalidParameterType { expected: String, actual: String },
+
     #[error("Unknown error: {message}")]
     Unknown { message: String },
 }

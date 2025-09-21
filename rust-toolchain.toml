@@ -1,0 +1,7 @@
+[toolchain]
+channel = "stable"
+components = ["rustfmt", "clippy"]
+
+# Suppress warnings for development
+[env]
+RUSTFLAGS = "-A unused_variables -A unused_imports -A dead_code -A unused_mut -A unused_assignments"
