@@ -1,78 +1,92 @@
 # Element Core Overview
 
-## 📋 **Tổng Quan**
+## 📋 **Overview**
 
-Element Core là hệ thống trung tâm quản lý tất cả các loại element trong game, từ combat damage/defense đến shield, race talent, item attributes và nhiều hơn nữa. Hệ thống được thiết kế để:
+Element Core is the central data hub for managing all elemental systems in the Chaos World MMORPG. It aggregates and caches elemental data from multiple sources (Race-Core, Item-Core, Skill-Core, etc.) while maintaining high performance and flexibility.
 
-- **Centralized Management**: Quản lý tập trung tất cả element types
-- **Maximum Flexibility**: Dễ dàng thêm element types mới
-- **Multi-System Support**: Hỗ trợ nhiều leveling systems khác nhau
-- **Unified Mechanics**: Cơ chế thống nhất cho tất cả derived stats
+**Version**: 2.0  
+**Last Updated**: 2024-12-19  
+**Status**: Active
 
-## 🎯 **Nguyên Tắc Thiết Kế**
+### **Key Features**
+- **Data Hub Pattern**: Central aggregation and caching of elemental data
+- **External Contributor Pattern**: Other systems contribute data through standardized interfaces
+- **High Performance**: Optimized for high-frequency game scenarios
+- **Unified Architecture**: Single, consistent approach across all elemental systems
 
-### **1. Centralized Element Registry**
-- Mỗi element type có unique name (enum: fire, water, ice, etc.)
-- Tất cả element types được quản lý trong một registry duy nhất
-- Dễ dàng thêm/sửa/xóa element types mà không ảnh hưởng code khác
+## 🎯 **Design Principles**
 
-### **2. Flexible Derived Stats System**
-- Mỗi element type có thể có các derived stats khác nhau
-- Derived stats là flat values, không dùng percentage
-- Cơ chế tính toán thống nhất: (attacker_stat - defender_stat)
+### **1. Data Hub Pattern**
+Element-Core acts as a **central data hub** that aggregates and caches elemental data from multiple sources, without containing business logic.
 
-### **3. Multi-System Compatibility**
-- Cùng một element type có thể được sử dụng bởi nhiều systems
-- Mỗi system có thể có primary stats và power scale khác nhau
-- Element type độc lập với implementation details
+### **2. External Contributor Pattern**
+Other systems (Race-Core, Item-Core, Skill-Core) contribute elemental data to Element-Core through standardized interfaces.
 
-### **4. Probability-Based Mechanics**
-- Critical hit và miss attack dựa trên probability
-- Formula cho phép 100% chance khi attacker quá mạnh
-- Formula cho phép 0% chance khi defender quá mạnh
+### **3. Single Responsibility**
+Element-Core focuses solely on:
+- Data aggregation and caching
+- Registry management
+- Performance optimization
+- Basic element operations
 
-### **5. Condition Core Integration**
-- **Standardized Condition Logic**: Sử dụng Condition Core cho tất cả element conditions
-- **Unified Condition Functions**: Tất cả systems sử dụng cùng condition functions
-- **Centralized Condition Management**: Condition logic được quản lý tập trung
-- **Cross-System Reuse**: Element conditions có thể được tái sử dụng across systems
+### **4. Performance First**
+All operations optimized for high-frequency game scenarios with minimal latency.
 
-## 🏗️ **Kiến Trúc Element Core**
+### **5. Unified Architecture**
+Single, consistent approach across all elemental systems, eliminating multiple conflicting patterns.
+
+## 🏗️ **Element Core Architecture**
+
+### **Core Structure**
+
+```rust
+/// Element-Core: Central data hub
+pub struct ElementCore {
+    /// Unified registry for all element data
+    registry: UnifiedElementRegistry,
+    
+    /// Aggregator for combining contributions
+    aggregator: ElementAggregator,
+    
+    /// Cache for performance optimization
+    cache: ElementCache,
+    
+    /// Configuration management
+    config: ElementConfig,
+}
+```
+
+### **Data Flow**
 
 ```
-Element Core
-├── Element Registry
-│   ├── Element Type Definitions
-│   ├── Element Categories
-│   └── Element Validation
-├── Derived Stats System
-│   ├── Power Points
-│   ├── Defense Points
-│   ├── Critical Stats
-│   ├── Accuracy Stats
-│   └── Custom Stats
-├── Calculation Engine
-│   ├── Stat Comparison Logic
-│   ├── Probability Calculations
-│   ├── Multi-System Aggregation
-│   └── Performance Optimization
-├── Condition Core Integration
-│   ├── Element Data Provider
-│   ├── Element Condition Functions
-│   ├── Element Condition Registry
-│   └── Element Condition Evaluation
-├── Integration Layer
-│   ├── Combat Core Integration
-│   ├── Shield System Integration
-│   ├── Race Talent Integration
-│   ├── Item Attribute Integration
-│   └── Custom System Integration
-└── Configuration System
-    ├── Element Definitions
-    ├── Derived Stats Config
-    ├── Probability Formulas
-    ├── Multi-System Mappings
-    └── Condition Configurations
+External Systems → Element-Core → Unified Registry
+     ↓
+Race-Core, Item-Core, Skill-Core contribute elemental data
+     ↓
+Element-Core aggregates and caches data
+     ↓
+Other systems consume aggregated data
+### **External Contributor Pattern**
+
+```rust
+/// External system integration trait
+pub trait ElementContributor: Send + Sync {
+    /// System identifier
+    fn system_id(&self) -> &str;
+    
+    /// Priority (higher = more important)
+    fn priority(&self) -> i64;
+    
+    /// Contribute to element stats
+    async fn contribute_element_stats(
+        &self, 
+        actor: &Actor, 
+        element_type: &str
+    ) -> ElementCoreResult<ElementContribution>;
+    
+    /// Handle element events
+    async fn handle_element_event(&self, event: &ElementEvent) -> ElementCoreResult<()>;
+}
 ```
 
 ## 📊 **Element Types & Categories**
@@ -1098,52 +1112,82 @@ mod integration_tests {
 }
 ```
 
-## 🎯 **Next Steps**
+## 🚀 **Usage Examples**
 
-### **Phase 1: Core Element System**
-1. **Element Registry**: Basic element type management
-2. **Derived Stats**: Core derived stats system
-3. **Calculation Engine**: Basic stat comparison logic
-4. **Configuration**: YAML-based configuration system
+### **Basic Element Stats Retrieval**
 
-### **Phase 2: Advanced Features**
-1. **Probability Formulas**: Advanced probability calculations
-2. **Multi-System Support**: System-specific configurations
-3. **Caching System**: Performance optimization
-4. **Batch Processing**: Efficient bulk operations
+```rust
+// Create Element-Core
+let mut element_core = ElementCore::new();
 
-### **Phase 3: Integration**
-1. **Combat Core Integration**: Replace current damage system
-2. **Shield System Integration**: Element-based shields
-3. **Race Talent Integration**: Element-based talents
-4. **Item Attribute Integration**: Element-based item stats
+// Register external contributors
+element_core.register_contributor(Arc::new(RaceCoreElementContributor::new())).await?;
+element_core.register_contributor(Arc::new(ItemCoreElementContributor::new())).await?;
+element_core.register_contributor(Arc::new(SkillCoreElementContributor::new())).await?;
 
-### **Phase 4: Optimization**
-1. **Performance Tuning**: Optimize calculations
-2. **Memory Optimization**: Reduce memory usage
-3. **Concurrency**: Multi-threaded processing
-4. **Monitoring**: Performance metrics and logging
+// Get element stats for actor
+let actor = Actor::new("player_1".to_string(), "human".to_string());
+let fire_stats = element_core.get_element_stats(&actor, "fire").await?;
+
+println!("Fire Power: {}", fire_stats.power);
+println!("Fire Defense: {}", fire_stats.defense);
+println!("Fire Affinity: {}", fire_stats.affinity);
+```
+
+### **Element Interaction Calculation**
+
+```rust
+// Calculate element interaction factor
+let interaction_factor = element_core.get_interaction_factor("fire", "water");
+
+// Use in combat calculation
+let base_damage = 100.0;
+let final_damage = base_damage * interaction_factor;
+```
+
+## ⚖️ **Balance Considerations**
+
+### **Performance vs Features**
+- **Performance**: Optimized for high-frequency operations
+- **Features**: Comprehensive elemental system capabilities
+
+### **Simplicity vs Power**
+- **Simplicity**: Clear, understandable architecture
+- **Power**: Rich elemental interactions and mechanics
+
+### **Maintenance vs Extensibility**
+- **Maintenance**: Easy to update and extend
+- **Extensibility**: Support for new systems and elements
 
 ## 📚 **Related Documents**
 
-- [Probability Mechanics Design](01_Probability_Mechanics_Design.md)
-- [Multi-System Integration Design](02_Multi_System_Integration_Design.md)
-- [Element Types Comprehensive Design](03_Element_Types_Comprehensive_Design.md)
-- [Status Effect System Design](04_Status_Effect_System_Design.md)
-- [Element Summary Comprehensive](05_Element_Summary_Comprehensive.md)
-- [Implementation Notes](06_Implementation_Notes.md) - **Critical implementation guidelines and requirements**
-- [Resource Manager Integration Design](07_Resource_Manager_Integration_Design.md) - **Integration with Resource Manager systems**
+- [Unified Architecture Design](20_Unified_Architecture_Design.md) - Target architecture
+- [Migration Guide](21_Migration_Guide.md) - Migration from old architecture
+- [Element System Architecture](01_Element_System_Architecture.md) - Basic architecture
+- [Element Registry Design](04_Element_Registry_Design.md) - Registry implementation
+- [Universal Element Registry Design](18_Universal_Element_Registry_Design.md) - Advanced registry features
+- [Stats Distribution Design](19_Stats_Distribution_Design.md) - External system integration
 
-> System consistency: Xác suất/steepness/scaling tham chiếu duy nhất `01_Probability_Mechanics_Design.md`; caps/cờ tính năng tham chiếu `11_Advanced_Derived_Stats_Design.md`. Tránh lặp công thức ở tài liệu khác.
+## 🔄 **Evolution Strategy**
 
-## ❓ **Questions for Discussion**
+### **Version 2.0 (Current)**
+- Unified architecture implementation
+- External contributor pattern
+- Performance optimization
 
-1. **Element Interactions**: Có nên có element rock-paper-scissors system?
-2. **Stat Scaling**: Làm thế nào để scale stats theo level?
-3. **Custom Stats**: Có nên cho phép custom derived stats?
-4. **Performance**: Làm thế nào để optimize cho nhiều elements?
-5. **Configuration**: Có nên có runtime configuration changes?
+### **Version 3.0 (Future)**
+- Advanced caching strategies
+- Machine learning integration
+- Enhanced performance monitoring
+
+### **Version 4.0 (Future)**
+- AI-powered optimization
+- Predictive caching
+- Advanced analytics
 
 ---
 
-*Tài liệu này sẽ được cập nhật khi có thêm yêu cầu và feedback từ team.*
+**Last Updated**: 2024-12-19  
+**Version**: 2.0  
+**Status**: Active  
+**Next Review**: 2024-12-26

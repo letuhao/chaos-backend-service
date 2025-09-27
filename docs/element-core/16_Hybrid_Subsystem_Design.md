@@ -739,6 +739,9 @@ mod integration_tests {
 - [00_Element_Core_Overview.md](./00_Element_Core_Overview.md) - Element Core overview
 - [11_Advanced_Derived_Stats_Design.md](./11_Advanced_Derived_Stats_Design.md) - Dynamics system
 - [14_Reuse_Analysis_Actor_Core_Resource_Manager.md](./14_Reuse_Analysis_Actor_Core_Resource_Manager.md) - Actor Core integration
+- [17_Elemental_Category_System_Design.md](./17_Elemental_Category_System_Design.md) - Element categorization system
+- [18_Universal_Element_Registry_Design.md](./18_Universal_Element_Registry_Design.md) - Universal element registry
+- [19_Stats_Distribution_Design.md](./19_Stats_Distribution_Design.md) - External system integration
 - [configs/tag_detection.yaml](./configs/tag_detection.yaml) - Tag detection configuration
 - [hybrid/configs/lightning_divine_wood.yaml](./hybrid/configs/lightning_divine_wood.yaml) - Example hybrid config
 

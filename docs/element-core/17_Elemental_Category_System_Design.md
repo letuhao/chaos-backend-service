@@ -785,6 +785,14 @@ async fn test_crystal_defense_with_categories() {
 - **Custom Interactions**: Support for custom category interactions
 - **Dynamic Categories**: Support for dynamic category assignment
 
+## 📚 **Related Documents**
+
+- [00_Element_Core_Overview.md](./00_Element_Core_Overview.md) - Element Core overview
+- [11_Advanced_Derived_Stats_Design.md](./11_Advanced_Derived_Stats_Design.md) - Derived stats system
+- [16_Hybrid_Subsystem_Design.md](./16_Hybrid_Subsystem_Design.md) - Hybrid elements system
+- [18_Universal_Element_Registry_Design.md](./18_Universal_Element_Registry_Design.md) - Universal element registry
+- [19_Stats_Distribution_Design.md](./19_Stats_Distribution_Design.md) - External system integration
+
 ---
 
 **Last Updated**: 2025-01-27  
