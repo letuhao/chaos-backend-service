@@ -15,8 +15,9 @@ members = [
     "services/payment-service",
     "services/anti-cheat-service",
     "services/analytics-service",
-    "services/chaos-backend"
-]
+    "services/chaos-backend",
+    "crates/element-core",
+    "crates/actor-core-hierarchical"]
 
 [workspace.package]
 version = "0.1.0"

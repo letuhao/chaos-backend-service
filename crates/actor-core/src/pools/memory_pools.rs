@@ -503,8 +503,7 @@ impl MemoryPool<crate::types::Snapshot> for SnapshotPool {
             
             PooledObject {
                 inner: Some(crate::types::Snapshot::new(
-                    uuid::Uuid::new_v4(),
-                    1,
+                    uuid::Uuid::new_v4().to_string(),
                 )),
                 pool: Arc::new(self.clone()),
             }

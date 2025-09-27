@@ -23,17 +23,23 @@ pub enum ConditionError {
     #[error("Chain logic error: {message}")]
     ChainLogicError { message: String },
 
-    #[error("IO error: {0}")]
-    IoError(#[from] std::io::Error),
-
-    #[error("YAML parsing error: {0}")]
-    YamlError(#[from] serde_yaml::Error),
-
     #[error("Invalid parameter count: expected {expected}, got {actual}")]
     InvalidParameterCount { expected: usize, actual: usize },
 
     #[error("Invalid parameter type: expected {expected}, got {actual}")]
     InvalidParameterType { expected: String, actual: String },
+
+    #[error("Index out of bounds: {index} (max: {max})")]
+    IndexOutOfBounds { index: usize, max: usize },
+
+    #[error("Data provider error: {provider_name} - {message}")]
+    DataProviderError { provider_name: String, message: String },
+
+    #[error("IO error: {0}")]
+    IoError(#[from] std::io::Error),
+
+    #[error("YAML parsing error: {0}")]
+    YamlError(#[from] serde_yaml::Error),
 
     #[error("Unknown error: {message}")]
     Unknown { message: String },

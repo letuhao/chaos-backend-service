@@ -1,0 +1,28 @@
+# Rust Analyzer configuration
+[cargo]
+# Only analyze library targets, skip examples, tests, and benchmarks
+allTargets = false
+targets = ["lib"]
+
+[diagnostics]
+# Disable diagnostics for test/example/bench code
+disabled = ["unused_variables", "unused_imports", "dead_code", "unused_mut"]
+
+[files]
+# Exclude directories from analysis
+exclude = [
+    "crates/actor-core/benches",
+    "crates/actor-core/examples",
+    "crates/actor-core/tests",
+    "benches",
+    "examples",
+    "tests",
+    "target",
+    "scripts",
+    "docs"
+]
+
+[check]
+# Only check library code
+targets = ["lib"]
+allTargets = false

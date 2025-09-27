@@ -111,10 +111,10 @@ pub trait Aggregator: Send + Sync {
     async fn resolve_batch(&self, actors: &[Actor]) -> ActorCoreResult<Vec<Snapshot>>;
     
     /// Get a cached snapshot if available.
-    fn get_cached_snapshot(&self, actor_id: &uuid::Uuid) -> Option<Snapshot>;
+    fn get_cached_snapshot(&self, actor_id: &String) -> Option<Snapshot>;
     
     /// Invalidate cache for a specific actor.
-    fn invalidate_cache(&self, actor_id: &uuid::Uuid);
+    fn invalidate_cache(&self, actor_id: &String);
     
     /// Clear all caches.
     fn clear_cache(&self);

@@ -370,7 +370,7 @@ impl SimdAggregationOptimizer {
     /// Optimize cap calculation.
     pub fn optimize_cap_calculation(&self, caps: &[crate::types::CapContribution]) -> ActorCoreResult<crate::types::Caps> {
         if caps.is_empty() {
-            return Ok(crate::types::Caps::new(f64::NEG_INFINITY, f64::INFINITY));
+            return Ok(crate::types::Caps::with_values("default".to_string(), f64::NEG_INFINITY, f64::INFINITY, crate::enums::AcrossLayerPolicy::Intersect));
         }
 
         // In a real implementation, this would use SIMD for parallel cap calculation
@@ -420,7 +420,7 @@ impl SimdAggregationOptimizer {
             }
         }
 
-        Ok(crate::types::Caps::new(min_cap, max_cap))
+        Ok(crate::types::Caps::with_values("optimized".to_string(), min_cap, max_cap, crate::enums::AcrossLayerPolicy::Intersect))
     }
 
     /// Get SIMD statistics.

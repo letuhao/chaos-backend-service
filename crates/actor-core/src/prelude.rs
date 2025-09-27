@@ -333,10 +333,7 @@ pub fn create_basic_contribution(dimension: &str, value: f64, system: &str) -> C
 /// assert_eq!(caps.max, 100.0);
 /// ```
 pub fn create_basic_caps(min: f64, max: f64) -> Caps {
-    Caps {
-        min: min,
-        max: max,
-    }
+    Caps::with_values("basic".to_string(), min, max, crate::enums::AcrossLayerPolicy::Intersect)
 }
 
 /// Validate a contribution with default rules.

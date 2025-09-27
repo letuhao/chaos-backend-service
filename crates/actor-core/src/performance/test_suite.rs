@@ -252,14 +252,22 @@ impl PerformanceTestSuite {
                 ];
 
                 let _subsystem_output = SubsystemOutput {
+                    system_id: "test_system".to_string(),
                     primary: contributions,
                     derived: Vec::new(),
                     caps: Vec::new(),
+                    processing_time: 0,
                     context: None,
                     meta: crate::types::SubsystemMeta {
+                        system_id: "test_system".to_string(),
+                        priority: 0,
+                        version: "1.0.0".to_string(),
+                        dependencies: Vec::new(),
                         system: "test_system".to_string(),
                         data: std::collections::HashMap::new(),
+                        created_at: chrono::Utc::now(),
                     },
+                    created_at: chrono::Utc::now(),
                 };
 
                 // Run aggregation
@@ -301,14 +309,22 @@ impl PerformanceTestSuite {
                     }
 
                     let _subsystem_output = SubsystemOutput {
+                        system_id: "test_system".to_string(),
                         primary: contributions,
                         derived: Vec::new(),
                         caps: Vec::new(),
+                        processing_time: 0,
                         context: None,
                         meta: crate::types::SubsystemMeta {
+                            system_id: "test_system".to_string(),
+                            priority: 0,
+                            version: "1.0.0".to_string(),
+                            dependencies: Vec::new(),
                             system: "test_system".to_string(),
                             data: std::collections::HashMap::new(),
+                            created_at: chrono::Utc::now(),
                         },
+                        created_at: chrono::Utc::now(),
                     };
 
                     let _snapshot = futures::executor::block_on(aggregator.resolve(&actor))?;
@@ -430,14 +446,22 @@ impl PerformanceTestSuite {
                                 ),
                             ];
                             let _subsystem_output = SubsystemOutput {
+                                system_id: "test_system".to_string(),
                                 primary: contributions,
                                 derived: Vec::new(),
                                 caps: Vec::new(),
+                                processing_time: 0,
                                 context: None,
                                 meta: crate::types::SubsystemMeta {
+                                    system_id: "test_system".to_string(),
+                                    priority: 0,
+                                    version: "1.0.0".to_string(),
+                                    dependencies: Vec::new(),
                                     system: "test_system".to_string(),
                                     data: std::collections::HashMap::new(),
+                                    created_at: chrono::Utc::now(),
                                 },
+                                created_at: chrono::Utc::now(),
                             };
                             let _ = futures::executor::block_on(aggregator_clone.resolve(&actor));
                         }

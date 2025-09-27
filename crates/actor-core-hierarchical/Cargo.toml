@@ -1,0 +1,68 @@
+[package]
+name = "actor-core-hierarchical"
+version = "0.1.0"
+edition = "2021"
+authors = ["Chaos World Team"]
+description = "Simple integration layer for element-core in actor systems"
+license = "MIT"
+repository = "https://github.com/chaos-world/chaos-backend-service"
+keywords = ["game", "actor", "elemental", "integration"]
+categories = ["game-development", "data-structures"]
+
+[dependencies]
+# Element core dependency for elemental systems
+element-core = { path = "../element-core" }
+
+# Async runtime
+tokio = { version = "1.0", features = ["full"] }
+
+# Error handling
+thiserror = "1.0"
+
+# Time handling
+chrono = { version = "0.4", features = ["serde"] }
+
+# UUID generation
+uuid = { version = "1.0", features = ["v4", "serde"] }
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+[dev-dependencies]
+# Testing
+criterion = "0.5"
+proptest = "1.0"
+
+[features]
+default = ["std"]
+std = []
+no-std = []
+
+[lib]
+name = "actor_core_hierarchical"
+path = "src/lib.rs"
+
+[[example]]
+name = "five_elements_actor"
+path = "examples/five_elements_actor.rs"
+
+[[example]]
+name = "simple_five_elements"
+path = "examples/simple_five_elements.rs"
+
+[[example]]
+name = "basic_actor"
+path = "examples/basic_actor.rs"
+
+[[example]]
+name = "single_element_actor"
+path = "examples/single_element_actor.rs"
+
+[[example]]
+name = "minimal_test"
+path = "examples/minimal_test.rs"
+
+[[example]]
+name = "step_by_step"
+path = "examples/step_by_step.rs"

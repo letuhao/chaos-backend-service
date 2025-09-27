@@ -11,6 +11,7 @@ rust-version = "1.89"
 [features]
 default = ["redis-cache"]
 extra_buckets = []
+inheritable = []
 
 # Heavy dependency features
 moka-cache = ["moka"]
@@ -80,3 +81,99 @@ criterion = { workspace = true }
 tempfile = "3"
 
 # CI and quality tools
+
+# Benchmarks configuration
+[[bench]]
+name = "actor_benchmarks"
+harness = false
+path = "benches/actor_benchmarks.rs"
+
+[[bench]]
+name = "bucket_processor_benchmarks"
+harness = false
+path = "benches/bucket_processor_benchmarks.rs"
+
+[[bench]]
+name = "registry_loader_benchmarks"
+harness = false
+path = "benches/registry_loader_benchmarks.rs"
+
+[[bench]]
+name = "simple_benchmarks"
+harness = false
+path = "benches/simple_benchmarks.rs"
+
+[[bench]]
+name = "micro_optimizations"
+harness = false
+path = "benches/micro_optimizations.rs"
+
+# Examples configuration
+[[example]]
+name = "basic_usage"
+path = "examples/basic_usage.rs"
+
+[[example]]
+name = "configuration_example"
+path = "examples/configuration_example.rs"
+
+[[example]]
+name = "mongodb_basic_test"
+path = "examples/mongodb_basic_test.rs"
+
+# Tests configuration
+[[test]]
+name = "actor_tests"
+path = "tests/actor_tests.rs"
+
+[[test]]
+name = "aggregation_tests"
+path = "tests/aggregation_tests.rs"
+
+[[test]]
+name = "aggregator_optimized_basic"
+path = "tests/aggregator_optimized_basic.rs"
+
+[[test]]
+name = "builder_tests"
+path = "tests/builder_tests.rs"
+
+[[test]]
+name = "cache_tests"
+path = "tests/cache_tests.rs"
+
+[[test]]
+name = "caps_tests"
+path = "tests/caps_tests.rs"
+
+[[test]]
+name = "config_tests"
+path = "tests/config_tests.rs"
+
+[[test]]
+name = "config_validation_tests"
+path = "tests/config_validation_tests.rs"
+
+[[test]]
+name = "edge_case_tests"
+path = "tests/edge_case_tests.rs"
+
+[[test]]
+name = "integration_tests"
+path = "tests/integration_tests.rs"
+
+[[test]]
+name = "interfaces_tests"
+path = "tests/interfaces_tests.rs"
+
+[[test]]
+name = "operator_mode_tests"
+path = "tests/operator_mode_tests.rs"
+
+[[test]]
+name = "runtime_registry_tests"
+path = "tests/runtime_registry_tests.rs"
+
+[[test]]
+name = "service_tests"
+path = "tests/service_tests.rs"

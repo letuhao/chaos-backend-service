@@ -125,3 +125,5 @@ scripts/data/lock
 scripts/data/wal/000001
 
 scripts/__pycache__/
+
+crates/actor-core-hierarchical-backup/

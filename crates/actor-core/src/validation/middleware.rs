@@ -320,7 +320,7 @@ impl crate::interfaces::Aggregator for AggregatorValidationMiddleware {
         Ok(results)
     }
 
-    fn get_cached_snapshot(&self, actor_id: &uuid::Uuid) -> Option<Snapshot> {
+    fn get_cached_snapshot(&self, actor_id: &String) -> Option<Snapshot> {
         if let Some(cached) = self.inner.get_cached_snapshot(actor_id) {
             // Validate cached snapshot before returning
             let validation_result = futures::executor::block_on(self.validate_with_stats(|validator| {
@@ -342,7 +342,7 @@ impl crate::interfaces::Aggregator for AggregatorValidationMiddleware {
         }
     }
 
-    fn invalidate_cache(&self, actor_id: &uuid::Uuid) {
+    fn invalidate_cache(&self, actor_id: &String) {
         self.inner.invalidate_cache(actor_id);
     }
 

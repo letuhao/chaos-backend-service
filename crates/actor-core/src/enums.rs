@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use tracing;
 
 /// AcrossLayerPolicy defines how caps are combined across layers.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum AcrossLayerPolicy {
     /// Intersect caps (most restrictive)
     Intersect,

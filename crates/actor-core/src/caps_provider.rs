@@ -98,7 +98,7 @@ impl CapsProvider for CapsProviderImpl {
                     .fold(f64::INFINITY, f64::min)
             };
             
-            effective_caps.insert(dimension, Caps::new(effective_min, effective_max));
+            effective_caps.insert(dimension.clone(), Caps::with_values(dimension, effective_min, effective_max, crate::enums::AcrossLayerPolicy::Intersect));
         }
         
         Ok(effective_caps)
@@ -127,7 +127,7 @@ impl CapsProvider for CapsProviderImpl {
                 // Start with infinite range and intersect with each layer
                 for layer_cap in layer_caps {
                     for (dimension, caps) in layer_cap {
-                        let entry = final_caps.entry(dimension).or_insert_with(|| Caps::new(f64::NEG_INFINITY, f64::INFINITY));
+                        let entry = final_caps.entry(dimension.clone()).or_insert_with(|| Caps::with_values(dimension, f64::NEG_INFINITY, f64::INFINITY, crate::enums::AcrossLayerPolicy::Intersect));
                         *entry = entry.intersection(&caps);
                     }
                 }
@@ -136,7 +136,7 @@ impl CapsProvider for CapsProviderImpl {
                 // Start with empty range and union with each layer
                 for layer_cap in layer_caps {
                     for (dimension, caps) in layer_cap {
-                        let entry = final_caps.entry(dimension).or_insert_with(|| Caps::new(f64::INFINITY, f64::NEG_INFINITY));
+                        let entry = final_caps.entry(dimension.clone()).or_insert_with(|| Caps::with_values(dimension, f64::INFINITY, f64::NEG_INFINITY, crate::enums::AcrossLayerPolicy::Intersect));
                         *entry = entry.union(&caps);
                     }
                 }

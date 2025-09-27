@@ -414,7 +414,7 @@ impl ExhaustionBenchmark {
 
     /// Create test snapshot
     fn create_test_snapshot(&self, resource_ranges: &HashMap<String, (f64, f64)>) -> Snapshot {
-        let mut snapshot = Snapshot::new(uuid::Uuid::new_v4(), 1);
+        let mut snapshot = Snapshot::new(uuid::Uuid::new_v4().to_string());
         
         for (resource_name, (min, max)) in resource_ranges {
             let current = min + (max - min) * 0.5; // Use middle value

@@ -67,22 +67,22 @@ impl AggregatorImpl {
         &self,
         contributions: Vec<Contribution>,
     ) -> ActorCoreResult<HashMap<String, f64>> {
-        // Group contributions by dimension
+        // Group contributions by stat name
         let mut grouped: HashMap<String, Vec<Contribution>> = HashMap::new();
         for contrib in contributions {
-            grouped.entry(contrib.dimension.clone()).or_insert_with(Vec::new).push(contrib);
+            grouped.entry(contrib.stat_name.clone()).or_insert_with(Vec::new).push(contrib);
         }
 
         let mut results = HashMap::new();
         
-        // Process each dimension
-        for (dimension, contribs) in grouped {
-            // Get merge rule for this dimension
-            let merge_rule = self.combiner_registry.get_rule(&dimension);
+        // Process each stat
+        for (stat_name, contribs) in grouped {
+            // Get merge rule for this stat
+            let merge_rule = self.combiner_registry.get_rule(&stat_name);
             
             // Process the contributions
             let result = self.process_dimension_contributions(contribs, merge_rule).await?;
-            results.insert(dimension, result);
+            results.insert(stat_name, result);
         }
 
         Ok(results)
@@ -200,11 +200,11 @@ impl AggregatorImpl {
         caps_used: &mut HashMap<String, Caps>,
         cap_contrib: CapContribution,
     ) {
-        let caps = caps_used.entry(cap_contrib.dimension.clone())
+        let caps = caps_used.entry(cap_contrib.stat_name.clone())
             .or_insert_with(|| {
                 // TODO: Load default caps from configuration
                 // For now, use a reasonable default range
-                Caps::new(0.0, 1000.0)
+                Caps::with_values(cap_contrib.stat_name.clone(), 0.0, 1000.0, crate::enums::AcrossLayerPolicy::Intersect)
             });
         
         match cap_contrib.mode {
@@ -213,7 +213,12 @@ impl AggregatorImpl {
                 caps.set_max(cap_contrib.value);
             },
             CapMode::Additive => {
-                caps.expand(cap_contrib.value);
+                // For additive mode, we don't have an expand method, so we'll adjust min/max
+                if cap_contrib.value > 0.0 {
+                    caps.set_max(caps.max + cap_contrib.value);
+                } else {
+                    caps.set_min(caps.min + cap_contrib.value);
+                }
             },
             CapMode::HardMax => {
                 caps.set_max(cap_contrib.value);
@@ -243,7 +248,7 @@ impl AggregatorImpl {
         processing_time: u64,
     ) -> Snapshot {
         Snapshot {
-            actor_id: actor.id,
+            actor_id: actor.id.clone(),
             primary: primary_stats,
             derived: HashMap::new(), // Simplified - no derived stats for now
             caps_used,
@@ -251,6 +256,7 @@ impl AggregatorImpl {
             created_at: chrono::Utc::now(),
             subsystems_processed: subsystems_processed.to_vec(),
             processing_time: Some(processing_time),
+            cache_hit: false,
             metadata: HashMap::new(),
         }
     }
@@ -390,7 +396,7 @@ impl Aggregator for AggregatorImpl {
         Ok(results)
     }
 
-    fn get_cached_snapshot(&self, actor_id: &Uuid) -> Option<Snapshot> {
+    fn get_cached_snapshot(&self, actor_id: &String) -> Option<Snapshot> {
         match self.cache.get(&actor_id.to_string()) {
             Some(value) => {
                 match serde_json::from_value(value) {
@@ -405,7 +411,7 @@ impl Aggregator for AggregatorImpl {
         }
     }
 
-    fn invalidate_cache(&self, actor_id: &Uuid) {
+    fn invalidate_cache(&self, actor_id: &String) {
         if let Err(e) = self.cache.delete(&actor_id.to_string()) {
             warn!("Failed to invalidate cache for {}: {}", actor_id, e);
         }

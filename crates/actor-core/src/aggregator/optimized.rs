@@ -140,7 +140,7 @@ impl OptimizedAggregator {
         
         // Create snapshot with optimized data structures
         Ok(Snapshot {
-            actor_id: actor.id,
+            actor_id: actor.id.clone(),
             primary: aggregated_stats.into_iter().collect(),
             derived: HashMap::new(), // Simplified - no derived stats for now
             caps_used: effective_caps.into_iter().collect(),
@@ -148,6 +148,7 @@ impl OptimizedAggregator {
             created_at: chrono::Utc::now(),
             subsystems_processed: Vec::new(), // Will be filled by caller
             processing_time: None,
+            cache_hit: false,
             metadata: HashMap::new(),
         })
     }
@@ -163,29 +164,29 @@ impl OptimizedAggregator {
         
         for contrib in contributions {
             grouped
-                .entry(contrib.dimension.clone())
+                .entry(contrib.stat_name.clone())
                 .or_insert_with(Vec::new)
                 .push(contrib.clone());
         }
         
-        // Process each dimension group
-        for (dimension, contribs) in grouped {
-            // Use interned dimension names to reduce allocations
-            let _interned_dimension = {
+        // Process each stat group
+        for (stat_name, contribs) in grouped {
+            // Use interned stat names to reduce allocations
+            let _interned_stat_name = {
                 let mut interner = self.dimension_interner.blocking_write();
-                interner.intern(&dimension)
+                interner.intern(&stat_name)
             };
             
             // Get initial value
-            let initial_value = stats.get(&dimension).copied().unwrap_or(0.0);
+            let initial_value = stats.get(&stat_name).copied().unwrap_or(0.0);
             
             // Process with optimized bucket processor
             let mut temp_stats = FxHashMap::default();
-            temp_stats.insert(dimension.clone(), initial_value);
+            temp_stats.insert(stat_name.clone(), initial_value);
             self.process_contributions_optimized(&mut temp_stats, &contribs);
             
-            if let Some(final_value) = temp_stats.get(&dimension) {
-                stats.insert(dimension, *final_value);
+            if let Some(final_value) = temp_stats.get(&stat_name) {
+                stats.insert(stat_name, *final_value);
             }
         }
     }
@@ -197,11 +198,13 @@ impl OptimizedAggregator {
         cap_contributions: &[CapContribution],
     ) {
         for cap_contrib in cap_contributions {
-            let caps_entry = caps.entry(cap_contrib.dimension.clone())
-                .or_insert_with(|| Caps {
-                    min: 0.0,
-                    max: f64::INFINITY,
-                });
+            let caps_entry = caps.entry(cap_contrib.stat_name.clone())
+                .or_insert_with(|| Caps::with_values(
+                    cap_contrib.stat_name.clone(),
+                    0.0,
+                    f64::INFINITY,
+                    crate::enums::AcrossLayerPolicy::Intersect
+                ));
             
             match cap_contrib.kind.as_str() {
                 "min" => {
@@ -244,7 +247,7 @@ impl OptimizedAggregator {
         
         // Include subsystem IDs for cache invalidation
         for subsystem in &actor.subsystems {
-            subsystem.system_id.hash(&mut hasher);
+            subsystem.hash(&mut hasher);
         }
         
         format!("actor_{}", hasher.finish())
@@ -288,7 +291,7 @@ impl Aggregator for OptimizedAggregator {
         Ok(results)
     }
 
-    fn get_cached_snapshot(&self, actor_id: &Uuid) -> Option<Snapshot> {
+    fn get_cached_snapshot(&self, actor_id: &String) -> Option<Snapshot> {
         let cache_key = format!("actor_{}", actor_id);
         match self.cache.get(&cache_key) {
             Some(value) => {
@@ -304,7 +307,7 @@ impl Aggregator for OptimizedAggregator {
         }
     }
 
-    fn invalidate_cache(&self, actor_id: &Uuid) {
+    fn invalidate_cache(&self, actor_id: &String) {
         let cache_key = format!("actor_{}", actor_id);
         if let Err(e) = self.cache.delete(&cache_key) {
             warn!("Failed to invalidate cache for {}: {}", actor_id, e);

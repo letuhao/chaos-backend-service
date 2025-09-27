@@ -174,12 +174,14 @@
 
 // Core modules - essential functionality
 pub mod types;
-// pub use types::*; // Commented out to avoid conflicts
 pub mod enums;
 pub mod interfaces;
 pub mod error;
 pub mod service_factory;
 pub mod validation;
+
+// Inheritance support for extending actor-core
+pub mod inheritable;
 
 // Core modules
 pub mod deprecation;

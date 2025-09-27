@@ -41,17 +41,25 @@ impl LockFreeInMemoryCache {
 
     fn evict_if_needed(&self) {
         if self.storage.len() <= self.max_entries { return; }
-        // Remove oldest entries until under max_entries
-        let mut entries: Vec<(String, std::time::Instant)> = Vec::new();
+        
+        // Use a more efficient eviction strategy
+        // Collect entries with their timestamps for sorting
+        let mut entries: Vec<(String, std::time::Instant)> = Vec::with_capacity(self.storage.len());
+        
+        // Single pass to collect all entries
         for item in self.storage.iter() {
             entries.push((item.key().clone(), item.created_at));
         }
+        
+        // Sort by creation time (oldest first)
         entries.sort_by_key(|(_, created_at)| *created_at);
-        let mut to_remove = self.storage.len().saturating_sub(self.max_entries);
-        for (k, _) in entries {
-            if to_remove == 0 { break; }
-            self.storage.remove(&k);
-            to_remove -= 1;
+        
+        // Calculate how many entries to remove
+        let to_remove = self.storage.len().saturating_sub(self.max_entries);
+        
+        // Remove oldest entries
+        for (key, _) in entries.into_iter().take(to_remove) {
+            self.storage.remove(&key);
         }
     }
 }

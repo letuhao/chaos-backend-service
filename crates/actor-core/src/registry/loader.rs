@@ -320,9 +320,11 @@ fn convert_cap_layers_config(config: CapLayersConfig) -> Result<CapLayerRegistry
                 RegistryLoaderConfig::get_default_config()
             });
             
-            let caps_obj = Caps::new(
-                cap_config.min.unwrap_or(0.0), // TODO: Load from config
+            let caps_obj = Caps::with_values(
+                cap_config.id.clone(),
+                cap_config.min.unwrap_or(0.0), // TODO: Load from config  
                 cap_config.max.unwrap_or(1000.0), // TODO: Load from config
+                crate::enums::AcrossLayerPolicy::Intersect
             );
             
             caps.insert(cap_config.id, (cap_mode, caps_obj));
@@ -365,7 +367,7 @@ fn convert_combiner_config(config: CombinerConfig) -> Result<CombinerRegistryImp
             RegistryLoaderConfig::get_default_config()
         });
         
-        let clamp = Caps::new(rule_config.clamp.min, rule_config.clamp.max);
+        let clamp = Caps::with_values("clamp".to_string(), rule_config.clamp.min, rule_config.clamp.max, crate::enums::AcrossLayerPolicy::Intersect);
         
         rules.insert(rule_config.id, (bucket_order, clamp));
     }

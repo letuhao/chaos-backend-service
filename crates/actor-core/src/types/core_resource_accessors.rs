@@ -25,8 +25,8 @@ pub trait CoreResourceAccessors {
     fn set_qi(&mut self, value: f64);
     fn get_experience(&self) -> f64;
     fn set_experience(&mut self, value: f64);
-    fn get_level(&self) -> i32;
-    fn set_level(&mut self, value: i32);
+    fn get_level(&self) -> i64;
+    fn set_level(&mut self, value: i64);
     
     // Generic access for core resources by index
     fn get_core_resource_by_index(&self, index: usize) -> Option<f64>;
@@ -112,12 +112,12 @@ impl<'a> CoreResourceAccessor<'a> {
     }
     
     /// Get level value
-    pub fn get_level(&self) -> i32 {
-        self.core_resources[5] as i32
+    pub fn get_level(&self) -> i64 {
+        self.core_resources[5] as i64
     }
     
     /// Set level value
-    pub fn set_level(&mut self, value: i32) {
+    pub fn set_level(&mut self, value: i64) {
         self.core_resources[5] = value as f64;
     }
     

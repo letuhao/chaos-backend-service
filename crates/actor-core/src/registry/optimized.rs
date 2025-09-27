@@ -107,8 +107,13 @@ impl OptimizedPluginRegistry {
         {
             let mut metadata_cache = self.metadata_cache.write();
             metadata_cache.insert(system_id.to_string(), SubsystemMeta {
+                system_id: system_id.to_string(),
+                priority: 0,
+                version: "1.0.0".to_string(),
+                dependencies: Vec::new(),
                 system: system_id.to_string(),
                 data: HashMap::new(),
+                created_at: chrono::Utc::now(),
             });
         }
         
