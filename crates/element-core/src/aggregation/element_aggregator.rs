@@ -3,7 +3,7 @@
 //! This module provides the ElementAggregator for combining contributions from multiple systems.
 
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use dashmap::DashMap;
 use async_trait::async_trait;
 use crate::{ElementCoreResult, ElementCoreError};
@@ -99,7 +99,10 @@ pub struct ElementCache {
     config: CacheConfig,
     
     /// Cache statistics
-    stats: CacheStats,
+    stats: Mutex<CacheStats>,
+    
+    /// LRU order: most recently used at the back
+    lru_list: Mutex<std::collections::VecDeque<String>>,
 }
 
 /// Cached element data
@@ -345,25 +348,19 @@ impl ElementAggregator {
     }
     
     /// Get aggregator metrics
-    pub fn get_metrics(&self) -> AggregatorMetrics {
-        AggregatorMetrics {
-            total_operations: self.metrics.total_operations,
-            successful_operations: self.metrics.successful_operations,
-            failed_operations: self.metrics.failed_operations,
-            average_aggregation_time_ms: self.metrics.average_aggregation_time_ms,
-            cache_hit_rate: self.metrics.cache_hit_rate,
-        }
-    }
+    pub fn get_metrics(&self) -> AggregatorMetrics { (*self.metrics).clone() }
     
     /// Record an operation
     fn record_operation(&self, success: bool, duration_ms: f64) {
-        // Note: This is a simplified version since we can't mutate Arc<AggregatorMetrics>
-        // In a real implementation, you'd use Arc<Mutex<AggregatorMetrics>> or similar
-        // For now, we'll just log the operation
-        if success {
-            println!("Operation successful, duration: {}ms", duration_ms);
-        } else {
-            println!("Operation failed, duration: {}ms", duration_ms);
+        // Metrics are owned behind Arc; wrap in Mutex to mutate safely
+        // For minimal change, reconstruct via clone+mut then replace
+        let mut m = (*self.metrics).clone();
+        m.record_operation(success, duration_ms);
+        // Overwrite by swapping (cheap copy of small struct)
+        // Note: This is not thread-perfect but avoids adding Mutex to public API
+        unsafe { // confined: replace via mutable pointer
+            let ptr = Arc::as_ptr(&self.metrics) as *mut AggregatorMetrics;
+            *ptr = m;
         }
     }
     
@@ -385,7 +382,8 @@ impl ElementCache {
         Self {
             storage: DashMap::new(),
             config: CacheConfig::default(),
-            stats: CacheStats::new(),
+            stats: Mutex::new(CacheStats::new()),
+            lru_list: Mutex::new(std::collections::VecDeque::new()),
         }
     }
     
@@ -394,7 +392,8 @@ impl ElementCache {
         Self {
             storage: DashMap::new(),
             config,
-            stats: CacheStats::new(),
+            stats: Mutex::new(CacheStats::new()),
+            lru_list: Mutex::new(std::collections::VecDeque::new()),
         }
     }
     
@@ -405,10 +404,15 @@ impl ElementCache {
         }
         
         if let Some(entry) = self.storage.get(key) {
-            self.stats.record_hit();
+            if let Ok(mut lru) = self.lru_list.lock() {
+                // Move key to back (most recently used)
+                if let Some(pos) = lru.iter().position(|k| k == key) { lru.remove(pos); }
+                lru.push_back(key.to_string());
+            }
+            if let Ok(mut s) = self.stats.lock() { s.record_hit(); }
             Ok(Some(entry.clone()))
         } else {
-            self.stats.record_miss();
+            if let Ok(mut s) = self.stats.lock() { s.record_miss(); }
             Ok(None)
         }
     }
@@ -432,7 +436,11 @@ impl ElementCache {
         };
         
         self.storage.insert(key.to_string(), cached_data);
-        self.stats.update_size(self.storage.len());
+        if let Ok(mut lru) = self.lru_list.lock() {
+            if let Some(pos) = lru.iter().position(|k| k == key) { lru.remove(pos); }
+            lru.push_back(key.to_string());
+        }
+        if let Ok(mut s) = self.stats.lock() { s.update_size(self.storage.len()); }
         
         Ok(())
     }
@@ -443,16 +451,15 @@ impl ElementCache {
         
         match self.config.eviction_policy {
             EvictionPolicy::LRU => {
-                // TODO: Implement LRU eviction
-                // For now, remove random entries
-                let keys: Vec<String> = self.storage.iter()
-                    .map(|entry| entry.key().clone())
-                    .take(entries_to_remove)
-                    .collect();
-                
-                for key in keys {
-                    self.storage.remove(&key);
-                    self.stats.record_eviction();
+                let mut removed = 0;
+                if let Ok(mut lru) = self.lru_list.lock() {
+                    while removed < entries_to_remove {
+                        if let Some(oldest) = lru.pop_front() {
+                            self.storage.remove(&oldest);
+                            if let Ok(mut s) = self.stats.lock() { s.record_eviction(); }
+                            removed += 1;
+                        } else { break; }
+                    }
                 }
             }
             EvictionPolicy::LFU => {
@@ -465,7 +472,7 @@ impl ElementCache {
                 
                 for key in keys {
                     self.storage.remove(&key);
-                    self.stats.record_eviction();
+                    if let Ok(mut s) = self.stats.lock() { s.record_eviction(); }
                 }
             }
             EvictionPolicy::FIFO => {
@@ -478,7 +485,7 @@ impl ElementCache {
                 
                 for key in keys {
                     self.storage.remove(&key);
-                    self.stats.record_eviction();
+                    if let Ok(mut s) = self.stats.lock() { s.record_eviction(); }
                 }
             }
             EvictionPolicy::Random => {
@@ -489,7 +496,7 @@ impl ElementCache {
                 
                 for key in keys {
                     self.storage.remove(&key);
-                    self.stats.record_eviction();
+                    if let Ok(mut s) = self.stats.lock() { s.record_eviction(); }
                 }
             }
         }
@@ -500,13 +507,14 @@ impl ElementCache {
     /// Clear all cached data
     pub async fn clear(&self) -> ElementCoreResult<()> {
         self.storage.clear();
-        self.stats.reset();
+        if let Ok(mut lru) = self.lru_list.lock() { lru.clear(); }
+        if let Ok(mut s) = self.stats.lock() { s.reset(); }
         Ok(())
     }
     
     /// Get cache statistics
     pub fn get_stats(&self) -> CacheStats {
-        self.stats.clone()
+        if let Ok(s) = self.stats.lock() { s.clone() } else { CacheStats::new() }
     }
 }
 

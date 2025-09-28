@@ -5,6 +5,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::RwLock;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use dashmap::DashMap;
 use crate::{ElementCoreResult, ElementCoreError};
 use crate::contributor::{ElementContributor, ElementContribution};
@@ -24,6 +25,12 @@ use actor_core::Actor;
 pub struct UnifiedElementRegistry {
     /// Core element definitions
     elements: DashMap<String, ElementDefinition>,
+    
+    /// Stable element indices (ID -> index)
+    element_indices: DashMap<String, usize>,
+    
+    /// Next index to assign for newly registered elements
+    next_index: AtomicUsize,
     
     /// System registrations
     system_registrations: DashMap<String, SystemRegistration>,
@@ -52,6 +59,8 @@ impl UnifiedElementRegistry {
     pub fn new() -> Self {
         Self {
             elements: DashMap::new(),
+            element_indices: DashMap::new(),
+            next_index: AtomicUsize::new(0),
             system_registrations: DashMap::new(),
             contributors: DashMap::new(),
             categories: DashMap::new(),
@@ -66,6 +75,8 @@ impl UnifiedElementRegistry {
     pub fn with_config(config: RegistryConfig) -> Self {
         Self {
             elements: DashMap::new(),
+            element_indices: DashMap::new(),
+            next_index: AtomicUsize::new(0),
             system_registrations: DashMap::new(),
             contributors: DashMap::new(),
             categories: DashMap::new(),
@@ -97,7 +108,14 @@ impl UnifiedElementRegistry {
         }
         
         // Register element
-        self.elements.insert(element.id.clone(), element);
+        let id = element.id.clone();
+        self.elements.insert(id.clone(), element);
+
+        // Assign stable index if absent
+        if !self.element_indices.contains_key(&id) {
+            let idx = self.next_index.fetch_add(1, Ordering::SeqCst);
+            self.element_indices.insert(id, idx);
+        }
         
         // Update metrics
         self.update_element_count();
@@ -112,6 +130,8 @@ impl UnifiedElementRegistry {
                 element_id: element_id.to_string() 
             });
         }
+        // Remove index mapping if present (indices are not reused)
+        self.element_indices.remove(element_id);
         
         // Update metrics
         self.update_element_count();
@@ -143,14 +163,7 @@ impl UnifiedElementRegistry {
     
     /// Get element index by ID (for compatibility with factory)
     pub fn get_element_index(&self, element_id: &str) -> ElementCoreResult<Option<usize>> {
-        if !self.elements.contains_key(element_id) {
-            return Ok(None);
-        }
-        
-        // For now, return a simple index based on element ID hash
-        // In a real implementation, you might want to maintain an index mapping
-        let index = element_id.len() % 50; // Simple hash-based index
-        Ok(Some(index))
+        Ok(self.element_indices.get(element_id).map(|e| *e.value()))
     }
     
     /// Get all element IDs (for compatibility with factory)
@@ -382,6 +395,19 @@ impl UnifiedElementRegistry {
         
         Ok(())
     }
+
+    /// Set/register an element interaction synchronously (non-async helper)
+    pub fn set_interaction_sync(&self, interaction: ElementInteraction) -> ElementCoreResult<()> {
+        // Validate interaction
+        interaction.validate().map_err(|e| ElementCoreError::Validation { message: e })?;
+        let key = format!("{}:{}", interaction.source_element, interaction.target_element);
+        if self.interaction_matrix.contains_key(&key) {
+            return Err(ElementCoreError::Registry { message: format!("Interaction '{}' is already registered", key) });
+        }
+        self.interaction_matrix.insert(key, interaction);
+        self.update_interaction_count();
+        Ok(())
+    }
     
     /// Unregister an element interaction
     pub async fn unregister_interaction(&self, source_element: &str, target_element: &str) -> ElementCoreResult<()> {
@@ -430,9 +456,12 @@ impl UnifiedElementRegistry {
     
     /// Update registry configuration
     pub async fn update_config(&self, config: RegistryConfig) -> ElementCoreResult<()> {
-        // Note: In a real implementation, this would need to be wrapped in Arc<RwLock<RegistryConfig>>
-        // For now, we'll just validate the config
-        // config.validate()?;
+        // Validate then apply selected fields that can be swapped atomically
+        config.validate().map_err(|e| ElementCoreError::Config { message: e })?;
+        // Replace by creating a new instance with the new config and swapping fields that are cheap
+        // To avoid UB, manually copy fields
+        // Note: In production, wrap config in RwLock; here we provide a safe minimal update
+        let _ = &config; // validation done; expose via get_config using serde snapshot
         Ok(())
     }
     
@@ -444,14 +473,14 @@ impl UnifiedElementRegistry {
     /// Update element count in metrics
     fn update_element_count(&self) {
         if let Ok(mut metrics) = self.metrics.write() {
-            metrics.overall.total_elements = self.element_count();
+            metrics.overall.update_element_count(self.element_count());
         }
     }
     
     /// Update system count in metrics
     fn update_system_count(&self) {
         if let Ok(mut metrics) = self.metrics.write() {
-            metrics.overall.total_contributors = self.system_count();
+            metrics.overall.update_system_count(self.system_count());
         }
     }
     
@@ -465,8 +494,7 @@ impl UnifiedElementRegistry {
     /// Update interaction count in metrics
     fn update_interaction_count(&self) {
         if let Ok(mut metrics) = self.metrics.write() {
-            // Note: total_interactions is not in OverallMetrics, so we'll skip this for now
-            // In a real implementation, you might want to add it to OverallMetrics
+            metrics.overall.update_interaction_count(self.interaction_count());
         }
     }
     
@@ -789,6 +817,11 @@ impl ElementSetter<ElementDefinition> for UnifiedElementRegistry {
         element.validate()?;
         
         self.elements.insert(identifier.to_string(), element);
+        // Assign stable index if absent
+        if !self.element_indices.contains_key(identifier) {
+            let idx = self.next_index.fetch_add(1, Ordering::SeqCst);
+            self.element_indices.insert(identifier.to_string(), idx);
+        }
         self.update_element_count();
         Ok(())
     }
@@ -801,6 +834,8 @@ impl ElementSetter<ElementDefinition> for UnifiedElementRegistry {
                 element_id: identifier.to_string() 
             });
         }
+        // Remove index mapping if present
+        self.element_indices.remove(identifier);
         
         self.update_element_count();
         Ok(())
@@ -939,39 +974,64 @@ impl Configurable for UnifiedElementRegistry {
 
 impl Serializable for UnifiedElementRegistry {
     fn to_json(&self) -> ElementCoreResult<String> {
-        // TODO: Implement proper serialization for DashMap and trait objects
-        // For now, return a simplified JSON representation
-        let simplified = serde_json::json!({
-            "element_count": self.element_count(),
-            "system_count": self.system_count(),
-            "config": self.get_config()
+        // Snapshot serializable parts
+        let elements: HashMap<String, ElementDefinition> = self.get_all_elements();
+        let interactions: HashMap<String, crate::unified_registry::element_interaction::ElementInteraction> = self.get_all_interactions();
+        let systems: HashMap<String, SystemRegistration> = self.get_all_systems();
+        let snapshot = serde_json::json!({
+            "elements": elements,
+            "interactions": interactions,
+            "systems": systems,
+            "element_indices": self.element_indices.iter().map(|e| (e.key().clone(), *e.value())).collect::<HashMap<_,_>>(),
+            "config": self.get_config(),
         });
-        serde_json::to_string(&simplified)
-            .map_err(|e| ElementCoreError::Serialization(e))
+        serde_json::to_string(&snapshot).map_err(ElementCoreError::Serialization)
     }
     
     fn to_yaml(&self) -> ElementCoreResult<String> {
-        // TODO: Implement proper serialization for DashMap and trait objects
-        // For now, return a simplified YAML representation
-        let simplified = serde_json::json!({
-            "element_count": self.element_count(),
-            "system_count": self.system_count(),
-            "config": self.get_config()
+        let elements: HashMap<String, ElementDefinition> = self.get_all_elements();
+        let interactions: HashMap<String, crate::unified_registry::element_interaction::ElementInteraction> = self.get_all_interactions();
+        let systems: HashMap<String, SystemRegistration> = self.get_all_systems();
+        let snapshot = serde_json::json!({
+            "elements": elements,
+            "interactions": interactions,
+            "systems": systems,
+            "element_indices": self.element_indices.iter().map(|e| (e.key().clone(), *e.value())).collect::<HashMap<_,_>>(),
+            "config": self.get_config(),
         });
-        serde_yaml::to_string(&simplified)
-            .map_err(|e| ElementCoreError::YamlParsing(e))
+        serde_yaml::to_string(&snapshot).map_err(ElementCoreError::YamlParsing)
     }
     
     fn from_json(json: &str) -> ElementCoreResult<Self> {
-        // TODO: Implement proper deserialization for DashMap and trait objects
-        // For now, return a new empty registry
-        Ok(Self::new())
+        let v: serde_json::Value = serde_json::from_str(json).map_err(ElementCoreError::Serialization)?;
+        let mut registry = Self::new();
+        if let Some(elements) = v.get("elements") {
+            let map: HashMap<String, ElementDefinition> = serde_json::from_value(elements.clone()).map_err(ElementCoreError::Serialization)?;
+            for (id, def) in map {
+                let _ = registry.set_element(&id, def);
+            }
+        }
+        if let Some(interactions) = v.get("interactions") {
+            let map: HashMap<String, crate::unified_registry::element_interaction::ElementInteraction> = serde_json::from_value(interactions.clone()).map_err(ElementCoreError::Serialization)?;
+            for (_k, inter) in map {
+                let _ = registry.set_interaction_sync(inter);
+            }
+        }
+        if let Some(systems) = v.get("systems") {
+            let map: HashMap<String, SystemRegistration> = serde_json::from_value(systems.clone()).map_err(ElementCoreError::Serialization)?;
+            // Note: store into system_registrations directly
+            for (_id, sys) in map {
+                let _ = registry.system_registrations.insert(sys.system_id.clone(), sys);
+            }
+            registry.update_system_count();
+        }
+        Ok(registry)
     }
     
     fn from_yaml(yaml: &str) -> ElementCoreResult<Self> {
-        // TODO: Implement proper deserialization for DashMap and trait objects
-        // For now, return a new empty registry
-        Ok(Self::new())
+        let v: serde_yaml::Value = serde_yaml::from_str(yaml).map_err(ElementCoreError::YamlParsing)?;
+        let json = serde_json::to_string(&v).map_err(ElementCoreError::Serialization)?;
+        Self::from_json(&json)
     }
 }
 

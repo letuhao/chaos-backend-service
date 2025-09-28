@@ -212,6 +212,7 @@ impl ElementInteraction {
         target_mastery: f64,
         dynamics: &InteractionDynamics,
     ) -> f64 {
+        // Base triggers per docs (same/generating/overcoming/neutral)
         let base_trigger = match self.interaction_type {
             InteractionType::Same => 0.0,
             InteractionType::Generating => 0.3,
@@ -220,18 +221,23 @@ impl ElementInteraction {
             InteractionType::Opposite => 0.5,
             InteractionType::Special => 0.6,
         };
-        
+
+        // Normalize mastery difference and apply sigmoid
         let mastery_diff = source_mastery - target_mastery;
         let normalized_diff = mastery_diff / dynamics.trigger_scale;
-        let sigmoid_value = sigmoid(normalized_diff, dynamics.steepness);
-        
-        (base_trigger + sigmoid_value).clamp(0.0, 1.0)
+        let s = sigmoid(normalized_diff, dynamics.steepness);
+
+        // Counterbalance – clamp to [0,1]
+        (base_trigger + s).clamp(0.0, 1.0)
     }
     
     /// Check if conditions are met
     pub fn check_conditions(&self, source_mastery: f64, target_mastery: f64) -> bool {
-        // TODO: Implement condition checking logic
-        // For now, always return true
+        // Minimal guardrails per design: allow unless invalid numbers
+        if !source_mastery.is_finite() || !target_mastery.is_finite() {
+            return false;
+        }
+        // Optionally, disallow when same element is marked Special (handled by type)
         true
     }
     

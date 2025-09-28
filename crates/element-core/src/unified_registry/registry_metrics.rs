@@ -43,6 +43,9 @@ pub struct OverallMetrics {
     /// Total number of elements
     pub total_elements: usize,
     
+    /// Total number of systems
+    pub total_systems: usize,
+    
     /// Total number of contributors
     pub total_contributors: usize,
     
@@ -349,6 +352,7 @@ impl OverallMetrics {
     pub fn new() -> Self {
         Self {
             total_elements: 0,
+            total_systems: 0,
             total_contributors: 0,
             total_plugins: 0,
             total_interactions: 0,
@@ -377,6 +381,11 @@ impl OverallMetrics {
     /// Update contributor count
     pub fn update_contributor_count(&mut self, count: usize) {
         self.total_contributors = count;
+    }
+    
+    /// Update system count
+    pub fn update_system_count(&mut self, count: usize) {
+        self.total_systems = count;
     }
     
     /// Update plugin count

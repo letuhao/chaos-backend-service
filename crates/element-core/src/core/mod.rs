@@ -8,7 +8,12 @@
 //! 
 //! ### `elemental_data`
 //! - **ElementalSystemData**: Main data structure with primary and derived stats
-//! - **ElementMasteryRank**: 7-tier mastery ranking system
+//! - **ElementMasteryLevel**: 24-tier mastery level system (Beginner to Supreme)
+//! - **MasteryLevelTier**: 6-tier categorization system
+//! - **ElementMasteryRealm**: 5-tier realm system (Awareness to Ascension)
+//! - **ElementMasteryStage**: 4-stage progression within each realm
+//! - **ElementalPowerTier**: 5-tier power classification system
+//! - **ExperienceTier**: 9-tier experience scaling system
 //! - **Array-based Performance**: Fixed-size arrays for O(1) access
 //! - **Comprehensive Validation**: All data integrity checks
 //! 

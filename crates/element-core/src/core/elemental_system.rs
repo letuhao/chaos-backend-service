@@ -2,7 +2,7 @@
 //! 
 //! This module contains the elemental system implementation.
 
-use crate::core::elemental_data::{ElementalSystemData, ElementMasteryRank, MAX_ELEMENTS};
+use crate::core::elemental_data::{ElementalSystemData, ElementMasteryLevel, MAX_ELEMENTS};
 
 /// Elemental system implementation
 pub struct ElementalSystem {
@@ -43,8 +43,8 @@ impl ElementalSystem {
         self.data = data;
     }
     
-    /// Get element mastery level by index (direct array access - 1-2 ns)
-    pub fn get_element_mastery_level(&self, index: usize) -> Option<f64> {
+    /// Get element mastery level value by index (direct array access - 1-2 ns)
+    pub fn get_element_mastery_level_value(&self, index: usize) -> Option<f64> {
         self.data.get_element_mastery_level(index)
     }
     
@@ -113,19 +113,19 @@ impl ElementalSystem {
     // ElementalContribution struct removed - will be implemented later
     
     /// Get element mastery rank by index
-    pub fn get_element_mastery_rank(&self, index: usize) -> Option<ElementMasteryRank> {
+    pub fn get_element_mastery_level(&self, index: usize) -> Option<ElementMasteryLevel> {
         if index < MAX_ELEMENTS {
-            Some(self.data.element_mastery_ranks[index])
+            Some(self.data.element_mastery_level_enums[index])
         } else {
             None
         }
     }
     
-    /// Update element mastery rank based on experience
-    pub fn update_element_mastery_rank(&mut self, index: usize) -> bool {
+    /// Update element mastery level based on experience
+    pub fn update_element_mastery_level(&mut self, index: usize) -> bool {
         if index < MAX_ELEMENTS {
-            let experience = self.data.element_mastery_experience[index];
-            self.data.element_mastery_ranks[index] = ElementMasteryRank::from_experience(experience);
+            let experience = self.data.element_mastery_experience[index] as i64;
+            self.data.element_mastery_level_enums[index] = ElementMasteryLevel::from_experience(experience);
             true
         } else {
             false
@@ -136,7 +136,7 @@ impl ElementalSystem {
     pub fn add_element_mastery_experience(&mut self, index: usize, experience: f64) -> bool {
         if index < MAX_ELEMENTS && experience > 0.0 {
             self.data.element_mastery_experience[index] += experience;
-            self.update_element_mastery_rank(index);
+            self.update_element_mastery_level(index);
             true
         } else {
             false

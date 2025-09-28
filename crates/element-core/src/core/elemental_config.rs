@@ -2,17 +2,18 @@
 //! 
 //! This module contains the elemental configuration structures for loading from YAML files.
 
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// Element configuration loaded from YAML
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ElementConfig {
     pub version: u32,
     pub element: ElementDefinition,
 }
 
 /// Element definition structure
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ElementDefinition {
     pub id: String,
     pub name: String,
@@ -30,14 +31,14 @@ pub struct ElementDefinition {
 }
 
 /// Element aliases for different languages
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ElementAliases {
     pub vi: Option<String>,
     pub zh_pinyin: Option<String>,
 }
 
 /// Base properties of an element
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BaseProperties {
     pub base_damage: f64,
     pub base_defense: f64,
@@ -47,10 +48,10 @@ pub struct BaseProperties {
 }
 
 /// Status effect configuration
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StatusEffectConfig {
     pub name: String,
-    // #[serde(rename = "type")] // Removed for now
+    #[serde(rename = "type")]
     pub effect_type: String,
     pub base_probability: f64,
     pub base_duration: f64,
@@ -67,7 +68,7 @@ pub struct StatusEffectConfig {
 }
 
 /// Spread rules for status effects
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SpreadRules {
     pub enabled: bool,
     pub spread_chance_base: f64,
@@ -76,7 +77,7 @@ pub struct SpreadRules {
 }
 
 /// Dynamics configuration for status effects
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Dynamics {
     pub intensity_gain: f64,
     pub intensity_damping: f64,
@@ -86,14 +87,14 @@ pub struct Dynamics {
 }
 
 /// Same element effects
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SameElementEffect {
     pub pool_id: String,
     pub apply_to: String,
 }
 
 /// Neutral effects
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NeutralEffect {
     pub pool_id: String,
     pub apply_to: String,
@@ -102,7 +103,7 @@ pub struct NeutralEffect {
 }
 
 /// Effect probability configuration
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EffectProbability {
     pub base: String,
     pub use_probability_engine: bool,
@@ -110,14 +111,14 @@ pub struct EffectProbability {
 }
 
 /// Environment modifications
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EnvironmentMod {
-    // #[serde(flatten)] // Removed for now
+    #[serde(flatten)]
     pub modifiers: HashMap<String, f64>,
 }
 
 /// Element references to other config files
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ElementReferences {
     pub probability_config_path: Option<String>,
     pub interaction_config_path: Option<String>,
@@ -127,7 +128,7 @@ pub struct ElementReferences {
 }
 
 /// Element registry for managing all elements
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ElementRegistry {
     pub elements: HashMap<String, ElementConfig>,
     pub element_indices: HashMap<String, usize>,

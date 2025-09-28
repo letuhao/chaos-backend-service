@@ -83,9 +83,16 @@ pub mod contributor;
 pub mod unified_registry;
 pub mod common_traits;
 
+// Re-export core types
+pub use core::elemental_data::{
+    ElementMasteryLevel, MasteryLevelTier, ElementMasteryRealm, 
+    ElementMasteryStage, ElementalPowerTier, ExperienceTier,
+    ElementalSystemData, MAX_ELEMENTS
+};
+
 // Re-export commonly used types from core module
 pub use core::{
-    ElementalSystem, ElementalSystemData, ElementConfig, ElementRegistry,
+    ElementalSystem, ElementConfig, ElementRegistry,
     ElementDefinition, ElementAliases, BaseProperties, ElementReferences
 };
 

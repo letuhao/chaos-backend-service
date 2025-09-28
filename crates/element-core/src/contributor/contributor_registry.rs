@@ -8,6 +8,7 @@ use async_trait::async_trait;
 use dashmap::DashMap;
 use crate::{ElementCoreResult, ElementCoreError};
 use crate::contributor::{ElementContributor, ElementContribution, ContributorMetadata};
+use crate::unified_registry::UnifiedElementRegistry;
 use actor_core::Actor;
 
 /// Registry for external system contributors
@@ -15,6 +16,8 @@ use actor_core::Actor;
 /// This registry manages all external systems that contribute to Element-Core,
 /// providing thread-safe access and management of contributors.
 pub struct ElementContributorRegistry {
+    /// Optional backing unified registry (preferred source of truth)
+    unified: Option<std::sync::Arc<UnifiedElementRegistry>>,
     /// Registered contributors
     contributors: DashMap<String, Arc<dyn ElementContributor>>,
     
@@ -29,6 +32,17 @@ impl ElementContributorRegistry {
     /// Create a new contributor registry
     pub fn new() -> Self {
         Self {
+            unified: None,
+            contributors: DashMap::new(),
+            metadata_cache: DashMap::new(),
+            registration_order: Arc::new(dashmap::DashSet::new()),
+        }
+    }
+    
+    /// Create a contributor registry backed by a UnifiedElementRegistry
+    pub fn with_unified_registry(registry: std::sync::Arc<UnifiedElementRegistry>) -> Self {
+        Self {
+            unified: Some(registry),
             contributors: DashMap::new(),
             metadata_cache: DashMap::new(),
             registration_order: Arc::new(dashmap::DashSet::new()),
@@ -47,6 +61,9 @@ impl ElementContributorRegistry {
         &self,
         contributor: Arc<dyn ElementContributor>
     ) -> ElementCoreResult<()> {
+        if let Some(unified) = &self.unified {
+            return unified.register_contributor(contributor).await;
+        }
         let system_id = contributor.system_id().to_string();
         
         // Check if contributor is already registered
@@ -76,6 +93,9 @@ impl ElementContributorRegistry {
     /// * `Ok(())` if unregistration was successful
     /// * `Err(ElementCoreError)` if contributor was not found
     pub async fn unregister_contributor(&self, system_id: &str) -> ElementCoreResult<()> {
+        if let Some(unified) = &self.unified {
+            return unified.unregister_contributor(system_id).await;
+        }
         if self.contributors.remove(system_id).is_none() {
             return Err(ElementCoreError::Registry { 
                 message: format!("Contributor '{}' not found", system_id)
@@ -97,6 +117,9 @@ impl ElementContributorRegistry {
     /// * `Some(Arc<dyn ElementContributor>)` if found
     /// * `None` if not found
     pub fn get_contributor(&self, system_id: &str) -> Option<Arc<dyn ElementContributor>> {
+        if let Some(unified) = &self.unified {
+            return unified.get_contributor(system_id);
+        }
         self.contributors.get(system_id).map(|entry| entry.clone())
     }
     
@@ -105,9 +128,11 @@ impl ElementContributorRegistry {
     /// # Returns
     /// * Vector of contributors sorted by priority
     pub fn get_contributors_by_priority(&self) -> Vec<Arc<dyn ElementContributor>> {
-        let mut contributors: Vec<_> = self.contributors.iter()
-            .map(|entry| entry.clone())
-            .collect();
+        let mut contributors: Vec<Arc<dyn ElementContributor>> = if let Some(unified) = &self.unified {
+            unified.get_all_contributors()
+        } else {
+            self.contributors.iter().map(|entry| entry.clone()).collect()
+        };
         
         // Sort by priority (highest first)
         contributors.sort_by_key(|contributor| std::cmp::Reverse(contributor.priority()));
@@ -120,15 +145,15 @@ impl ElementContributorRegistry {
     /// # Returns
     /// * Vector of contributors in registration order
     pub fn get_contributors_by_registration_order(&self) -> Vec<Arc<dyn ElementContributor>> {
-        let mut contributors = Vec::new();
-        
-        for system_id in self.registration_order.iter() {
-            if let Some(contributor) = self.get_contributor(&system_id) {
-                contributors.push(contributor);
-            }
+        if self.unified.is_some() {
+            // Fallback to priority ordering when backed by unified registry
+            return self.get_contributors_by_priority();
         }
-        
-        contributors
+        let mut v = Vec::new();
+        for system_id in self.registration_order.iter() {
+            if let Some(c) = self.get_contributor(&system_id) { v.push(c); }
+        }
+        v
     }
     
     /// Get contributor metadata
@@ -140,6 +165,10 @@ impl ElementContributorRegistry {
     /// * `Some(ContributorMetadata)` if found
     /// * `None` if not found
     pub fn get_metadata(&self, system_id: &str) -> Option<ContributorMetadata> {
+        if let Some(_unified) = &self.unified {
+            // Recompute on demand from contributor when using unified backing
+            return self.get_contributor(system_id).map(|c| c.get_metadata());
+        }
         self.metadata_cache.get(system_id).map(|entry| entry.clone())
     }
     
@@ -148,9 +177,17 @@ impl ElementContributorRegistry {
     /// # Returns
     /// * HashMap of system_id -> ContributorMetadata
     pub fn get_all_metadata(&self) -> HashMap<String, ContributorMetadata> {
-        self.metadata_cache.iter()
-            .map(|entry| (entry.key().clone(), entry.value().clone()))
-            .collect()
+        if let Some(unified) = &self.unified {
+            let mut map = HashMap::new();
+            for c in unified.get_all_contributors() {
+                map.insert(c.system_id().to_string(), c.get_metadata());
+            }
+            map
+        } else {
+            self.metadata_cache.iter()
+                .map(|entry| (entry.key().clone(), entry.value().clone()))
+                .collect()
+        }
     }
     
     /// Check if a contributor is registered
@@ -162,7 +199,7 @@ impl ElementContributorRegistry {
     /// * `true` if registered
     /// * `false` if not registered
     pub fn is_registered(&self, system_id: &str) -> bool {
-        self.contributors.contains_key(system_id)
+        if let Some(unified) = &self.unified { unified.is_contributor_registered(system_id) } else { self.contributors.contains_key(system_id) }
     }
     
     /// Get the number of registered contributors
@@ -170,7 +207,7 @@ impl ElementContributorRegistry {
     /// # Returns
     /// * Number of registered contributors
     pub fn contributor_count(&self) -> usize {
-        self.contributors.len()
+        if let Some(unified) = &self.unified { unified.contributor_count() } else { self.contributors.len() }
     }
     
     /// Get all system IDs
@@ -178,16 +215,22 @@ impl ElementContributorRegistry {
     /// # Returns
     /// * Vector of all registered system IDs
     pub fn get_system_ids(&self) -> Vec<String> {
-        self.contributors.iter()
-            .map(|entry| entry.key().clone())
-            .collect()
+        if let Some(unified) = &self.unified {
+            unified.get_all_contributors().iter().map(|c| c.system_id().to_string()).collect()
+        } else {
+            self.contributors.iter().map(|entry| entry.key().clone()).collect()
+        }
     }
     
     /// Clear all contributors
     pub async fn clear(&self) {
-        self.contributors.clear();
-        self.metadata_cache.clear();
-        self.registration_order.clear();
+        if self.unified.is_some() {
+            // No-op; unified registry owns data
+        } else {
+            self.contributors.clear();
+            self.metadata_cache.clear();
+            self.registration_order.clear();
+        }
     }
     
     /// Collect contributions from all registered contributors

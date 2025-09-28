@@ -9,6 +9,13 @@ use crate::core::elemental_config::{
 use std::path::Path;
 use std::fs;
 use std::collections::HashMap;
+use serde_yaml;
+use crate::ElementCoreError;
+use crate::common_traits::ElementSetter;
+use crate::unified_registry::unified_element_registry::UnifiedElementRegistry;
+use crate::unified_registry::element_definition as unified_def;
+use crate::unified_registry::element_category::ElementCategory;
+use crate::unified_registry::element_interaction::{ElementInteraction, InteractionType};
 
 /// Element configuration loader
 pub struct ElementConfigLoader {
@@ -56,46 +63,98 @@ impl ElementConfigLoader {
         let content = fs::read_to_string(file_path)
             .map_err(|e| format!("Failed to read file {}: {}", file_path.display(), e))?;
 
-        // TODO: Implement YAML parsing without serde for now
-        // let config: ElementConfig = serde_yaml::from_str(&content)
-        //     .map_err(|e| format!("Failed to parse YAML from {}: {}", file_path.display(), e))?;
-        
-        // Temporary mock config for testing
-        let config = ElementConfig {
-            version: 1,
-            element: ElementDefinition {
-                id: "fire".to_string(),
-                name: "Fire".to_string(),
-                aliases: ElementAliases {
-                    vi: Some("hỏa".to_string()),
-                    zh_pinyin: Some("huo".to_string()),
-                },
-                category: "five_elements".to_string(),
-                description: "Fire element".to_string(),
-                base_properties: BaseProperties {
-                    base_damage: 100.0,
-                    base_defense: 80.0,
-                    base_crit_rate: 0.15,
-                    base_crit_damage: 1.5,
-                    base_accuracy: 0.85,
-                },
-                probability_overrides: HashMap::new(),
-                derived_stats: vec!["element_mastery".to_string()],
-                status_effects: vec![],
-                same_element_effects: vec![],
-                neutral_effects: vec![],
-                environment_mods: HashMap::new(),
-                references: ElementReferences {
-                    probability_config_path: None,
-                    interaction_config_path: None,
-                    status_pool_path: None,
-                    golden_vectors_path: None,
-                    dynamics_design: None,
-                },
-            },
-        };
+        let config: ElementConfig = serde_yaml::from_str(&content)
+            .map_err(|e| format!("Failed to parse YAML from {}: {}", file_path.display(), e))?;
 
         Ok(config)
+    }
+
+    /// Populate a unified registry from all YAML element configs and central interactions config
+    pub fn populate_unified_registry(&self, unified: &UnifiedElementRegistry) -> Result<(), ElementCoreError> {
+        let registry = self.load_all_elements()
+            .map_err(|e| ElementCoreError::Config { message: e })?;
+
+        // Deterministic ordering for stable indices
+        let mut ids = registry.get_element_ids();
+        ids.sort();
+
+        for id in ids {
+            if let Some(cfg) = registry.get_element_config(&id) {
+                let def = unified_def::ElementDefinition {
+                    id: cfg.element.id.clone(),
+                    name: cfg.element.name.clone(),
+                    description: cfg.element.description.clone(),
+                    category: cfg.element.category.parse().unwrap_or(ElementCategory::Special(
+                        crate::unified_registry::element_category::SpecialElement::Neutral
+                    )),
+                    base_properties: unified_def::ElementProperties {
+                        base_damage: cfg.element.base_properties.base_damage,
+                        base_defense: cfg.element.base_properties.base_defense,
+                        base_crit_rate: cfg.element.base_properties.base_crit_rate,
+                        base_crit_damage: cfg.element.base_properties.base_crit_damage,
+                        base_accuracy: cfg.element.base_properties.base_accuracy,
+                        base_penetration: 0.0,
+                        base_absorption: 0.0,
+                        base_amplification: 0.0,
+                        base_reduction: 0.0,
+                    },
+                    derived_stats: Vec::new(),
+                    status_effects: Vec::new(),
+                    environment_mods: HashMap::new(),
+                    references: unified_def::ElementReferences::default(),
+                    aliases: unified_def::ElementAliases {
+                        vi: cfg.element.aliases.vi.clone(),
+                        zh_pinyin: cfg.element.aliases.zh_pinyin.clone(),
+                        ja: None,
+                        ko: None,
+                    },
+                    version: cfg.version,
+                    created_at: chrono::Utc::now(),
+                    updated_at: chrono::Utc::now(),
+                };
+                unified.set_element(&cfg.element.id, def)?;
+            }
+        }
+
+        // Load central interactions config based on directory structure: ../../configs/interaction_config.yaml
+        let base = Path::new(&self.config_dir);
+        if let (Some(parent), Some(grand)) = (base.parent(), base.parent().and_then(|p| p.parent())) {
+            let interactions_path = grand.join("configs").join("interaction_config.yaml");
+            if interactions_path.exists() {
+                if let Ok(content) = fs::read_to_string(&interactions_path) {
+                    if let Ok(cfg) = serde_yaml::from_str::<crate::config::yaml_loader::InteractionConfig>(&content) {
+                        for (src, pair) in cfg.pairs.iter() {
+                            for tgt in &pair.generating {
+                                let _ = unified.set_interaction_sync(ElementInteraction::new(
+                                    format!("{}_generating_{}", src, tgt),
+                                    src.clone(),
+                                    tgt.clone(),
+                                    InteractionType::Generating,
+                                ));
+                            }
+                            for tgt in &pair.overcoming {
+                                let _ = unified.set_interaction_sync(ElementInteraction::new(
+                                    format!("{}_overcoming_{}", src, tgt),
+                                    src.clone(),
+                                    tgt.clone(),
+                                    InteractionType::Overcoming,
+                                ));
+                            }
+                            for tgt in &pair.neutral {
+                                let _ = unified.set_interaction_sync(ElementInteraction::new(
+                                    format!("{}_neutral_{}", src, tgt),
+                                    src.clone(),
+                                    tgt.clone(),
+                                    InteractionType::Neutral,
+                                ));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(())
     }
 
     /// Load element configuration by ID
