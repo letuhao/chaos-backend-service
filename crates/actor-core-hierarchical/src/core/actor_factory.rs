@@ -3,7 +3,7 @@
 //! Factory for creating hierarchical actors with different configurations.
 
 use crate::core::HierarchicalActor;
-use element_core::{ElementalSystem, ElementalRegistry, ElementalSystemData, ElementalParams};
+use element_core::{ElementalSystem, UnifiedElementRegistry as ElementalRegistry, ElementalSystemData, ElementalParams};
 use std::collections::HashMap;
 use std::sync::Arc;
 use uuid::Uuid;

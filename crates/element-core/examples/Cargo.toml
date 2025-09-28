@@ -1,0 +1,13 @@
+[package]
+name = "element-core-examples"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "integration_examples"
+path = "integration/main.rs"
+
+[dependencies]
+element-core = { path = "../" }
+tokio = { version = "1.0", features = ["full"] }
+chrono = { version = "0.4", features = ["serde"] }

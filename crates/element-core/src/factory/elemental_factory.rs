@@ -3,19 +3,19 @@
 //! This module provides factory functions for creating elemental system instances.
 
 use crate::core::{ElementalSystemData, ElementalSystem, ElementMasteryRank};
-use crate::registry::ElementalRegistry;
+use crate::unified_registry::UnifiedElementRegistry;
 use crate::config::elemental_config_loader::ElementConfigLoader;
-use crate::ElementalParams;
+use crate::{ElementalParams, common_traits::Validatable};
 use std::sync::Arc;
 
 /// Elemental factory for creating elemental system instances
 pub struct ElementalFactory {
-    registry: Arc<ElementalRegistry>,
+    registry: Arc<UnifiedElementRegistry>,
 }
 
 impl ElementalFactory {
     /// Create a new elemental factory
-    pub fn new(registry: Arc<ElementalRegistry>) -> Self {
+    pub fn new(registry: Arc<UnifiedElementRegistry>) -> Self {
         Self { registry }
     }
 
@@ -23,7 +23,7 @@ impl ElementalFactory {
     pub fn from_config_dir(config_dir: String) -> Result<Self, crate::ElementCoreError> {
         let loader = ElementConfigLoader::new(config_dir);
         let registry = loader.load_all_elements()?;
-        let registry = Arc::new(ElementalRegistry::from_registry(registry));
+        let registry = Arc::new(UnifiedElementRegistry::new());
         
         Ok(Self::new(registry))
     }
@@ -66,8 +66,7 @@ impl ElementalFactory {
     /// Create elemental system with custom parameters
     pub fn create_elemental_system_with_params(&self, params: ElementalParams) -> Result<ElementalSystem, crate::ElementCoreError> {
         // Validate that primary element exists in registry
-        let _config = self.registry.get_element_config(&params.primary_element)?
-            .ok_or_else(|| crate::ElementCoreError::ElementNotFound { element_id: params.primary_element.clone() })?;
+        let _config = self.registry.get_element_config(&params.primary_element)?;
 
         // Create elemental system using builder pattern
         let mut builder = self.create_builder();
@@ -109,8 +108,7 @@ impl ElementalFactory {
     /// Initialize element data with default values (CORRECTED VERSION)
     fn initialize_element_data(&self, data: &mut ElementalSystemData, index: usize, element_id: &str) -> Result<(), crate::ElementCoreError> {
         // Get element config
-        let config = self.registry.get_element_config(element_id)?
-            .ok_or_else(|| crate::ElementCoreError::ElementNotFound { element_id: element_id.to_string() })?;
+        let config = self.registry.get_element_config(element_id)?;
 
         // Initialize PRIMARY STATS only
         data.element_mastery_levels[index] = 1.0;
@@ -123,18 +121,18 @@ impl ElementalFactory {
         // Calculate DERIVED STATS from primary stats and base properties
         data.calculate_derived_stats(
             index,
-            config.element.base_properties.base_damage,
-            config.element.base_properties.base_defense,
-            config.element.base_properties.base_crit_rate,
-            config.element.base_properties.base_crit_damage,
-            config.element.base_properties.base_accuracy,
+            config.base_properties.base_damage,
+            config.base_properties.base_defense,
+            config.base_properties.base_crit_rate,
+            config.base_properties.base_crit_damage,
+            config.base_properties.base_accuracy,
         )?;
 
         Ok(())
     }
 
     /// Get registry reference
-    pub fn get_registry(&self) -> Arc<ElementalRegistry> {
+    pub fn get_registry(&self) -> Arc<UnifiedElementRegistry> {
         self.registry.clone()
     }
 
@@ -146,14 +144,14 @@ impl ElementalFactory {
 
 /// Elemental system builder for step-by-step construction
 pub struct ElementalSystemBuilder {
-    registry: Arc<ElementalRegistry>,
+    registry: Arc<UnifiedElementRegistry>,
     data: ElementalSystemData,
     initialized_elements: Vec<String>,
 }
 
 impl ElementalSystemBuilder {
     /// Create a new builder
-    pub fn new(registry: Arc<ElementalRegistry>) -> Self {
+    pub fn new(registry: Arc<UnifiedElementRegistry>) -> Self {
         Self {
             registry,
             data: ElementalSystemData::new(),
@@ -208,8 +206,7 @@ impl ElementalSystemBuilder {
     /// Initialize element data with default values (CORRECTED VERSION)
     fn initialize_element_data(&mut self, index: usize, element_id: &str) -> Result<(), crate::ElementCoreError> {
         // Get element config
-        let config = self.registry.get_element_config(element_id)?
-            .ok_or_else(|| crate::ElementCoreError::ElementNotFound { element_id: element_id.to_string() })?;
+        let config = self.registry.get_element_config(element_id)?;
 
         // Initialize PRIMARY STATS only
         self.data.element_mastery_levels[index] = 1.0;
@@ -222,11 +219,11 @@ impl ElementalSystemBuilder {
         // Calculate DERIVED STATS from primary stats and base properties
         self.data.calculate_derived_stats(
             index,
-            config.element.base_properties.base_damage,
-            config.element.base_properties.base_defense,
-            config.element.base_properties.base_crit_rate,
-            config.element.base_properties.base_crit_damage,
-            config.element.base_properties.base_accuracy,
+            config.base_properties.base_damage,
+            config.base_properties.base_defense,
+            config.base_properties.base_crit_rate,
+            config.base_properties.base_crit_damage,
+            config.base_properties.base_accuracy,
         )?;
 
         Ok(())
@@ -239,8 +236,8 @@ mod tests {
     use crate::core::elemental_config::{ElementConfig, ElementDefinition, ElementAliases, BaseProperties};
     use std::collections::HashMap;
 
-    fn create_test_registry() -> ElementalRegistry {
-        let mut registry = ElementalRegistry::new();
+    fn create_test_registry() -> UnifiedElementRegistry {
+        let mut registry = UnifiedElementRegistry::new();
         
         let config = ElementConfig {
             version: 1,
@@ -338,5 +335,53 @@ mod tests {
         assert_eq!(system.get_data().element_mastery_levels[0], 10.0);
         assert_eq!(system.get_data().element_mastery_experience[0], 100.0);
         assert_eq!(system.get_data().element_qi_amounts[0], 500.0);
+    }
+}
+
+impl Validatable for ElementalFactory {
+    fn validate(&self) -> crate::ElementCoreResult<()> {
+        // Validate the registry
+        self.registry.validate()?;
+        
+        Ok(())
+    }
+    
+    fn get_validation_errors(&self) -> Vec<String> {
+        let mut errors = Vec::new();
+        
+        // Check registry validation
+        if let Err(e) = self.registry.validate() {
+            errors.push(format!("Registry validation failed: {}", e));
+        }
+        
+        errors
+    }
+}
+
+impl Validatable for ElementalSystemBuilder {
+    fn validate(&self) -> crate::ElementCoreResult<()> {
+        // Validate the data
+        self.data.validate()?;
+        
+        // Validate the registry
+        self.registry.validate()?;
+        
+        Ok(())
+    }
+    
+    fn get_validation_errors(&self) -> Vec<String> {
+        let mut errors = Vec::new();
+        
+        // Check data validation
+        if let Err(e) = self.data.validate() {
+            errors.push(format!("Elemental system data validation failed: {}", e));
+        }
+        
+        // Check registry validation
+        if let Err(e) = self.registry.validate() {
+            errors.push(format!("Registry validation failed: {}", e));
+        }
+        
+        errors
     }
 }

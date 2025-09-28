@@ -97,63 +97,17 @@ impl ElementalSystem {
 // SystemData trait implementation removed - will be implemented later
 
 // SystemContribution trait implementation removed - will be implemented later
-/*
-impl SystemContribution for ElementalSystem {
-    fn calculate_hp_contribution(&self) -> f64 {
-        // Calculate HP contribution based on elemental mastery levels
-        let total_mastery = self.calculate_total_element_mastery_bonus();
-        total_mastery * 10.0 // 10 HP per mastery point
-    }
-    
-    fn calculate_mp_contribution(&self) -> f64 {
-        // Calculate MP contribution based on qi amounts
-        let total_qi: f64 = self.data.element_qi_amounts.iter().sum();
-        total_qi * 0.5 // 0.5 MP per qi point
-    }
-    
-    fn calculate_attack_power_contribution(&self) -> f64 {
-        // Calculate attack power contribution based on power points
-        let total_power: f64 = self.data.element_power_points.iter().sum();
-        total_power * 1.0 // 1:1 ratio
-    }
-    
-    fn calculate_defense_contribution(&self) -> f64 {
-        // Calculate defense contribution based on defense points
-        let total_defense: f64 = self.data.element_defense_points.iter().sum();
-        total_defense * 1.0 // 1:1 ratio
-    }
-    
-    fn calculate_speed_contribution(&self) -> f64 {
-        // Calculate speed contribution based on qi manipulation speeds
-        let total_speed: f64 = self.data.element_qi_manipulation_speeds.iter().sum();
-        total_speed * 0.1 // 0.1 speed per manipulation speed point
-    }
-    
-    fn calculate_critical_rate_contribution(&self) -> f64 {
-        // Calculate critical rate contribution based on crit rates
-        let total_crit_rate: f64 = self.data.element_crit_rates.iter().sum();
-        total_crit_rate * 0.01 // Convert to percentage
-    }
-    
-    fn calculate_critical_damage_contribution(&self) -> f64 {
-        // Calculate critical damage contribution based on crit damages
-        let total_crit_damage: f64 = self.data.element_crit_damages.iter().sum();
-        total_crit_damage * 0.1 // Scale down
-    }
-    
-    fn calculate_accuracy_contribution(&self) -> f64 {
-        // Calculate accuracy contribution based on accurate rates
-        let total_accuracy: f64 = self.data.element_accurate_rates.iter().sum();
-        total_accuracy * 0.01 // Convert to percentage
-    }
-    
-    fn calculate_dodge_rate_contribution(&self) -> f64 {
-        // Calculate dodge rate contribution based on dodge rates
-        let total_dodge_rate: f64 = self.data.element_dodge_rates.iter().sum();
-        total_dodge_rate * 0.01 // Convert to percentage
-    }
-}
-*/
+// REMOVED: SystemContribution implementation violates data hub pattern
+// Element-Core should act as a data hub that aggregates data from external systems,
+// not as a monolithic system that contributes directly to Actor-Core stats.
+// 
+// Instead, external systems (Race-Core, Item-Core, Skill-Core) should:
+// 1. Register as ElementContributor with Element-Core
+// 2. Contribute elemental data through ElementContribution
+// 3. Element-Core aggregates and caches the data
+// 4. Actor-Core queries Element-Core for aggregated elemental stats
+//
+// This maintains the data hub pattern and external contributor pattern.
 
 impl ElementalSystem {
     // ElementalContribution struct removed - will be implemented later

@@ -1,477 +1,557 @@
 # Performance Optimization Design
 
-## 📋 **Tổng Quan**
+## 📋 **Overview**
 
-Tài liệu này mô tả các chiến lược tối ưu performance cho Element Core, bao gồm caching, memory management, calculation optimization, và concurrency handling.
+This document outlines the performance optimization strategies for Element-Core, focusing on game performance requirements, memory usage, and access patterns. The design prioritizes fast access times over memory efficiency for game scenarios.
 
-## 🚀 **Performance Optimization Strategies**
+**Version**: 2.0  
+**Last Updated**: 2024-12-19  
+**Status**: Active
 
-### **1. Caching Strategy**
+---
 
-#### **Derived Stats Caching**
+## 🎯 **Performance Requirements**
+
+### **Game Performance Targets**
+- **Access Time**: 1-2 nanoseconds for hot path operations
+- **Memory Usage**: Acceptable up to 20KB per system instance
+- **Throughput**: 1,000,000+ operations per second
+- **Latency**: < 1 microsecond for 99.9% of operations
+
+### **Critical Path Operations**
+1. **Element Stat Access**: Direct array access for derived stats
+2. **Interaction Matrix Lookup**: 2D array access for element interactions
+3. **Feature Flag Checks**: Boolean array access for feature flags
+4. **Mastery Level Queries**: Direct array access for mastery levels
+
+---
+
+## 🔧 **Performance Trade-offs Analysis**
+
+### **Array vs HashMap Performance Comparison**
+
+#### **Array-Based Approach (Current Implementation)**
 ```rust
-// Multi-level caching for derived stats
-pub struct ElementStatsCache {
-    // L1: Hot cache for frequently accessed stats
-    hot_cache: LruCache<ElementStatsKey, ElementStats>,
-    
-    // L2: Warm cache for moderately accessed stats
-    warm_cache: LruCache<ElementStatsKey, ElementStats>,
-    
-    // L3: Cold cache for rarely accessed stats
-    cold_cache: LruCache<ElementStatsKey, ElementStats>,
-    
-    // Cache invalidation tracking
-    invalidation_tracker: InvalidationTracker,
+// Direct array access - 1-2 nanoseconds
+pub struct ElementalSystemData {
+    pub element_mastery_levels: [f64; MAX_ELEMENTS],           // 50 × 8 bytes = 400 bytes
+    pub power_point: [f64; MAX_ELEMENTS],                      // 50 × 8 bytes = 400 bytes
+    pub element_interaction_bonuses: [[f64; MAX_ELEMENTS]; MAX_ELEMENTS], // 50×50 × 8 bytes = 20KB
+    pub feature_flags: [[bool; 16]; MAX_ELEMENTS],             // 50×16 × 1 byte = 800 bytes
 }
 
-// Cache key structure
-#[derive(Hash, Eq, PartialEq, Clone)]
-pub struct ElementStatsKey {
-    pub actor_id: String,
-    pub element_type: String,
-    pub stat_category: StatCategory,
-    pub primary_stats_hash: u64, // Hash of primary stats for invalidation
+// Access pattern
+let mastery_level = data.element_mastery_levels[index];        // 1-2 ns
+let interaction = data.element_interaction_bonuses[attacker][defender]; // 1-2 ns
+let flag = data.feature_flags[element][flag_index];            // 1-2 ns
+```
+
+**Performance Characteristics:**
+- **Access Time**: 1-2 nanoseconds (optimal)
+- **Memory Usage**: ~22KB per system instance
+- **Cache Efficiency**: High (contiguous memory layout)
+- **Predictability**: Excellent (no hash collisions)
+
+#### **HashMap-Based Approach (Alternative)**
+```rust
+// HashMap access - 10-50 nanoseconds
+pub struct ElementalSystemData {
+    pub element_mastery_levels: HashMap<String, f64>,
+    pub power_point: HashMap<String, f64>,
+    pub element_interaction_bonuses: HashMap<(String, String), f64>,
+    pub feature_flags: HashMap<String, HashMap<String, bool>>,
+}
+
+// Access pattern
+let mastery_level = data.element_mastery_levels.get("fire")?;  // 10-50 ns
+let interaction = data.element_interaction_bonuses.get(&("fire".to_string(), "water".to_string()))?; // 10-50 ns
+let flag = data.feature_flags.get("fire")?.get("parry_enabled")?; // 10-50 ns
+```
+
+**Performance Characteristics:**
+- **Access Time**: 10-50 nanoseconds (5-25x slower)
+- **Memory Usage**: ~15KB per system instance (more efficient)
+- **Cache Efficiency**: Low (scattered memory layout)
+- **Predictability**: Poor (hash collisions, rehashing)
+
+### **Performance Decision Matrix**
+
+| Criteria | Array | HashMap | Winner |
+|----------|-------|---------|--------|
+| **Access Speed** | 1-2 ns | 10-50 ns | ✅ Array |
+| **Memory Usage** | 22KB | 15KB | ✅ HashMap |
+| **Cache Efficiency** | High | Low | ✅ Array |
+| **Predictability** | Excellent | Poor | ✅ Array |
+| **Game Performance** | Optimal | Suboptimal | ✅ Array |
+
+**Conclusion**: Array-based approach is optimal for game performance requirements.
+
+---
+
+## 🚀 **Optimization Strategies**
+
+### **1. Array-Based Data Structures**
+
+#### **Direct Array Access**
+```rust
+// Optimized for 1-2 nanosecond access
+pub const MAX_ELEMENTS: usize = 50;
+
+pub struct ElementalSystemData {
+    // Primary stats - direct array access
+    pub element_mastery_levels: [f64; MAX_ELEMENTS],
+    pub element_qi_amounts: [f64; MAX_ELEMENTS],
+    
+    // Derived stats - direct array access
+    pub power_point: [f64; MAX_ELEMENTS],
+    pub defense_point: [f64; MAX_ELEMENTS],
+    
+    // Interaction matrix - 2D array for O(1) access
+    pub element_interaction_bonuses: [[f64; MAX_ELEMENTS]; MAX_ELEMENTS],
+    
+    // Feature flags - 2D boolean array
+    pub feature_flags: [[bool; 16]; MAX_ELEMENTS],
+}
+
+impl ElementalSystemData {
+    // Hot path - 1-2 nanoseconds
+    pub fn get_element_mastery_level(&self, index: usize) -> Option<f64> {
+        if index < MAX_ELEMENTS {
+            Some(self.element_mastery_levels[index])
+        } else {
+            None
+        }
+    }
+    
+    // Hot path - 1-2 nanoseconds
+    pub fn get_element_interaction(&self, attacker: usize, defender: usize) -> Option<f64> {
+        if attacker < MAX_ELEMENTS && defender < MAX_ELEMENTS {
+            Some(self.element_interaction_bonuses[attacker][defender])
+        } else {
+            None
+        }
+    }
 }
 ```
 
-#### **Cache Invalidation Strategy**
+#### **Memory Layout Optimization**
 ```rust
-// Smart cache invalidation based on stat dependencies
-pub struct InvalidationTracker {
-    // Track which primary stats affect which derived stats
-    stat_dependencies: HashMap<String, HashSet<String>>,
+// Optimized memory layout for cache efficiency
+pub struct ElementalSystemData {
+    // Group related data together for better cache locality
+    pub element_mastery_levels: [f64; MAX_ELEMENTS],
+    pub element_mastery_experience: [f64; MAX_ELEMENTS],
+    pub element_mastery_ranks: [ElementMasteryRank; MAX_ELEMENTS],
     
-    // Track cache entries by primary stat
-    cache_entries_by_primary_stat: HashMap<String, HashSet<ElementStatsKey>>,
+    // Group combat stats together
+    pub power_point: [f64; MAX_ELEMENTS],
+    pub defense_point: [f64; MAX_ELEMENTS],
+    pub crit_rate: [f64; MAX_ELEMENTS],
+    pub crit_damage: [f64; MAX_ELEMENTS],
+    
+    // Group interaction data together
+    pub element_interaction_bonuses: [[f64; MAX_ELEMENTS]; MAX_ELEMENTS],
+    pub feature_flags: [[bool; 16]; MAX_ELEMENTS],
+}
+```
+
+### **2. Caching Strategy**
+
+#### **Multi-Level Caching**
+```rust
+pub struct ElementCoreCache {
+    // L1 Cache - Hot data (frequently accessed)
+    l1_cache: HashMap<String, CachedElementData>,
+    
+    // L2 Cache - Warm data (occasionally accessed)
+    l2_cache: HashMap<String, CachedElementData>,
+    
+    // L3 Cache - Cold data (rarely accessed)
+    l3_cache: HashMap<String, CachedElementData>,
+    
+    // Cache statistics
+    hit_rates: CacheHitRates,
+    eviction_policy: EvictionPolicy,
 }
 
-impl InvalidationTracker {
-    // Invalidate cache when primary stats change
-    fn invalidate_by_primary_stat(&mut self, changed_primary_stat: &str) {
-        if let Some(affected_keys) = self.cache_entries_by_primary_stat.get(changed_primary_stat) {
-            for key in affected_keys {
-                self.invalidate_key(key);
+impl ElementCoreCache {
+    // Cache-aware access pattern
+    pub fn get_element_data(&mut self, element_id: &str) -> Option<&CachedElementData> {
+        // Try L1 cache first (hottest)
+        if let Some(data) = self.l1_cache.get(element_id) {
+            self.hit_rates.l1_hits += 1;
+            return Some(data);
+        }
+        
+        // Try L2 cache (warm)
+        if let Some(data) = self.l2_cache.get(element_id) {
+            self.hit_rates.l2_hits += 1;
+            // Promote to L1 cache
+            self.promote_to_l1(element_id, data.clone());
+            return Some(data);
+        }
+        
+        // Try L3 cache (cold)
+        if let Some(data) = self.l3_cache.get(element_id) {
+            self.hit_rates.l3_hits += 1;
+            // Promote to L2 cache
+            self.promote_to_l2(element_id, data.clone());
+            return Some(data);
+        }
+        
+        // Cache miss
+        self.hit_rates.misses += 1;
+        None
+    }
+}
+```
+
+#### **Cache Eviction Strategy**
+```rust
+pub enum EvictionPolicy {
+    LRU,    // Least Recently Used
+    LFU,    // Least Frequently Used
+    TTL,    // Time To Live
+    Hybrid, // Combination of LRU + LFU
+}
+
+impl ElementCoreCache {
+    // LRU eviction for L1 cache (most aggressive)
+    fn evict_l1_cache(&mut self) {
+        if self.l1_cache.len() >= L1_CACHE_SIZE {
+            let oldest_key = self.find_lru_key(&self.l1_cache);
+            if let Some(data) = self.l1_cache.remove(&oldest_key) {
+                // Demote to L2 cache
+                self.l2_cache.insert(oldest_key, data);
+            }
+        }
+    }
+    
+    // LFU eviction for L2 cache (frequency-based)
+    fn evict_l2_cache(&mut self) {
+        if self.l2_cache.len() >= L2_CACHE_SIZE {
+            let least_frequent_key = self.find_lfu_key(&self.l2_cache);
+            if let Some(data) = self.l2_cache.remove(&least_frequent_key) {
+                // Demote to L3 cache
+                self.l3_cache.insert(least_frequent_key, data);
             }
         }
     }
 }
 ```
 
-### **2. Memory Management**
+### **3. Batch Processing**
 
-#### **Efficient Stat Storage**
+#### **Bulk Operations**
 ```rust
-// Compact stat storage using bit packing
-pub struct CompactElementStats {
-    // Use bit fields for boolean stats
-    flags: u64,
-    
-    // Use fixed-point arithmetic for decimal stats
-    decimal_stats: [u32; 16], // 16 decimal stats with 16.16 fixed point
-    
-    // Use lookup tables for enum values
-    enum_stats: [u8; 8], // 8 enum stats
-}
-
-// Stat access with bit manipulation
-impl CompactElementStats {
-    fn get_crit_rate(&self) -> f64 {
-        // Convert from fixed-point to float
-        self.decimal_stats[0] as f64 / 65536.0
-    }
-    
-    fn set_crit_rate(&mut self, value: f64) {
-        // Convert from float to fixed-point
-        self.decimal_stats[0] = (value * 65536.0) as u32;
-    }
-}
-```
-
-#### **Memory Pool Management**
-```rust
-// Object pool for stat calculations
-pub struct StatCalculationPool {
-    // Pre-allocated calculation objects
-    calculation_objects: Vec<StatCalculation>,
-    
-    // Available objects for reuse
-    available_objects: Vec<usize>,
-    
-    // Pool statistics
-    pool_stats: PoolStatistics,
-}
-
-// Reuse calculation objects to avoid allocation
-impl StatCalculationPool {
-    fn get_calculation_object(&mut self) -> &mut StatCalculation {
-        if let Some(index) = self.available_objects.pop() {
-            &mut self.calculation_objects[index]
-        } else {
-            // Expand pool if needed
-            self.expand_pool();
-            self.get_calculation_object()
+impl ElementalSystem {
+    // Batch update multiple elements at once
+    pub fn batch_update_mastery_levels(&mut self, updates: &[(usize, f64)]) {
+        for (index, level) in updates {
+            if *index < MAX_ELEMENTS {
+                self.data.element_mastery_levels[*index] = *level;
+            }
         }
-    }
-}
-```
-
-### **3. Calculation Optimization**
-
-#### **Batch Calculations**
-```rust
-// Batch process multiple stat calculations
-pub struct BatchStatCalculator {
-    // Collect multiple calculations
-    pending_calculations: Vec<StatCalculationRequest>,
-    
-    // Process in batches for efficiency
-    batch_size: usize,
-}
-
-impl BatchStatCalculator {
-    // Process multiple calculations at once
-    fn process_batch(&mut self) -> Vec<StatCalculationResult> {
-        let batch = self.pending_calculations.drain(..self.batch_size).collect();
         
-        // Use SIMD for parallel processing
-        self.process_batch_simd(batch)
+        // Recalculate derived stats in batch
+        self.batch_recalculate_derived_stats(updates);
     }
-}
-```
-
-#### **Lazy Evaluation**
-```rust
-// Lazy evaluation for expensive calculations
-pub struct LazyElementStats {
-    // Cache for calculated values
-    calculated_values: HashMap<String, LazyValue>,
     
-    // Dependencies for invalidation
-    dependencies: HashMap<String, HashSet<String>>,
-}
-
-pub enum LazyValue {
-    Calculated(f64),
-    Pending(Box<dyn Fn() -> f64>),
-}
-
-impl LazyElementStats {
-    // Only calculate when needed
-    fn get_stat(&mut self, stat_name: &str) -> f64 {
-        match self.calculated_values.get(stat_name) {
-            Some(LazyValue::Calculated(value)) => *value,
-            Some(LazyValue::Pending(calc_fn)) => {
-                let value = calc_fn();
-                self.calculated_values.insert(stat_name.to_string(), LazyValue::Calculated(value));
-                value
-            },
-            None => {
-                // Calculate and cache
-                let value = self.calculate_stat(stat_name);
-                self.calculated_values.insert(stat_name.to_string(), LazyValue::Calculated(value));
-                value
+    // Batch recalculate derived stats
+    fn batch_recalculate_derived_stats(&mut self, updates: &[(usize, f64)]) {
+        for (index, _) in updates {
+            if *index < MAX_ELEMENTS {
+                self.recalculate_element_derived_stats(*index);
             }
         }
     }
-}
-```
-
-### **4. Concurrency Handling**
-
-#### **Thread-Safe Stat Calculations**
-```rust
-// Thread-safe stat calculation with minimal locking
-pub struct ThreadSafeElementCore {
-    // Read-write lock for stat calculations
-    stat_calculator: RwLock<ElementStatCalculator>,
     
-    // Lock-free cache for read operations
-    read_cache: Arc<LockFreeCache<ElementStatsKey, ElementStats>>,
-    
-    // Thread pool for parallel calculations
-    calculation_pool: ThreadPool,
-}
-
-impl ThreadSafeElementCore {
-    // Parallel stat calculation
-    async fn calculate_stats_parallel(&self, requests: Vec<StatCalculationRequest>) -> Vec<StatCalculationResult> {
-        let futures: Vec<_> = requests.into_iter()
-            .map(|request| self.calculation_pool.spawn(move || {
-                self.calculate_single_stat(request)
-            }))
-            .collect();
+    // Bulk element interaction calculation
+    pub fn bulk_calculate_interactions(&self, attackers: &[usize], defenders: &[usize]) -> Vec<f64> {
+        let mut results = Vec::with_capacity(attackers.len());
         
-        futures::future::join_all(futures).await
-    }
-}
-```
-
-#### **Lock-Free Data Structures**
-```rust
-// Lock-free cache using atomic operations
-pub struct LockFreeCache<K, V> {
-    // Use atomic pointers for lock-free access
-    buckets: Vec<AtomicPtr<CacheBucket<K, V>>>,
-    
-    // Atomic counters for statistics
-    hit_count: AtomicU64,
-    miss_count: AtomicU64,
-}
-
-impl<K, V> LockFreeCache<K, V> {
-    // Lock-free get operation
-    fn get(&self, key: &K) -> Option<V> {
-        let bucket_index = self.hash_key(key);
-        let bucket_ptr = self.buckets[bucket_index].load(Ordering::Acquire);
-        
-        if bucket_ptr.is_null() {
-            self.miss_count.fetch_add(1, Ordering::Relaxed);
-            return None;
+        for (attacker, defender) in attackers.iter().zip(defenders.iter()) {
+            if *attacker < MAX_ELEMENTS && *defender < MAX_ELEMENTS {
+                results.push(self.data.element_interaction_bonuses[*attacker][*defender]);
+            } else {
+                results.push(0.0);
+            }
         }
         
-        // Lock-free traversal
-        self.traverse_bucket(bucket_ptr, key)
+        results
     }
 }
 ```
 
-## 📊 **Performance Metrics**
+### **4. SIMD Operations**
 
-### **Key Performance Indicators**
-```yaml
-performance_metrics:
-  # Calculation Performance
-  stat_calculation_time_p50: "< 1ms"      # 50th percentile
-  stat_calculation_time_p95: "< 5ms"      # 95th percentile
-  stat_calculation_time_p99: "< 10ms"     # 99th percentile
-  
-  # Memory Usage
-  memory_usage_per_actor: "< 1KB"         # Memory per actor
-  cache_memory_usage: "< 100MB"           # Total cache memory
-  memory_fragmentation: "< 5%"            # Memory fragmentation
-  
-  # Concurrency Performance
-  concurrent_calculations: 1000           # Max concurrent calculations
-  thread_pool_utilization: "> 80%"        # Thread pool efficiency
-  lock_contention: "< 1%"                 # Lock contention rate
-  
-  # Cache Performance
-  cache_hit_rate: "> 90%"                 # Cache hit rate
-  cache_invalidation_time: "< 0.1ms"      # Cache invalidation time
-  cache_memory_efficiency: "> 85%"        # Cache memory efficiency
-```
-
-### **Performance Monitoring**
+#### **Vectorized Calculations**
 ```rust
-// Performance monitoring and metrics collection
-pub struct PerformanceMonitor {
-    // Calculation timing
-    calculation_timer: Histogram,
-    
-    // Memory usage tracking
-    memory_tracker: MemoryTracker,
-    
-    // Cache performance
-    cache_metrics: CacheMetrics,
-    
-    // Concurrency metrics
-    concurrency_metrics: ConcurrencyMetrics,
-}
+use std::arch::x86_64::*;
 
-impl PerformanceMonitor {
-    // Track calculation performance
-    fn track_calculation<F, R>(&self, operation: F) -> R 
-    where 
-        F: FnOnce() -> R 
-    {
-        let start = Instant::now();
-        let result = operation();
-        let duration = start.elapsed();
+impl ElementalSystem {
+    // SIMD-optimized batch calculation
+    pub fn simd_calculate_power_points(&self, elements: &[usize]) -> Vec<f64> {
+        let mut results = Vec::with_capacity(elements.len());
         
-        self.calculation_timer.record(duration);
-        result
-    }
-}
-```
-
-## 🔧 **Configuration & Tuning**
-
-### **Performance Configuration**
-```yaml
-# performance_config.yaml
-performance:
-  # Cache Configuration
-  cache:
-    hot_cache_size: 1000
-    warm_cache_size: 5000
-    cold_cache_size: 20000
-    cache_ttl: 300  # 5 minutes
-    
-  # Thread Pool Configuration
-  thread_pool:
-    min_threads: 4
-    max_threads: 16
-    thread_timeout: 30  # seconds
-    
-  # Memory Configuration
-  memory:
-    max_memory_usage: "1GB"
-    gc_threshold: 0.8
-    compaction_threshold: 0.9
-    
-  # Calculation Configuration
-  calculation:
-    batch_size: 100
-    lazy_evaluation: true
-    simd_enabled: true
-```
-
-### **Tuning Guidelines**
-```rust
-// Performance tuning recommendations
-pub struct PerformanceTuning {
-    // Cache tuning
-    pub fn tune_cache_sizes(&mut self, hit_rate: f64) {
-        if hit_rate < 0.8 {
-            // Increase cache sizes
-            self.hot_cache_size *= 2;
-            self.warm_cache_size *= 2;
-        }
-    }
-    
-    // Thread pool tuning
-    pub fn tune_thread_pool(&mut self, utilization: f64) {
-        if utilization > 0.9 {
-            // Increase thread pool size
-            self.max_threads = (self.max_threads * 1.5) as usize;
-        }
-    }
-    
-    // Memory tuning
-    pub fn tune_memory(&mut self, fragmentation: f64) {
-        if fragmentation > 0.1 {
-            // Trigger memory compaction
-            self.trigger_compaction();
-        }
-    }
-}
-```
-
-## 🧪 **Performance Testing**
-
-### **Load Testing**
-```rust
-// Performance testing framework
-#[cfg(test)]
-mod performance_tests {
-    use super::*;
-    
-    #[test]
-    fn test_concurrent_calculations() {
-        let element_core = ThreadSafeElementCore::new();
-        let requests = generate_test_requests(1000);
-        
-        let start = Instant::now();
-        let results = element_core.calculate_stats_parallel(requests).await;
-        let duration = start.elapsed();
-        
-        assert!(duration.as_millis() < 100); // Should complete in < 100ms
-        assert_eq!(results.len(), 1000);
-    }
-    
-    #[test]
-    fn test_memory_usage() {
-        let element_core = ElementCore::new();
-        let memory_before = get_memory_usage();
-        
-        // Create 1000 actors with stats
-        for i in 0..1000 {
-            element_core.create_actor_stats(&format!("actor_{}", i));
+        // Process 4 elements at a time using SIMD
+        for chunk in elements.chunks(4) {
+            if chunk.len() == 4 {
+                // Load 4 mastery levels
+                let mastery_levels = unsafe {
+                    _mm256_loadu_pd(&self.data.element_mastery_levels[chunk[0]] as *const f64)
+                };
+                
+                // Load 4 base damages
+                let base_damages = unsafe {
+                    _mm256_loadu_pd(&self.data.base_damage[chunk[0]] as *const f64)
+                };
+                
+                // Calculate power points: mastery * base_damage
+                let power_points = unsafe {
+                    _mm256_mul_pd(mastery_levels, base_damages)
+                };
+                
+                // Store results
+                let mut result_array = [0.0f64; 4];
+                unsafe {
+                    _mm256_storeu_pd(result_array.as_mut_ptr(), power_points);
+                }
+                
+                results.extend_from_slice(&result_array);
+            } else {
+                // Handle remaining elements
+                for &index in chunk {
+                    if index < MAX_ELEMENTS {
+                        results.push(self.data.power_point[index]);
+                    }
+                }
+            }
         }
         
-        let memory_after = get_memory_usage();
-        let memory_per_actor = (memory_after - memory_before) / 1000;
-        
-        assert!(memory_per_actor < 1024); // Should be < 1KB per actor
+        results
     }
 }
 ```
 
-### **Benchmarking**
-```rust
-// Benchmarking framework
-use criterion::{criterion_group, criterion_main, Criterion};
+### **5. Memory Pool Management**
 
-fn benchmark_stat_calculation(c: &mut Criterion) {
-    let element_core = ElementCore::new();
-    let test_requests = generate_benchmark_requests();
-    
-    c.bench_function("stat_calculation", |b| {
-        b.iter(|| {
-            element_core.calculate_stats_batch(&test_requests)
-        })
-    });
+#### **Object Pooling**
+```rust
+pub struct ElementalSystemPool {
+    available_systems: Vec<ElementalSystem>,
+    in_use_systems: HashSet<usize>,
+    pool_size: usize,
 }
 
-criterion_group!(benches, benchmark_stat_calculation);
-criterion_main!(benches);
-```
-
-## 🚀 **Deployment Considerations**
-
-### **Production Configuration**
-```yaml
-# production_config.yaml
-performance:
-  # Production-optimized settings
-  cache:
-    hot_cache_size: 10000
-    warm_cache_size: 50000
-    cold_cache_size: 200000
-    
-  thread_pool:
-    min_threads: 8
-    max_threads: 32
-    
-  memory:
-    max_memory_usage: "4GB"
-    gc_threshold: 0.7
-```
-
-### **Monitoring & Alerting**
-```rust
-// Production monitoring
-pub struct ProductionMonitor {
-    // Health checks
-    health_checker: HealthChecker,
-    
-    // Alerting
-    alert_manager: AlertManager,
-    
-    // Metrics collection
-    metrics_collector: MetricsCollector,
-}
-
-impl ProductionMonitor {
-    // Monitor system health
-    fn check_health(&self) -> HealthStatus {
-        let cpu_usage = self.get_cpu_usage();
-        let memory_usage = self.get_memory_usage();
-        let cache_hit_rate = self.get_cache_hit_rate();
+impl ElementalSystemPool {
+    pub fn new(pool_size: usize) -> Self {
+        let mut pool = Self {
+            available_systems: Vec::with_capacity(pool_size),
+            in_use_systems: HashSet::new(),
+            pool_size,
+        };
         
-        if cpu_usage > 0.9 || memory_usage > 0.9 || cache_hit_rate < 0.8 {
-            HealthStatus::Unhealthy
-        } else {
-            HealthStatus::Healthy
+        // Pre-allocate systems
+        for _ in 0..pool_size {
+            pool.available_systems.push(ElementalSystem::new());
         }
+        
+        pool
+    }
+    
+    pub fn acquire(&mut self) -> Option<ElementalSystem> {
+        self.available_systems.pop()
+    }
+    
+    pub fn release(&mut self, mut system: ElementalSystem) {
+        // Reset system to default state
+        system.reset_to_defaults();
+        
+        // Return to pool
+        self.available_systems.push(system);
     }
 }
 ```
 
 ---
 
-**Last Updated**: 2025-01-27  
-**Version**: 1.0  
-**Status**: Design Phase  
+## 📊 **Performance Monitoring**
+
+### **Metrics Collection**
+```rust
+pub struct PerformanceMetrics {
+    // Access time metrics
+    pub average_access_time: f64,
+    pub p99_access_time: f64,
+    pub p999_access_time: f64,
+    
+    // Throughput metrics
+    pub operations_per_second: f64,
+    pub peak_throughput: f64,
+    
+    // Memory metrics
+    pub memory_usage: usize,
+    pub cache_hit_rate: f64,
+    
+    // Error metrics
+    pub error_rate: f64,
+    pub timeout_rate: f64,
+}
+
+impl PerformanceMetrics {
+    pub fn record_access_time(&mut self, duration: std::time::Duration) {
+        let nanos = duration.as_nanos() as f64;
+        self.average_access_time = (self.average_access_time + nanos) / 2.0;
+        
+        // Update percentiles
+        if nanos > self.p99_access_time {
+            self.p99_access_time = nanos;
+        }
+        if nanos > self.p999_access_time {
+            self.p999_access_time = nanos;
+        }
+    }
+    
+    pub fn record_operation(&mut self) {
+        self.operations_per_second += 1.0;
+    }
+    
+    pub fn record_cache_hit(&mut self) {
+        self.cache_hit_rate = (self.cache_hit_rate + 1.0) / 2.0;
+    }
+}
+```
+
+### **Performance Profiling**
+```rust
+pub struct PerformanceProfiler {
+    metrics: PerformanceMetrics,
+    start_time: std::time::Instant,
+    operation_count: usize,
+}
+
+impl PerformanceProfiler {
+    pub fn new() -> Self {
+        Self {
+            metrics: PerformanceMetrics::default(),
+            start_time: std::time::Instant::now(),
+            operation_count: 0,
+        }
+    }
+    
+    pub fn profile_operation<F, R>(&mut self, operation: F) -> R
+    where
+        F: FnOnce() -> R,
+    {
+        let start = std::time::Instant::now();
+        let result = operation();
+        let duration = start.elapsed();
+        
+        self.metrics.record_access_time(duration);
+        self.metrics.record_operation();
+        self.operation_count += 1;
+        
+        result
+    }
+    
+    pub fn get_metrics(&self) -> &PerformanceMetrics {
+        &self.metrics
+    }
+}
+```
+
+---
+
+## 🎯 **Game-Specific Optimizations**
+
+### **Hot Path Optimization**
+```rust
+// Optimized for game combat scenarios
+impl ElementalSystem {
+    // Hot path - called millions of times per second
+    #[inline(always)]
+    pub fn get_combat_stats(&self, element_index: usize) -> CombatStats {
+        if element_index < MAX_ELEMENTS {
+            CombatStats {
+                power: self.data.power_point[element_index],
+                defense: self.data.defense_point[element_index],
+                crit_rate: self.data.crit_rate[element_index],
+                crit_damage: self.data.crit_damage[element_index],
+            }
+        } else {
+            CombatStats::default()
+        }
+    }
+    
+    // Hot path - element interaction calculation
+    #[inline(always)]
+    pub fn get_interaction_factor(&self, attacker: usize, defender: usize) -> f64 {
+        if attacker < MAX_ELEMENTS && defender < MAX_ELEMENTS {
+            self.data.element_interaction_bonuses[attacker][defender]
+        } else {
+            1.0 // Neutral interaction
+        }
+    }
+}
+```
+
+### **Memory Access Patterns**
+```rust
+// Optimized memory access for game scenarios
+impl ElementalSystem {
+    // Sequential access pattern (cache-friendly)
+    pub fn get_all_mastery_levels(&self) -> &[f64; MAX_ELEMENTS] {
+        &self.data.element_mastery_levels
+    }
+    
+    // Random access pattern (still fast with arrays)
+    pub fn get_mastery_levels(&self, indices: &[usize]) -> Vec<f64> {
+        indices.iter()
+            .filter(|&&i| i < MAX_ELEMENTS)
+            .map(|&i| self.data.element_mastery_levels[i])
+            .collect()
+    }
+}
+```
+
+---
+
+## 📋 **Performance Checklist**
+
+### **Implementation Checklist**
+- [ ] Array-based data structures implemented
+- [ ] Direct array access for hot paths
+- [ ] 2D arrays for interaction matrix
+- [ ] Boolean arrays for feature flags
+- [ ] Cache-friendly memory layout
+- [ ] Batch processing for bulk operations
+- [ ] SIMD operations for vectorized calculations
+- [ ] Memory pooling for system instances
+- [ ] Performance metrics collection
+- [ ] Hot path optimization with `#[inline(always)]`
+
+### **Performance Validation**
+- [ ] Access time < 2 nanoseconds for hot paths
+- [ ] Memory usage < 25KB per system instance
+- [ ] Throughput > 1,000,000 operations per second
+- [ ] Latency < 1 microsecond for 99.9% of operations
+- [ ] Cache hit rate > 95% for frequently accessed data
+- [ ] No memory leaks in long-running scenarios
+- [ ] Performance degradation < 10% under load
+
+---
+
+## 📚 **Related Documents**
+
+- [Element Core Overview](00_Element_Core_Overview.md) - System overview
+- [Unified Architecture Design](20_Unified_Architecture_Design.md) - Target architecture
+- [Element Registry Design](04_Element_Registry_Design.md) - Registry implementation
+- [Best Practices Guide](23_Best_Practices_Guide.md) - Implementation guidelines
+
+---
+
+**Last Updated**: 2024-12-19  
+**Version**: 2.0  
+**Status**: Active  
 **Maintainer**: Chaos World Team

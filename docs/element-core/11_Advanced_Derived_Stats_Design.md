@@ -6,18 +6,24 @@ Tài liệu này mô tả các derived stats nâng cao cho Element Core, bao g�
 
 ## ⚙️ **Phạm Vi & Cờ Tính Năng (Scope & Feature Flags)**
 
-- MVP (Enabled by default):
-  - SkillExecutionSpeed, SkillCooldownReduction
-  - ParryRate, BlockRate
-  - ElementPenetration, ElementAbsorption, ElementReflection
-  - ResourceRegeneration, ResourceEfficiency
-- Future (Disabled by default; bật qua config khi cần):
-  - ElementMovementSpeed, ElementTeleportation
-  - ElementSelfHealing, ElementGroupHealing
-  - ElementLeadershipBonus, ElementTeachingEfficiency, ElementCraftingEfficiency, ElementResourceDiscovery
-  - ElementSensitivity, MasterySynergyBonus
+### **MVP (Enabled by default):**
+- **Skill Execution & Performance**: SkillExecutionSpeed, SkillCooldownReduction
+- **Combat Mechanics**: ParryRate, BlockRate, ElementPenetration, ElementAbsorption, ElementReflection
+- **Resource Management**: ResourceRegeneration, ResourceEfficiency
 
-Lưu ý triển khai: Các tính năng Future nên được bảo vệ bởi feature flags để tránh chi phí runtime không cần thiết và giữ ổn định cân bằng game trong giai đoạn đầu.
+### **Advanced Features (Enabled by default):**
+- **Parry System**: ParryRate, ParryBreak, ParryStrength, ParryShred
+- **Block System**: BlockRate, BlockBreak, BlockStrength, BlockShred
+- **Skill Effectiveness**: AttackSkillEffectiveness, DefenseSkillEffectiveness, StatusSkillEffectiveness, MovementTechniqueEffectiveness, HealingSkillEffectiveness, SupportSkillEffectiveness, UtilitySkillEffectiveness, SkillEffectiveness
+- **Social & Economy**: ElementLeadershipBonus, ElementTeachingEfficiency, ElementCraftingEfficiency, ElementResourceDiscovery
+- **Perception & Detection**: ElementSensitivity
+- **Advanced Combat**: MasterySynergyBonus
+
+### **Future (Disabled by default; bật qua config khi cần):**
+- ElementMovementSpeed, ElementTeleportation
+- ElementSelfHealing, ElementGroupHealing
+
+**Lưu ý triển khai**: Các tính năng Future nên được bảo vệ bởi feature flags để tránh chi phí runtime không cần thiết và giữ ổn định cân bằng game trong giai đoạn đầu.
 
 ## 🧩 **Dynamics (No Hard Caps)**
 
@@ -45,12 +51,33 @@ features:
   element_teleportation: false
   element_self_healing: false
   element_group_healing: false
-  element_leadership_bonus: false
-  element_teaching_efficiency: false
-  element_crafting_efficiency: false
-  element_resource_discovery: false
-  element_sensitivity: false
-  mastery_synergy_bonus: false
+  # Advanced Features (Enabled by default)
+  parry_break: true
+  parry_strength: true
+  parry_shred: true
+  block_break: true
+  block_strength: true
+  block_shred: true
+  attack_skill_effectiveness: true
+  defense_skill_effectiveness: true
+  status_skill_effectiveness: true
+  movement_technique_effectiveness: true
+  healing_skill_effectiveness: true
+  support_skill_effectiveness: true
+  utility_skill_effectiveness: true
+  skill_effectiveness: true
+  element_leadership_bonus: true
+  element_teaching_efficiency: true
+  element_crafting_efficiency: true
+  element_resource_discovery: true
+  element_sensitivity: true
+  mastery_synergy_bonus: true
+
+  # Future Features (Disabled by default)
+  element_movement_speed: false
+  element_teleportation: false
+  element_self_healing: false
+  element_group_healing: false
 
 dynamics:
   intensity_gain: 0.02
@@ -187,30 +214,53 @@ fn calculate_block_rate(
 }
 ```
 
-#### Parry/Block Counter-Stats and Strength/Shred
+#### **Parry/Block Counter-Stats and Strength/Shred**
 
-- Parry/Block checks are passive and do not scale with any `skill_*_effectiveness`.
-- Use yin–yang deltas with sigmoid for triggers; use deltas for mitigation magnitude.
+- **ParryBreak**: Khả năng phá vỡ parry của đối thủ
+- **ParryStrength**: Sức mạnh của parry (ảnh hưởng đến counter damage)
+- **ParryShred**: Khả năng xuyên thủng parry defense
+- **BlockBreak**: Khả năng phá vỡ block của đối thủ
+- **BlockStrength**: Sức mạnh của block (ảnh hưởng đến damage reduction)
+- **BlockShred**: Khả năng xuyên thủng block defense
 
-```text
-Parry trigger (defender vs attacker):
-  p_parry = sigmoid( s × (parry_rate_defender − parry_break_attacker) )
+```rust
+// Parry/Block counter-stats calculation
+fn calculate_parry_break(base_break: f64, element_mastery: f64) -> f64 {
+    let mastery_bonus = element_mastery * 0.0002; // 0.02% per mastery point
+    base_break + mastery_bonus
+}
 
-Block trigger (defender vs attacker):
-  p_block = sigmoid( s × (block_rate_defender − block_break_attacker) )
+fn calculate_parry_strength(base_strength: f64, element_mastery: f64) -> f64 {
+    let mastery_bonus = element_mastery * 0.0003; // 0.03% per mastery point
+    base_strength + mastery_bonus
+}
 
-Block mitigation value (applied on pre-shield damage):
-  block_value = f(block_strength_defender − block_shred_attacker)
-  // f can be linear or bounded-sigmoid per balance; recommended linear→clamped at engine bounds
+fn calculate_parry_shred(base_shred: f64, element_mastery: f64) -> f64 {
+    let mastery_bonus = element_mastery * 0.0001; // 0.01% per mastery point
+    base_shred + mastery_bonus
+}
 
-Parry outcome scaling (optional, engine-defined):
-  parry_outcome_scale ∝ max(0, parry_strength_defender − parry_shred_attacker)
-  // e.g., affects counter-window length, stagger time, or converted damage share
+fn calculate_block_break(base_break: f64, element_mastery: f64) -> f64 {
+    let mastery_bonus = element_mastery * 0.0002; // 0.02% per mastery point
+    base_break + mastery_bonus
+}
+
+fn calculate_block_strength(base_strength: f64, element_mastery: f64) -> f64 {
+    let mastery_bonus = element_mastery * 0.0004; // 0.04% per mastery point
+    base_strength + mastery_bonus
+}
+
+fn calculate_block_shred(base_shred: f64, element_mastery: f64) -> f64 {
+    let mastery_bonus = element_mastery * 0.0001; // 0.01% per mastery point
+    base_shred + mastery_bonus
+}
 ```
 
-Implementation notes:
-- Order in Damage Composition: resolve Hit→Parry→Block before penetration/defense. If Parry succeeds, short-circuit damage (engine-defined outcome). If Block succeeds, reduce incoming damage by `block_value` before further mitigation and before shields.
-- Telemetry: log `(parry_rate_def, parry_break_att, p_parry)` and `(block_rate_def, block_break_att, p_block, block_value)` alongside existing `(Δ, I, R, p)`.
+**Implementation notes:**
+- Order in Damage Composition: resolve Hit→Parry→Block before penetration/defense
+- If Parry succeeds, short-circuit damage (engine-defined outcome)
+- If Block succeeds, reduce incoming damage by `block_value` before further mitigation and before shields
+- Telemetry: log `(parry_rate_def, parry_break_att, p_parry)` and `(block_rate_def, block_break_att, p_block, block_value)` alongside existing `(Δ, I, R, p)`
 
 ### **3. Element Mastery Bonuses**
 
@@ -262,7 +312,134 @@ fn calculate_mastery_decay_resistance(
 - **Max Value**: 0.5x (50% synergy bonus)
 - **Application**: Khi sử dụng multiple elements
 
-### **4. Skill Effects & Mobility**
+### **4. Skill Effectiveness System**
+
+#### **AttackSkillEffectiveness**
+- **Mục đích**: Tăng hiệu quả của attack skills
+- **Formula**: `effectiveness = base_effectiveness * (1 + mastery_level * 0.0002)`
+- **Max Value**: 2.0x (100% effectiveness bonus)
+- **Application**: Tất cả attack skills của element đó
+
+#### **DefenseSkillEffectiveness**
+- **Mục đích**: Tăng hiệu quả của defense skills
+- **Formula**: `effectiveness = base_effectiveness * (1 + mastery_level * 0.0002)`
+- **Max Value**: 2.0x (100% effectiveness bonus)
+- **Application**: Tất cả defense skills của element đó
+
+#### **StatusSkillEffectiveness**
+- **Mục đích**: Tăng hiệu quả của status skills
+- **Formula**: `effectiveness = base_effectiveness * (1 + mastery_level * 0.0003)`
+- **Max Value**: 2.5x (150% effectiveness bonus)
+- **Application**: Tất cả status skills của element đó
+
+#### **MovementTechniqueEffectiveness**
+- **Mục đích**: Tăng hiệu quả của movement skills
+- **Formula**: `effectiveness = base_effectiveness * (1 + mastery_level * 0.0002)`
+- **Max Value**: 2.0x (100% effectiveness bonus)
+- **Application**: Tất cả movement skills của element đó
+
+#### **HealingSkillEffectiveness**
+- **Mục đích**: Tăng hiệu quả của healing skills
+- **Formula**: `effectiveness = base_effectiveness * (1 + mastery_level * 0.0003)`
+- **Max Value**: 2.5x (150% effectiveness bonus)
+- **Application**: Tất cả healing skills của element đó
+
+#### **SupportSkillEffectiveness**
+- **Mục đích**: Tăng hiệu quả của support skills
+- **Formula**: `effectiveness = base_effectiveness * (1 + mastery_level * 0.0002)`
+- **Max Value**: 2.0x (100% effectiveness bonus)
+- **Application**: Tất cả support skills của element đó
+
+#### **UtilitySkillEffectiveness**
+- **Mục đích**: Tăng hiệu quả của utility skills
+- **Formula**: `effectiveness = base_effectiveness * (1 + mastery_level * 0.0002)`
+- **Max Value**: 2.0x (100% effectiveness bonus)
+- **Application**: Tất cả utility skills của element đó
+
+#### **SkillEffectiveness**
+- **Mục đích**: Tăng hiệu quả chung của tất cả skills
+- **Formula**: `effectiveness = base_effectiveness * (1 + mastery_level * 0.0001)`
+- **Max Value**: 1.5x (50% effectiveness bonus)
+- **Application**: Tất cả skills của element đó
+
+```rust
+// Skill effectiveness calculation
+fn calculate_skill_effectiveness(
+    base_effectiveness: f64,
+    element_mastery: f64,
+    skill_type: &str
+) -> f64 {
+    let mastery_bonus = match skill_type {
+        "attack" => element_mastery * 0.0002,
+        "defense" => element_mastery * 0.0002,
+        "status" => element_mastery * 0.0003,
+        "movement" => element_mastery * 0.0002,
+        "healing" => element_mastery * 0.0003,
+        "support" => element_mastery * 0.0002,
+        "utility" => element_mastery * 0.0002,
+        "general" => element_mastery * 0.0001,
+        _ => 0.0,
+    };
+    
+    base_effectiveness * (1.0 + mastery_bonus)
+}
+```
+
+### **5. Social & Economy System**
+
+#### **ElementLeadershipBonus**
+- **Mục đích**: Tăng leadership khi sử dụng element
+- **Formula**: `bonus = mastery_level * 0.0001`
+- **Max Value**: 0.5 (50% leadership bonus)
+- **Application**: Khi leading groups with same element
+
+#### **ElementTeachingEfficiency**
+- **Mục đích**: Tăng hiệu quả teaching element skills
+- **Formula**: `efficiency = base_efficiency * (1 + mastery_level * 0.0002)`
+- **Max Value**: 2.0x (100% teaching efficiency)
+- **Application**: Khi teaching element skills to others
+
+#### **ElementCraftingEfficiency**
+- **Mục đích**: Tăng hiệu quả crafting với element materials
+- **Formula**: `efficiency = base_efficiency * (1 + mastery_level * 0.0002)`
+- **Max Value**: 2.0x (100% crafting efficiency)
+- **Application**: Khi crafting with element materials
+
+#### **ElementResourceDiscovery**
+- **Mục đích**: Tăng khả năng tìm thấy element resources
+- **Formula**: `discovery_chance = base_chance * (1 + mastery_level * 0.0001)`
+- **Max Value**: 2.0x (100% discovery bonus)
+- **Application**: Khi exploring element-rich areas
+
+### **6. Perception & Detection System**
+
+#### **ElementSensitivity**
+- **Mục đích**: Tăng độ nhạy cảm với element energy
+- **Formula**: `sensitivity = base_sensitivity * (1 + mastery_level * 0.0001)`
+- **Max Value**: 3.0x (200% sensitivity bonus)
+- **Application**: Khi detecting element sources, hidden areas, or other element users
+
+### **7. Advanced Combat Mechanics**
+
+#### **MasterySynergyBonus**
+- **Mục đích**: Bonus khi sử dụng nhiều elements cùng lúc
+- **Formula**: `synergy_bonus = min(elements_count * 0.1, 0.5)`
+- **Max Value**: 0.5x (50% synergy bonus)
+- **Application**: Khi sử dụng multiple elements
+
+```rust
+// Mastery synergy bonus calculation
+fn calculate_mastery_synergy_bonus(
+    active_elements: &[f64], // mastery levels of active elements
+    element_count: usize
+) -> f64 {
+    let base_synergy = (element_count as f64 * 0.1).min(0.5);
+    let mastery_multiplier = active_elements.iter().sum::<f64>() / 1000.0; // Normalize
+    base_synergy * (1.0 + mastery_multiplier)
+}
+```
+
+### **8. Skill Effects & Mobility**
 
 #### **ElementMovementSpeed**
 - **Mục đích**: Tăng tốc độ di chuyển trong môi trường phù hợp

@@ -3,7 +3,7 @@
 //! This module provides simple adapter functionality for element-core integration.
 //! Elemental data is pure data - no conversion or aggregation needed.
 
-use element_core::{ElementalSystemData, ElementalSystem, ElementalRegistry};
+use element_core::{ElementalSystemData, ElementalSystem, UnifiedElementRegistry as ElementalRegistry};
 use std::sync::Arc;
 
 /// Simple elemental adapter - no complex conversions needed

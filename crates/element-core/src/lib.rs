@@ -1,26 +1,132 @@
 //! # Element Core
 //! 
-//! A high-performance elemental system for the Chaos World MMORPG backend service.
+//! A high-performance, comprehensive elemental system for the Chaos World MMORPG backend service.
 //! 
-//! This crate provides:
-//! - Array-based elemental data structures for high performance
-//! - Element configuration loading from YAML files
-//! - Element registry for managing element configurations
-//! - Factory patterns for creating elemental system instances
-//! - Configurable element properties and derived stats
+//! ## Overview
+//! 
+//! The Element Core provides a complete elemental system that manages element definitions,
+//! interactions, derived stats, and system integrations. It follows a data hub pattern where
+//! other systems can register and contribute elemental data without direct dependencies.
+//! 
+//! ## Key Features
+//! 
+//! ### 🚀 **High Performance**
+//! - Array-based data structures for O(1) access times
+//! - Fixed-size arrays (`MAX_ELEMENTS = 50`) for predictable memory usage
+//! - 2D interaction matrices for fast element interaction lookups
+//! - Thread-safe concurrent access with `Arc<RwLock<T>>`
+//! 
+//! ### 🏗️ **Modular Architecture**
+//! - **Core Module**: Primary data structures and elemental system logic
+//! - **Unified Registry**: Central registry for all element definitions and interactions
+//! - **Factory Module**: Builder patterns for creating elemental system instances
+//! - **Config Module**: YAML configuration loading and validation
+//! - **Aggregation Module**: Stats aggregation and caching
+//! - **Contributor Module**: External system integration
+//! - **Common Traits**: Standardized API patterns across all components
+//! 
+//! ### 📊 **Comprehensive Stats System**
+//! - **Primary Stats**: Directly stored values (mastery levels, qi amounts, etc.)
+//! - **Derived Stats**: Calculated from primary stats + base properties
+//! - **50+ Derived Stats**: Power points, defense points, crit rates, status effects, etc.
+//! - **Element Mastery Ranks**: 7-tier ranking system (Novice to Transcendent)
+//! 
+//! ### 🔄 **Element Interactions**
+//! - **Tương Sinh Tương Khắc**: Traditional Chinese elemental relationships
+//! - **Generating, Overcoming, Neutral, Same, Opposite** interaction types
+//! - **Matrix-based Lookups**: O(1) interaction factor retrieval
+//! - **Configurable Bonuses**: Custom interaction multipliers
+//! 
+//! ### 🛠️ **Developer Experience**
+//! - **Comprehensive Validation**: All data structures validate their integrity
+//! - **Detailed Error Messages**: Context-rich error reporting with helpful descriptions
+//! - **Common Traits**: Consistent API patterns across all components
+//! - **Thread Safety**: Safe concurrent access to all data structures
+//! - **Serialization Support**: JSON/YAML serialization for persistence
+//! 
+//! ## Quick Start
+//! 
+//! ```rust
+//! use element_core::{ElementalFactory, UnifiedElementRegistry, ElementalSystemData};
+//! use std::sync::Arc;
+//! 
+//! // Create a registry
+//! let registry = Arc::new(UnifiedElementRegistry::new());
+//! 
+//! // Create a factory
+//! let factory = ElementalFactory::new(registry);
+//! 
+//! // Create an elemental system
+//! let system = factory.create_elemental_system();
+//! 
+//! // Access elemental data
+//! let data = system.get_data();
+//! println!("Total mastery: {}", data.get_total_elemental_mastery());
+//! ```
+//! 
+//! ## Architecture Principles
+//! 
+//! 1. **Data Hub Pattern**: Element-Core acts as a central data aggregator
+//! 2. **External Contributors**: Other systems register and contribute data
+//! 3. **Single Responsibility**: Each module has a clear, focused purpose
+//! 4. **Performance First**: Optimized for game loop performance requirements
+//! 5. **Thread Safety**: All operations are safe for concurrent access
+//! 6. **Validation**: Comprehensive data integrity checking
+//! 7. **Extensibility**: Easy to add new elements and interaction types
 
 pub mod core;
-pub mod registry;
 pub mod factory;
 pub mod config;
 pub mod aggregation;
 pub mod adapters;
+pub mod contributor;
+pub mod unified_registry;
+pub mod common_traits;
 
-// Re-export commonly used types
-pub use core::*;
-pub use registry::*;
-pub use factory::*;
-pub use config::*;
+// Re-export commonly used types from core module
+pub use core::{
+    ElementalSystem, ElementalSystemData, ElementConfig, ElementRegistry,
+    ElementDefinition, ElementAliases, BaseProperties, ElementReferences
+};
+
+// Note: registry module removed - using unified_registry instead
+
+// Re-export from factory module
+pub use factory::{
+    ElementalFactory, ElementalSystemBuilder
+};
+
+// Re-export from config module
+pub use config::{
+    ElementConfigLoader, YamlConfigLoader, ConfigValidationRule,
+    InteractionConfig, ProbabilityConfig, StatusPoolConfig
+};
+
+// Re-export from contributor module
+pub use contributor::{
+    ElementContributor, ElementContribution, ElementContributorRegistry,
+    ElementEvent, ContributorMetadata
+};
+
+// Re-export from unified_registry module
+pub use unified_registry::{
+    UnifiedElementRegistry, ElementCategory, SystemRegistration,
+    SystemCapability, SystemHealth, ElementPlugin, ElementInteraction,
+    RegistryConfig, RegistryMetrics, ElementProperties, DerivedStatConfig,
+    StatusEffectConfig, SpreadRules, EnvironmentMod
+};
+
+// Re-export from aggregation module
+pub use aggregation::{
+    ElementAggregator, AggregationStrategy, ElementCache, CacheStats,
+    AggregatorMetrics, CacheConfig, EvictionPolicy
+};
+
+// Re-export common traits
+pub use common_traits::{
+    ElementGetter, ElementSetter, Validatable, Cacheable,
+    MetricsProvider, Configurable, Serializable, ElementHelper
+};
 
 /// Parameters for configuring elemental system when creating an actor
 #[derive(Debug, Clone)]
@@ -43,42 +149,96 @@ use std::sync::Arc;
 pub type ElementCoreResult<T> = Result<T, ElementCoreError>;
 
 /// Element Core Error type
+/// 
+/// This enum provides comprehensive error handling for the element-core system
+/// with detailed context and helpful error messages.
 #[derive(Debug, thiserror::Error)]
 pub enum ElementCoreError {
-    #[error("Configuration error: {0}")]
-    Config(String),
+    /// Configuration-related errors
+    /// 
+    /// This error occurs when there are issues with configuration loading,
+    /// parsing, or validation. It includes context about what configuration
+    /// was being processed and what went wrong.
+    #[error("Configuration error: {message}")]
+    Config { message: String },
     
-    #[error("Registry error: {0}")]
-    Registry(String),
+    /// Registry-related errors
+    /// 
+    /// This error occurs when there are issues with the element registry,
+    /// such as failed registrations, missing elements, or registry corruption.
+    #[error("Registry error: {message}")]
+    Registry { message: String },
     
-    #[error("Factory error: {0}")]
-    Factory(String),
+    /// Factory-related errors
+    /// 
+    /// This error occurs when there are issues with the elemental factory,
+    /// such as failed element creation or invalid factory configuration.
+    #[error("Factory error: {message}")]
+    Factory { message: String },
     
-    #[error("Validation error: {0}")]
-    Validation(String),
+    /// Validation-related errors
+    /// 
+    /// This error occurs when data validation fails. It includes detailed
+    /// information about what validation rule was violated and why.
+    #[error("Validation error: {message}")]
+    Validation { message: String },
     
-    #[error("Index out of bounds: {index} (max: {max})")]
-    IndexOutOfBounds { index: usize, max: usize },
+    /// Index out of bounds errors
+    /// 
+    /// This error occurs when trying to access an array or collection
+    /// with an index that is outside the valid range.
+    #[error("Index out of bounds: attempted to access index {index} but maximum allowed index is {max}")]
+    IndexOutOfBounds { 
+        /// The index that was attempted
+        index: usize, 
+        /// The maximum allowed index
+        max: usize 
+    },
     
-    #[error("Element not found: {element_id}")]
-    ElementNotFound { element_id: String },
+    /// Element not found errors
+    /// 
+    /// This error occurs when trying to access an element that doesn't exist
+    /// in the registry or when an element ID is invalid.
+    #[error("Element not found: '{element_id}' - this element does not exist in the registry or the ID is invalid")]
+    ElementNotFound { 
+        /// The element ID that was not found
+        element_id: String 
+    },
     
-    #[error("Invalid element configuration: {0}")]
-    InvalidElementConfig(String),
+    /// Invalid element configuration errors
+    /// 
+    /// This error occurs when an element configuration is malformed,
+    /// missing required fields, or contains invalid values.
+    #[error("Invalid element configuration: {message}")]
+    InvalidElementConfig { message: String },
     
+    /// IO-related errors
+    /// 
+    /// This error occurs when there are file system or network I/O issues,
+    /// such as file not found, permission denied, or network timeouts.
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
+    
+    /// Serialization errors
+    /// 
+    /// This error occurs when there are issues with JSON serialization
+    /// or deserialization, such as malformed JSON or type mismatches.
+    #[error("Serialization error: {0}")]
+    Serialization(#[from] serde_json::Error),
+    
+    /// YAML parsing errors
+    /// 
+    /// This error occurs when there are issues with YAML parsing,
+    /// such as malformed YAML syntax or invalid YAML structure.
+    #[error("YAML parsing error: {0}")]
+    YamlParsing(#[from] serde_yaml::Error),
 }
 
-impl From<serde_yaml::Error> for ElementCoreError {
-    fn from(error: serde_yaml::Error) -> Self {
-        ElementCoreError::Config(error.to_string())
-    }
-}
+// Note: From<serde_yaml::Error> is automatically implemented by thiserror
 
 impl From<String> for ElementCoreError {
     fn from(error: String) -> Self {
-        ElementCoreError::Config(error)
+        ElementCoreError::Config { message: error }
     }
 }
 
@@ -88,13 +248,13 @@ mod tests {
 
     #[test]
     fn test_element_core_creation() {
-        let registry = ElementalRegistry::new();
-        assert_eq!(registry.element_count().unwrap(), 0);
+        let registry = ElementRegistry::new();
+        assert_eq!(registry.element_count(), 0);
     }
 
     #[test]
     fn test_factory_creation() {
-        let registry = Arc::new(ElementalRegistry::new());
+        let registry = Arc::new(UnifiedElementRegistry::new());
         let factory = ElementalFactory::new(registry);
         let system = factory.create_elemental_system();
         assert!(system.get_data().element_mastery_levels[0] == 0.0);

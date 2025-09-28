@@ -8,9 +8,25 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
+# Core dependencies
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.9"
 serde_json = "1.0"
 tokio = { version = "1.0", features = ["full"] }
 async-trait = "0.1"
 thiserror = "1.0"
+anyhow = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+
+# Performance dependencies
+rayon = "1.7"  # Parallel processing
+dashmap = "5.4"  # Concurrent HashMap
+arc-swap = "1.5"  # Atomic reference counting
+
+# Actor Core integration
+actor-core = { path = "../actor-core" }
+
+[dev-dependencies]
+tokio-test = "0.4"
+criterion = "0.5"
+proptest = "1.0"

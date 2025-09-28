@@ -46,6 +46,45 @@ impl ElementMasteryRank {
             _ => ElementMasteryRank::Transcendent,
         }
     }
+    
+    /// Get the minimum experience required for this rank
+    pub fn min_experience(&self) -> f64 {
+        match self {
+            ElementMasteryRank::Novice => 0.0,
+            ElementMasteryRank::Apprentice => 100.0,
+            ElementMasteryRank::Adept => 500.0,
+            ElementMasteryRank::Expert => 1000.0,
+            ElementMasteryRank::Master => 2000.0,
+            ElementMasteryRank::Grandmaster => 5000.0,
+            ElementMasteryRank::Transcendent => 10000.0,
+        }
+    }
+    
+    /// Get the maximum experience for this rank
+    pub fn max_experience(&self) -> f64 {
+        match self {
+            ElementMasteryRank::Novice => 99.0,
+            ElementMasteryRank::Apprentice => 499.0,
+            ElementMasteryRank::Adept => 999.0,
+            ElementMasteryRank::Expert => 1999.0,
+            ElementMasteryRank::Master => 4999.0,
+            ElementMasteryRank::Grandmaster => 9999.0,
+            ElementMasteryRank::Transcendent => f64::INFINITY,
+        }
+    }
+}
+
+impl crate::common_traits::Validatable for ElementMasteryRank {
+    fn validate(&self) -> crate::ElementCoreResult<()> {
+        // ElementMasteryRank is an enum, so it's always valid
+        // We could add validation for the experience ranges if needed
+        Ok(())
+    }
+    
+    fn get_validation_errors(&self) -> Vec<String> {
+        // ElementMasteryRank is always valid
+        vec![]
+    }
 }
 
 /// Elemental system data structure with CORRECT primary/derived separation
@@ -274,22 +313,64 @@ impl ElementalSystemData {
     
     /// Set element mastery level by index (direct array access - 1-2 ns)
     pub fn set_element_mastery_level(&mut self, index: usize, level: f64) -> Result<(), crate::ElementCoreError> {
-        if index < MAX_ELEMENTS {
-            self.element_mastery_levels[index] = level;
-            Ok(())
-        } else {
-            Err(crate::ElementCoreError::IndexOutOfBounds { index, max: MAX_ELEMENTS })
+        if index >= MAX_ELEMENTS {
+            return Err(crate::ElementCoreError::IndexOutOfBounds { 
+                index, 
+                max: MAX_ELEMENTS
+            });
         }
+        
+        // Validate level value
+        if !level.is_finite() {
+            return Err(crate::ElementCoreError::Validation { 
+                message: format!("Mastery level must be finite, got {}", level)
+            });
+        }
+        
+        if level < 0.0 {
+            return Err(crate::ElementCoreError::Validation { 
+                message: format!("Mastery level must be non-negative, got {}", level)
+            });
+        }
+        
+        if level > 1000.0 {
+            return Err(crate::ElementCoreError::Validation { 
+                message: format!("Mastery level too high (max 1000.0), got {}", level)
+            });
+        }
+        
+        self.element_mastery_levels[index] = level;
+        Ok(())
     }
     
     /// Set element qi amount by index (direct array access - 1-2 ns)
     pub fn set_element_qi_amount(&mut self, index: usize, amount: f64) -> Result<(), crate::ElementCoreError> {
-        if index < MAX_ELEMENTS {
-            self.element_qi_amounts[index] = amount;
-            Ok(())
-        } else {
-            Err(crate::ElementCoreError::IndexOutOfBounds { index, max: MAX_ELEMENTS })
+        if index >= MAX_ELEMENTS {
+            return Err(crate::ElementCoreError::IndexOutOfBounds { index, max: MAX_ELEMENTS });
         }
+        
+        // Validate amount value
+        if !amount.is_finite() {
+            return Err(crate::ElementCoreError::Validation { 
+                message: format!("QI amount must be finite, got {}", amount)
+            });
+        }
+        
+        if amount < 0.0 {
+            return Err(crate::ElementCoreError::Validation { 
+                message: format!("QI amount must be non-negative, got {}", amount)
+            });
+        }
+        
+        // Check against capacity
+        if amount > self.element_qi_capacities[index] {
+            return Err(crate::ElementCoreError::Validation { 
+                message: format!("QI amount {} exceeds capacity {}", amount, self.element_qi_capacities[index])
+            });
+        }
+        
+        self.element_qi_amounts[index] = amount;
+        Ok(())
     }
     
     /// Set element power point by index (derived stat - direct array access - 1-2 ns)
@@ -396,6 +477,254 @@ impl ElementalSystemData {
         } else {
             0.0
         }
+    }
+}
+
+impl crate::common_traits::Validatable for ElementalSystemData {
+    fn validate(&self) -> crate::ElementCoreResult<()> {
+        // Validate mastery levels are non-negative
+        for (i, level) in self.element_mastery_levels.iter().enumerate() {
+            if *level < 0.0 {
+                return Err(crate::ElementCoreError::Validation { 
+                    message: format!("Element mastery level at index {} is negative: {}", i, level)
+                });
+            }
+        }
+        
+        // Validate experience is non-negative
+        for (i, exp) in self.element_mastery_experience.iter().enumerate() {
+            if *exp < 0.0 {
+                return Err(crate::ElementCoreError::Validation { 
+                    message: format!("Element mastery experience at index {} is negative: {}", i, exp)
+                });
+            }
+        }
+        
+        // Validate qi amounts are non-negative
+        for (i, qi) in self.element_qi_amounts.iter().enumerate() {
+            if *qi < 0.0 {
+                return Err(crate::ElementCoreError::Validation { 
+                    message: format!("Element qi amount at index {} is negative: {}", i, qi)
+                });
+            }
+        }
+        
+        // Validate qi capacities are positive
+        for (i, capacity) in self.element_qi_capacities.iter().enumerate() {
+            if *capacity <= 0.0 {
+                return Err(crate::ElementCoreError::Validation { 
+                    message: format!("Element qi capacity at index {} is not positive: {}", i, capacity)
+                });
+            }
+        }
+        
+        // Validate qi regeneration rates are non-negative
+        for (i, rate) in self.element_qi_regeneration_rates.iter().enumerate() {
+            if *rate < 0.0 {
+                return Err(crate::ElementCoreError::Validation { 
+                    message: format!("Element qi regeneration rate at index {} is negative: {}", i, rate)
+                });
+            }
+        }
+        
+        // Validate qi amounts don't exceed capacities
+        for (i, (amount, capacity)) in self.element_qi_amounts.iter().zip(self.element_qi_capacities.iter()).enumerate() {
+            if *amount > *capacity {
+                return Err(crate::ElementCoreError::Validation { 
+                    message: format!("Element qi amount at index {} exceeds capacity: {} > {}", i, amount, capacity)
+                });
+            }
+        }
+        
+        // Validate derived stats are non-negative
+        let derived_stats = [
+            &self.element_mastery,
+            &self.power_point,
+            &self.defense_point,
+            &self.crit_rate,
+            &self.resist_crit_rate,
+            &self.crit_damage,
+            &self.resist_crit_damage,
+            &self.accurate_rate,
+            &self.dodge_rate,
+            &self.status_probability,
+            &self.status_resistance,
+            &self.status_duration,
+            &self.status_duration_reduction,
+            &self.status_intensity,
+            &self.status_intensity_reduction,
+            &self.element_penetration,
+            &self.element_absorption,
+            &self.element_amplification,
+            &self.element_reduction,
+            &self.reflection_rate,
+            &self.resist_reflection_rate,
+        ];
+        
+        for (stat_idx, stat_array) in derived_stats.iter().enumerate() {
+            for (i, value) in stat_array.iter().enumerate() {
+                if *value < 0.0 {
+                    return Err(crate::ElementCoreError::Validation { 
+                        message: format!("Derived stat {} at index {} is negative: {}", stat_idx, i, value)
+                    });
+                }
+            }
+        }
+        
+        // Validate rates are between 0 and 1
+        let rate_stats = [
+            (&self.crit_rate, "crit_rate"),
+            (&self.resist_crit_rate, "resist_crit_rate"),
+            (&self.accurate_rate, "accurate_rate"),
+            (&self.dodge_rate, "dodge_rate"),
+            (&self.status_probability, "status_probability"),
+            (&self.status_resistance, "status_resistance"),
+            (&self.reflection_rate, "reflection_rate"),
+            (&self.resist_reflection_rate, "resist_reflection_rate"),
+        ];
+        
+        for (stat_array, stat_name) in rate_stats.iter() {
+            for (i, value) in stat_array.iter().enumerate() {
+                if *value < 0.0 || *value > 1.0 {
+                    return Err(crate::ElementCoreError::Validation { 
+                        message: format!("Rate stat {} at index {} is out of range [0,1]: {}", stat_name, i, value)
+                    });
+                }
+            }
+        }
+        
+        // Validate damage multipliers are positive
+        let damage_stats = [
+            (&self.crit_damage, "crit_damage"),
+            (&self.resist_crit_damage, "resist_crit_damage"),
+        ];
+        
+        for (stat_array, stat_name) in damage_stats.iter() {
+            for (i, value) in stat_array.iter().enumerate() {
+                if *value < 1.0 {
+                    return Err(crate::ElementCoreError::Validation { 
+                        message: format!("Damage stat {} at index {} is less than 1.0: {}", stat_name, i, value)
+                    });
+                }
+            }
+        }
+        
+        Ok(())
+    }
+    
+    fn get_validation_errors(&self) -> Vec<String> {
+        let mut errors = Vec::new();
+        
+        // Check mastery levels
+        for (i, level) in self.element_mastery_levels.iter().enumerate() {
+            if *level < 0.0 {
+                errors.push(format!("Element mastery level at index {} is negative: {}", i, level));
+            }
+        }
+        
+        // Check experience
+        for (i, exp) in self.element_mastery_experience.iter().enumerate() {
+            if *exp < 0.0 {
+                errors.push(format!("Element mastery experience at index {} is negative: {}", i, exp));
+            }
+        }
+        
+        // Check qi amounts
+        for (i, qi) in self.element_qi_amounts.iter().enumerate() {
+            if *qi < 0.0 {
+                errors.push(format!("Element qi amount at index {} is negative: {}", i, qi));
+            }
+        }
+        
+        // Check qi capacities
+        for (i, capacity) in self.element_qi_capacities.iter().enumerate() {
+            if *capacity <= 0.0 {
+                errors.push(format!("Element qi capacity at index {} is not positive: {}", i, capacity));
+            }
+        }
+        
+        // Check qi regeneration rates
+        for (i, rate) in self.element_qi_regeneration_rates.iter().enumerate() {
+            if *rate < 0.0 {
+                errors.push(format!("Element qi regeneration rate at index {} is negative: {}", i, rate));
+            }
+        }
+        
+        // Check qi amounts don't exceed capacities
+        for (i, (amount, capacity)) in self.element_qi_amounts.iter().zip(self.element_qi_capacities.iter()).enumerate() {
+            if *amount > *capacity {
+                errors.push(format!("Element qi amount at index {} exceeds capacity: {} > {}", i, amount, capacity));
+            }
+        }
+        
+        // Check derived stats
+        let derived_stats = [
+            (&self.element_mastery, "element_mastery"),
+            (&self.power_point, "power_point"),
+            (&self.defense_point, "defense_point"),
+            (&self.crit_rate, "crit_rate"),
+            (&self.resist_crit_rate, "resist_crit_rate"),
+            (&self.crit_damage, "crit_damage"),
+            (&self.resist_crit_damage, "resist_crit_damage"),
+            (&self.accurate_rate, "accurate_rate"),
+            (&self.dodge_rate, "dodge_rate"),
+            (&self.status_probability, "status_probability"),
+            (&self.status_resistance, "status_resistance"),
+            (&self.status_duration, "status_duration"),
+            (&self.status_duration_reduction, "status_duration_reduction"),
+            (&self.status_intensity, "status_intensity"),
+            (&self.status_intensity_reduction, "status_intensity_reduction"),
+            (&self.element_penetration, "element_penetration"),
+            (&self.element_absorption, "element_absorption"),
+            (&self.element_amplification, "element_amplification"),
+            (&self.element_reduction, "element_reduction"),
+            (&self.reflection_rate, "reflection_rate"),
+            (&self.resist_reflection_rate, "resist_reflection_rate"),
+        ];
+        
+        for (stat_array, stat_name) in derived_stats.iter() {
+            for (i, value) in stat_array.iter().enumerate() {
+                if *value < 0.0 {
+                    errors.push(format!("Derived stat {} at index {} is negative: {}", stat_name, i, value));
+                }
+            }
+        }
+        
+        // Check rate stats are between 0 and 1
+        let rate_stats = [
+            (&self.crit_rate, "crit_rate"),
+            (&self.resist_crit_rate, "resist_crit_rate"),
+            (&self.accurate_rate, "accurate_rate"),
+            (&self.dodge_rate, "dodge_rate"),
+            (&self.status_probability, "status_probability"),
+            (&self.status_resistance, "status_resistance"),
+            (&self.reflection_rate, "reflection_rate"),
+            (&self.resist_reflection_rate, "resist_reflection_rate"),
+        ];
+        
+        for (stat_array, stat_name) in rate_stats.iter() {
+            for (i, value) in stat_array.iter().enumerate() {
+                if *value < 0.0 || *value > 1.0 {
+                    errors.push(format!("Rate stat {} at index {} is out of range [0,1]: {}", stat_name, i, value));
+                }
+            }
+        }
+        
+        // Check damage multipliers are positive
+        let damage_stats = [
+            (&self.crit_damage, "crit_damage"),
+            (&self.resist_crit_damage, "resist_crit_damage"),
+        ];
+        
+        for (stat_array, stat_name) in damage_stats.iter() {
+            for (i, value) in stat_array.iter().enumerate() {
+                if *value < 1.0 {
+                    errors.push(format!("Damage stat {} at index {} is less than 1.0: {}", stat_name, i, value));
+                }
+            }
+        }
+        
+        errors
     }
 }
 
